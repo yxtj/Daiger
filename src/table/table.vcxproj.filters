@@ -1,0 +1,87 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="E:\Programs\eclipse\maiter\src\table\TableDescriptor.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="E:\Programs\eclipse\maiter\src\table\local-table.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="E:\Programs\eclipse\maiter\src\table\global-table.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="E:\Programs\eclipse\maiter\src\table\table-registry.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="E:\Programs\eclipse\maiter\src\table\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{68F679B5-310E-3326-BC3D-29F44BECF5FC}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{fa55551f-129c-4ec0-8e9a-de00ad4c8f8c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="tbl_widget">
+      <UniqueIdentifier>{515bef27-61f3-450a-ad00-007c0e7f633b}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="deltatable.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="global-table.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="local-table.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="statetable.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="table.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="table_iterator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="table-coder.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TableDescriptor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TableHelper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="table-interfaces.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="table-registry.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="typed-global-table.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="tbl_widget\IterateKernel.h">
+      <Filter>tbl_widget</Filter>
+    </ClInclude>
+    <ClInclude Include="tbl_widget\sharder.h">
+      <Filter>tbl_widget</Filter>
+    </ClInclude>
+    <ClInclude Include="tbl_widget\sharder_impl.hpp">
+      <Filter>tbl_widget</Filter>
+    </ClInclude>
+    <ClInclude Include="tbl_widget\term_checker.h">
+      <Filter>tbl_widget</Filter>
+    </ClInclude>
+    <ClInclude Include="tbl_widget\term_checker_impl.hpp">
+      <Filter>tbl_widget</Filter>
+    </ClInclude>
+    <ClInclude Include="tbl_widget\trigger.h">
+      <Filter>tbl_widget</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

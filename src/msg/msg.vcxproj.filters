@@ -1,0 +1,62 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="E:\Programs\eclipse\maiter\src\msg\CMakeLists.txt" />
+    <CustomBuild Include="E:\Programs\eclipse\maiter\src\CMakeFiles\08db03912839d5acc4da156485813752\mtype.pb.cc.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="E:\Programs\eclipse\maiter\src\CMakeFiles\08db03912839d5acc4da156485813752\common.pb.cc.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="E:\Programs\eclipse\maiter\src\CMakeFiles\08db03912839d5acc4da156485813752\message.pb.cc.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{68F679B5-310E-3326-BC3D-29F44BECF5FC}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{BD6E279C-3BFC-31D6-ADA3-1E8B1064504A}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{5BE5C0E0-D7F5-39AB-837A-6FC57D77A012}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Proto">
+      <UniqueIdentifier>{d211c60b-01c9-4998-afe7-8197bdee26b9}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="CMakeFiles\msg\common.pb.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CMakeFiles\msg\message.pb.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CMakeFiles\msg\mtype.pb.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="CMakeFiles\msg\common.pb.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CMakeFiles\msg\message.pb.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CMakeFiles\msg\mtype.pb.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="common.proto">
+      <Filter>Proto</Filter>
+    </None>
+    <None Include="message.proto">
+      <Filter>Proto</Filter>
+    </None>
+    <None Include="mtype.proto">
+      <Filter>Proto</Filter>
+    </None>
+  </ItemGroup>
+</Project>
