@@ -1,0 +1,1 @@
+grep 'computing time' $1 | awk '{print $3}'
