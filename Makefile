@@ -8,7 +8,7 @@ CMAKE_FLAGS =
 
 export CXX CC CFLAGS CPPFLAGS OPROFILE
 
-.PHONY: clean
+.PHONY: clean external
 
 all: release 
 
@@ -23,12 +23,20 @@ debug:
 	@cd bin/debug && $(CMAKE) $(CMAKE_FLAGS) -DCMAKE_BUILD_TYPE=Debug $(TOP)/src
 	@cd bin/debug  && $(MAKE)
 #	@cp bin/debug/examples/maiter .
-	
-eclipse:
-	#CMAKE_FLAGS = -G"Eclipse CDT4 - Unix Makefiles"
-	@make debug CMAKE_FLAGS=-G"Eclipse CDT4 - Unix Makefiles"
-	#$(MAKE) release CMAKE_FLAGS = -G"Eclipse CDT4 - Unix Makefiles"
 
+external: gflags glog
+
+gflags: bin/glags/lib/libgflags.a
+	@mkdir -p bin/gflags
+	@cd external && tar xf gflags-2.2.0.tzr.gz
+	@cd bin/gflags && cmake ../external/gflags-2.2.0
+	@cd bin/gflags && $(MAKE)
+
+glog: bin/glob/lib/libglog.a
+	@mkdir -p bin/glog
+	@cd external && tar xf glog-0.3.5.tzr.gz
+	@cd bin/gflags && cmake ../external/glog-0.3.5
+	@cd bin/gflags && $(MAKE)
 
 clean:
 	rm -rf bin/*

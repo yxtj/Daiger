@@ -8,11 +8,13 @@ set(EXAMPLE_LIBS ${EXAMPLE_LIBS} util z lzo2 pthread rt)
 #add_custom_target(example_proto DEPENDS ${EXAMPLE_PB_HDR})
 
 add_library(example 
-            #pagerank.cc
-            shortestpath.cc
+            pagerank.cc
+            jacobi.cc
+            markovchain.cc
             #adsorption.cc
             #katz.cc
             #simrank.cc
+            shortestpath.cc
             con_component.cc
             widestpath.cc
             minspantree.cc

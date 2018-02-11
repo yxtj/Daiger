@@ -7,8 +7,10 @@ using namespace std;
 DECLARE_string(result_dir);
 DECLARE_int64(num_nodes);
 DECLARE_double(portion);
+DECLARE_bool(priority_diff);
 DECLARE_double(weight_alpha);
 DECLARE_bool(priority_degree);
+
 
 struct MinSpanTreeIterateKernel: public IterateKernel<int, float, vector<Link> > {
 	float imax;
@@ -95,16 +97,21 @@ struct MinSpanTreeIterateKernel: public IterateKernel<int, float, vector<Link> >
 	}
 
 	void priority(float& pri, const float& value, const float& delta, const vector<Link>& data){
-		//pri = value - std::min(value, delta);
-		float dif = (delta - value) * (FLAGS_priority_degree ? data.size(): 1);
-		if(dif<=0)	// good news
-			pri = -dif;
-		else
-			pri = FLAGS_weight_alpha * dif;
+		// delta is u_i, value is v_i
+		if(FLAGS_priority_diff){
+			pri = delta - value;
+		}else{
+			pri = better(delta, value) ? delta : FLAGS_weight_alpha * delta;
+		}
+		if(FLAGS_priority_degree)
+			pri *= data.size();
 	}
 
-	float g_func(const int& k, const float& delta, const float& value, const Link& d){
-		return d.weight;
+	float g_func(const int& k, const float& delta, const float& value, const vector<Link>& data, const int& dst){
+		auto it = find_if(data.begin(), data.end(), [&](const Link& l){
+			return l.end == dst;
+		});
+		return it->weight;
 	}
 
 	void g_func(const int& k, const float& delta, const float& value, const vector<Link>& data,

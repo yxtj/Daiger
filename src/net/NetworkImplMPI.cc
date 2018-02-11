@@ -9,8 +9,13 @@
 #include <gflags/gflags.h>
 #include <glog/logging.h>
 #include <mpi.h>
+#include <fstream>
 
 using namespace std;
+
+DECLARE_string(net_ratio);
+DECLARE_string(bandwidth_folder);
+DECLARE_int32(bandwidth_window);
 
 namespace dsm {
 
@@ -28,6 +33,10 @@ NetworkImplMPI::NetworkImplMPI(): world(nullptr),id_(-1),size_(0){
 	if(!getenv("OMPI_COMM_WORLD_RANK")){
 		LOG(FATAL)<< "OpenMPI is not running!";
 	}
+	if(!parseRatio()) {
+		LOG(FATAL) << "Cannot parse sending ratio!";
+	}
+	DVLOG(1)<<"ratio="<<ratio;
 	MPI::Init_thread(MPI_THREAD_SINGLE);
 
 	MPI_Errhandler handler;
@@ -37,6 +46,89 @@ NetworkImplMPI::NetworkImplMPI(): world(nullptr),id_(-1),size_(0){
 	world = MPI::COMM_WORLD;
 	id_ = world.Get_rank();
 	size_=world.Get_size();
+
+	// ratio control variables
+	for(size_t i=0;i<NET_NUM_LAST;++i)
+		net_last.push(ratio);
+	net_sum=NET_NUM_LAST*ratio; // assumed default delay 1ms
+
+	measuring=false;
+	BANDWIDTH_WINDOW = FLAGS_bandwidth_window;
+}
+
+bool NetworkImplMPI::parseRatio()
+{
+	string s = FLAGS_net_ratio;
+	for(size_t i = 0; i < s.size(); ++i) {
+		if(s[i] >= 'A' && s[i] <= 'Z')
+			s[i] += 'a' - 'A';
+	}
+	bool flag = true;
+	size_t scale = 1;
+	if(s.size() < 2) {
+		flag = false;
+	} else if(s == "inf") {
+		ratio = numeric_limits<decltype(ratio)>::max();
+	} else{
+		if(s.back()=='k' || s.back()=='m' || s.back()=='g') {
+			if(s.back() == 'k')
+				scale = 1000;
+			else if(s.back() == 'm')
+				scale = 1000 * 1000;
+			else
+				scale = 1000 * 1000 * 1000;
+			s = s.substr(0, s.size() - 1);
+		}
+		try {
+			ratio = stod(s);
+		} catch(...) {
+			flag = false;
+		}
+	}
+	if(flag && scale != 1) {
+		ratio *= scale;
+	}
+	return flag;
+}
+
+void NetworkImplMPI::start_measure_bandwidth_usage(){
+	measuring=!FLAGS_bandwidth_folder.empty();
+	measure_start_time=Now();
+	//bandwidth_usage.clear();
+}
+void NetworkImplMPI::stop_measure_bandwidth_usage(){
+	measuring=false;
+}
+void NetworkImplMPI::update_bandwidth_usage(const size_t size, double t_b, double t_e){
+	t_b-=measure_start_time;
+	t_e-=measure_start_time;
+	int idx_b=static_cast<int>(t_b)/BANDWIDTH_WINDOW;
+	int idx_e=static_cast<int>(t_e)/BANDWIDTH_WINDOW;
+	// expend
+	if(bandwidth_usage.size() <= idx_e){
+		if(bandwidth_usage.capacity() <= idx_e)
+			bandwidth_usage.reserve(idx_e*2);
+		bandwidth_usage.resize(idx_e+1, 0.0);
+	}
+	// update bandwidth usage
+	if(idx_b==idx_e){
+		bandwidth_usage[idx_b]+=size;
+	}else{
+		double t=t_e-t_b;
+		double r=size/(t/BANDWIDTH_WINDOW);
+		bandwidth_usage[idx_b] += r*((idx_b+1)*BANDWIDTH_WINDOW - t_b);
+		bandwidth_usage[idx_e] += r*(t_e - idx_e*BANDWIDTH_WINDOW);
+		for(int i=idx_b+1; i<idx_e; ++i){
+			bandwidth_usage[i]+=r;
+		}
+	}
+}
+void NetworkImplMPI::dump_bandwidth_usage(){
+	if(id()!=0 && !FLAGS_bandwidth_folder.empty()){
+		ofstream fout(FLAGS_bandwidth_folder+"/band-"+to_string(id()-1));
+		for(auto v : bandwidth_usage)
+			fout<<v<<" ";
+	}
 }
 
 NetworkImplMPI* self=nullptr;
@@ -51,6 +143,7 @@ void NetworkImplMPI::Shutdown(){
 		VLOG(1)<<"Shut down MPI at rank "<<MPI::COMM_WORLD.Get_rank();
 		MPI::Finalize();
 	}
+	self->dump_bandwidth_usage();
 	delete self;
 	self=nullptr;
 }
@@ -86,10 +179,18 @@ std::string NetworkImplMPI::receive(int dst, int type, const int nBytes){
 void NetworkImplMPI::send(const Task* t){
 //	VLOG_IF(2,t->type!=4)<<"Sending(m) from "<<id()<<" to "<<t->src_dst<<", type "<<t->type;
 	lock_guard<recursive_mutex> sl(us_lock);
+	Timer tmr;
+	double t_limit=t->payload.size()/ratio;
+	double t_estimated_trans=t->payload.size()/(net_sum/net_last.size());
 	TaskSendMPI tm{t,
-		world.Isend(t->payload.data(), t->payload.size(), MPI::BYTE,t->src_dst, t->type)};
-//		MPI::Request()};
+		world.Isend(t->payload.data(), t->payload.size(), MPI::BYTE,t->src_dst, t->type),
+		Now()
+	};
 	unconfirmed_send_buffer.push_back(tm);
+	double t_control=t_limit-t_estimated_trans-tmr.elapsed();
+//	LOG_EVERY_N(INFO, 100)<<t_control;
+	if(t_control>0.0)
+		Sleep(t_control);
 }
 //void NetworkImplMPI::send(const int dst, const int type, const std::string& data){
 //	send(new Task(dst,type,data));
@@ -126,7 +227,18 @@ size_t NetworkImplMPI::collectFinishedSend(){
 	while(it!=unconfirmed_send_buffer.end()){
 //		VLOG(3) << "Unconfirmed at " << id()<<": "<<it->tsk->src_dst<<" , "<<it->tsk->type;
 		if(it->req.Test()){
-			VLOG_IF(2,it->tsk->type!=4)<< "Sending(f) from "<<id()<<" to " << it->tsk->src_dst<< " of type " << it->tsk->type;
+//			VLOG_IF(2,it->tsk->type!=4)<< "Sending(f) from "<<id()<<" to " << it->tsk->src_dst<< " of type " << it->tsk->type;
+			size_t size=it->tsk->payload.size();
+			double now=Now();
+			if(size>=NET_MINIMUM_LEN){
+				double v=size/(now-it->stime);
+				net_last.push(v);
+				net_sum+=v-net_last.front();
+				net_last.pop();
+//				LOG_EVERY_N(INFO,100)<<"ratio updated to "<<net_sum/net_last.size();
+			}
+			if(measuring)
+				update_bandwidth_usage(size, it->stime, now);
 			delete it->tsk;
 			it=unconfirmed_send_buffer.erase(it);
 		}else

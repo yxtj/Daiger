@@ -46,6 +46,9 @@ public:
 	void Flush();
 	void Shutdown();
 
+	void start_measure_bandwidth_usage();
+	void stop_measure_bandwidth_usage();
+
 	int id() const;
 	int size() const;
 
@@ -71,6 +74,7 @@ private:
 	mutable std::recursive_mutex ps_lock;
 
 	std::deque<std::pair<std::string,TaskBase> > receive_buffer;
+	std::deque<double> receive_time; // one-to-one mapping to receive_buffer
 	mutable std::recursive_mutex rec_lock;
 
 	// Enqueue the given request to pending buffer for transmission.

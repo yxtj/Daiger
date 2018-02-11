@@ -1,18 +1,23 @@
 cmake_minimum_required (VERSION 2.6) 
 cmake_policy(SET CMP0014 OLD)
 
-project (Daiger) 
+project (MAITER) 
 
+include(../cmake/MaiterPP.cmake)
 include(../cmake/FindProtobuf.cmake)
+#include(../cmake/PcFromUcontext.cmake)
 
 include(CheckIncludeFile)
 include(CheckIncludeFileCXX)
 include(CheckLibraryExists)
 include(CheckFunctionExists)
 
-find_package(Boost REQUIRED)
+#find_package(PythonLibs)
+#find_package(SWIG)
+#find_package(SDL)
+#find_package(Boost REQUIRED)
 
-check_include_file_cxx("google/protobuf/descriptor.h" HAVE_PROTOBUF)
+#check_include_file_cxx("google/protobuf/descriptor.h" HAVE_PROTOBUF)
 
 check_include_file("/usr/include/lzo/lzo1x.h" HAVE_LZO1X_H)
 check_include_file("/usr/include/libunwind.h"  HAVE_LIBUNWIND_H)
@@ -22,6 +27,7 @@ find_program(HAVE_MPICC "mpic++")
 
 find_library(HAVE_LIBUNWIND unwind)
 find_library(HAVE_PROTOBUF protobuf)
+#find_library(protobuf REQUIRED)
 
 if (NOT HAVE_LZO1X_H)
   message(FATAL_ERROR "Required lzo header file not found.")
@@ -85,12 +91,13 @@ include_directories( ${CMAKE_CURRENT_SOURCE_DIR}
 include_directories(SYSTEM
                      external/${GFLAGS_DIR}
                      external/${GLOG_DIR}
+                     external/webgraph 
 	               )
 		     
 
 link_directories(${MPI_LIBDIRS})
 
-set(CMAKE_CXX_FLAGS "${CXX_DEFAULT} -fPIC -fno-omit-frame-pointer -std=c++11 -ggdb1 ${CXX_WARN} ${CXX_DEFINE}")
+set(CMAKE_CXX_FLAGS "${CXX_DEFAULT} -fPIC -fno-omit-frame-pointer -std=c++0x -ggdb1 ${CXX_WARN} ${CXX_DEFINE}")
 add_subdirectory (dbg)
 add_subdirectory (util)
 add_subdirectory (net)

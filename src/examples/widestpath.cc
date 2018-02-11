@@ -8,6 +8,8 @@ DECLARE_string(result_dir);
 DECLARE_int64(num_nodes);
 DECLARE_double(portion);
 DECLARE_int64(graph_source);
+
+DECLARE_bool(priority_diff);
 DECLARE_double(weight_alpha);
 DECLARE_bool(priority_degree);
 
@@ -35,7 +37,7 @@ struct WidestPathIterateKernel: public IterateKernel<int, float, vector<Link> > 
 			pos = spacepos + 1;
 		}
 		// special process for the source node: add a self-loop with infinity weight,
-		// to make sure that the delta for the source node can always be zero.
+		// to make sure that the delta for the source node can always be infinity.
 		if(k==FLAGS_graph_source){
 			auto it=find_if(data.begin(), data.end(), [&](const Link& p){
 				return p.end==FLAGS_graph_source;
@@ -110,30 +112,35 @@ struct WidestPathIterateKernel: public IterateKernel<int, float, vector<Link> > 
 	}
 
 	void priority(float& pri, const float& value, const float& delta, const vector<Link>& data){
-		//pri = value - std::min(value, delta);
-		float dif = (value - delta) * (FLAGS_priority_degree ? data.size(): 1);
-		if(dif<=0)	// good news
-			pri = -dif;
-		else
-			pri = FLAGS_weight_alpha * dif;
+		// delta is u_i, value is v_i
+		if(FLAGS_priority_diff){
+			pri = delta - value;
+		}else{
+			pri = better(delta, value) ? delta : FLAGS_weight_alpha * delta;
+		}
+		if(FLAGS_priority_degree)
+			pri *= data.size();
 	}
 
-	float g_func(const int& k, const float& delta, const float& value, const Link& d){
-		return d.end==FLAGS_graph_source ? imax : min(delta, d.weight);
-		//return min(delta, d.weight);
+	float g_func(const int& k, const float& delta, const float& value, const vector<Link>& data, const int& dst){
+		auto it = find_if(data.begin(), data.end(), [&](const Link& l){
+			return l.end == dst;
+		});
+		//return d.end==FLAGS_graph_source ? imax : min(delta, it->weight);
+		return min(delta, it->weight);
 	}
 
 	void g_func(const int& k, const float& delta, const float& value, const vector<Link>& data,
 			vector<pair<int, float> >* output){
 		for(vector<Link>::const_iterator it = data.begin(); it != data.end(); it++){
-			//output->push_back(make_pair(it->end, min(delta, it->weight)));
-
+			output->push_back(make_pair(it->end, min(delta, it->weight)));
+			/*
 			if(it->end == FLAGS_graph_source){	// to avoid positive loop
 				output->push_back(make_pair(it->end, imax));
 			}else{
 				float outv = min(delta, it->weight);
 				output->push_back(make_pair(it->end, outv));
-			}
+			}*/
 		}
 	}
 

@@ -111,7 +111,7 @@ public:
 	void coordinate_in_neighbors(TypedGlobalTable<K, V, V, D>* table, const bool non_default_in_neighbor){
 		// whether to send processed (g_func) delta to out-neighbors
 		table->fill_ineighbor_cache(non_default_in_neighbor);
-		table->allpy_inneighbor_cache_local();
+		table->apply_inneighbor_cache_local();
 		table->send_ineighbor_cache_remote();
 		table->clear_ineighbor_cache();
 		table->reset_ineighbor_bp();
@@ -190,6 +190,7 @@ public:
 	void apply_changes_on_graph(TypedGlobalTable<K, V, V, D>* table,
 			std::vector<std::tuple<K, ChangeEdgeType, D>>& changes)
 	{
+		LOG(WARNING)<<"Note that: the current delta values in incremental case is designed for PageRank.";
 		for(auto& tup : changes){
 			const K& key =  std::get<0>(tup);
 			const ChangeEdgeType type = std::get<1>(tup);
@@ -202,49 +203,80 @@ public:
 	void apply_changes_on_delta(TypedGlobalTable<K, V, V, D>* table,
 			std::vector<std::tuple<K, ChangeEdgeType, D>>& changes)
 	{
-		double t1=0, t2=0, t3=0, tacc=0;
+		double t1=0, t2=0, t3=0, t4=0;
 		// put changes into messages(remote) / apply(local)
 		V default_v = maiter->iterkernel->default_v();
 		string from, to, value;
+		Timer tmr;
 		for(auto& tup : changes){
 			K key = std::get<0>(tup);
 			ChangeEdgeType type = std::get<1>(tup);
 			K dst = maiter->iterkernel->get_keys(std::get<2>(tup)).front();
 			V weight;
-			if(type==ChangeEdgeType::REMOVE){
-				weight = default_v;
+			if(maiter->iterkernel->is_selective()){
+				// sssp version:
+				if(type==ChangeEdgeType::REMOVE){
+					weight = default_v;
+				}else{
+					tmr.reset();
+					ClutterRecord<K, V, V, D> c = table->get(key);
+					t1+=tmr.elapsed();
+					tmr.reset();
+					weight = maiter->iterkernel->g_func(c.k, c.v1, c.v2, c.v3, dst);
+					t2+=tmr.elapsed();
+				}
+				tmr.reset();
+				table->accumulateF1(key, dst, weight);
+				t3+=tmr.elapsed();
 			}else{
-				Timer tmr;
+				// page rank version:
+				tmr.reset();
 				ClutterRecord<K, V, V, D> c = table->get(key);
+				size_t n = c.v3.size();
+				V delta0;
+				maiter->iterkernel->init_c(c.k, delta0, c.v3);
+				V chg=delta0 / (1>=n ? 1 : n);
 				t1+=tmr.elapsed();
 				tmr.reset();
-				auto it=std::find(c.v3.begin(), c.v3.end(), dst);
-
-//				std::vector<std::pair<K, V>> output;
-//				maiter->iterkernel->g_func(c.k, c.v1, c.v2, c.v3, &output);
-				t2+=tmr.elapsed();
-				tmr.reset();
-//				auto it = std::find_if(output.begin(), output.end(), [&](const std::pair<K, V>& p){
-//					return p.first==dst;
-//				});
-////				VLOG_IF(0,it==output.end())<<char(type)<<" "<<key<<" "<<weight;
-//				weight = it==output.end() ? default_v : it->second;
-				weight = maiter->iterkernel->g_func(c.k, c.v1, c.v2, *it);
+				if(type==ChangeEdgeType::REMOVE){
+					double x=1.0/n - 1.0/(n+1); // x>0
+					if(n==0 || n==1)
+						x=1;
+					x*=delta0;
+					for(auto& neigh : c.v3){
+						table->accumulateF1(maiter->iterkernel->get_key(neigh), x);
+					}
+					table->accumulateF1(dst, -chg);
+				}else{ // ChangeEdgeType::ADD
+					double x=1.0/n - 1.0/(n-1); // x<0
+					if(n==0 || n==1)
+						x=1;
+					x*=delta0;
+					for(auto& neigh : c.v3){
+						if(neigh == dst){
+							table->accumulateF1(dst, chg);
+						}else{
+							table->accumulateF1(maiter->iterkernel->get_key(neigh), x);
+						}
+					}
+				}
 				t3+=tmr.elapsed();
 			}
-			Timer tmr;
 //			VLOG(1)<<"  "<<char(type)<<" "<<key<<" "<<dst<<"\t"<<weight<<"\t d="<<table->getF1(key)<<" v="<<table->getF2(key);
+			tmr.reset();
 			table->accumulateF1(key, dst, weight);
+			t3+=tmr.elapsed();
+			tmr.reset();
 			if(table->canSend()){
 				table->helper()->signalToSend();
 				table->resetSendMarker();
 			}
-			tacc+=tmr.elapsed();
+			t4+=tmr.elapsed();
 		}
 //		table->helper()->signalToProcess();
 		table->helper()->signalToSend();
 		table->resetSendMarker();
-		VLOG(0)<<t1<<" , "<<t2<<" , "<<t3<<"\t"<<tacc;
+		VLOG(0)<<t1<<" , "<<t2<<" , "<<t3<<" , "<<t4;
 	}
 
 	void delta_table(TypedGlobalTable<K, V, V, D>* a){
@@ -466,7 +498,6 @@ public:
 
 public:
 	int registerMaiter(){
-		VLOG(0) << "Number of shards: " << conf.num_workers();
 		table = CreateTable<K, V, V, D>(0, conf.num_workers(), schedule_portion, sharder,
 				iterkernel, termchecker);
 

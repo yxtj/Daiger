@@ -8,6 +8,13 @@ using namespace std;
 DEFINE_string(runner, "", "");
 DEFINE_int32(taskid,0,"unique id for distinguishing different task");
 
+DEFINE_string(net_ratio, "inf", "maximum sending ratio on one worker (bytes per seconds). "
+	"supports: inf, K (1000), M (10^6), G (10^9)");
+DEFINE_double(net_delay_time, 0.0, "delay time before commiting a received message");
+DEFINE_string(bandwidth_folder, "", "the folder used to record the bandwidth usage");
+DEFINE_int32(bandwidth_window, 1, "the time window used to measure the bandwidth usage");
+
+
 DEFINE_int32(shards, 10, "");
 DEFINE_int32(iterations, 10, "");
 DEFINE_int32(block_size, 10, "");
@@ -35,8 +42,10 @@ DEFINE_double(termcheck_threshold, 1000000000, "");
 DEFINE_double(sleep_time, 0.001, "");
 
 DEFINE_int64(graph_source, 0, "the source node for some graph algorithms like shortest-path, widest-path");
-DEFINE_double(weight_alpha, 1, "the factor for the bad news");
+DEFINE_bool(priority_diff, false, "whether to use difference-based priority or weight-value-based priority");
+DEFINE_double(weight_alpha, 1, "the weight factor for bad news in the weight-value-based priority");
 DEFINE_bool(priority_degree, false, "whether to multiple the degree to the priority");
+
 
 int main(int argc, char** argv){
 	FLAGS_log_prefix = false;
@@ -44,16 +53,17 @@ int main(int argc, char** argv){
 
 	Init(argc, argv);
 
+	CHECK_NE(FLAGS_runner, "");
+
 	ConfigData conf;
 	conf.set_num_workers(NetworkThread::Get()->size() - 1);
 	conf.set_worker_id(NetworkThread::Get()->id() - 1);
 
-//  cout<<NetworkThread::Get()->id()<<":"<<getcallstack()<<endl;
-// return 0;
-//  LOG(INFO) << "Running: " << FLAGS_runner;
-	CHECK_NE(FLAGS_runner, "");
 	RunnerRegistry::KernelRunner k = RunnerRegistry::Get()->runner(FLAGS_runner);
-	LOG(INFO)<< "kernel runner is " << FLAGS_runner;
+	if(NetworkThread::Get()->id() == 0){
+		LOG(INFO) << "Kernel runner is " << FLAGS_runner;
+		LOG(INFO) << "Number of shards: " << conf.num_workers();
+	}
 	CHECK(k != NULL) << "Could not find kernel runner " << FLAGS_runner;
 	k(conf);
 	LOG(INFO)<< "Exiting.";

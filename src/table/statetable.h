@@ -138,11 +138,6 @@ public:
 				};
 			}
 
-			//random number generator
-			std::mt19937 gen(std::chrono::system_clock::now().time_since_epoch().count());
-			std::uniform_int_distribution<int> dist(0, parent_.buckets_.size() - 1);
-			auto rand_num = [&](){return dist(gen);};
-
 			if(parent_.entries_ <= SAMPLE_SIZE){
 				//if table size is less than the sample set size, schedule them all
 				scheduled_pos.reserve(parent_.entries_);
@@ -157,6 +152,11 @@ public:
 			}else{
 				//sample random pos, the sample reflect the whole data set more or less
 				std::vector<int> sampled_pos;
+/*
+				//random number generator
+				std::mt19937 gen(std::chrono::system_clock::now().time_since_epoch().count());
+				std::uniform_int_distribution<int> dist(0, parent_.buckets_.size() - 1);
+				auto rand_num = [&](){return dist(gen);};
 				int trials = 0;
 				for(int i = 0; i < SAMPLE_SIZE; i++){
 					int rand_pos = rand_num();
@@ -173,45 +173,50 @@ public:
 				if(b_no_change && bfilter) return;
 				if(!bfilter) b_no_change = false;
 
-				/*
-				 //determine priority
-				 for(i=0; i<parent_.size_; i++){
-				 if(parent_.buckets_[i].v1 == defaultv) continue;
-				 V sum = ((IterateKernel<V1>*)parent.info_.iterkernel)->accumulate(&parent_.buckets_[i].v1, parent_.buckets_[i].v2);
-				 parent_.buckets_[i].priority = abs(sum - parent_.buckets_[i].v2);
-				 }
-				 */
-
-				//get the cut index, everything larger than the cut will be scheduled
-				sort(sampled_pos.begin(), sampled_pos.end(), compare_priority(parent_));
-				int cut_index = SAMPLE_SIZE * parent_.info_.schedule_portion;
-				V1 threshold = parent_.buckets_[sampled_pos[cut_index]].priority;
-				//V1 threshold = ((Scheduler<K, V1>*)parent_.info_.scheduler)->priority(parent_.buckets_[sampled_pos[cut_index]].k, parent_.buckets_[sampled_pos[cut_index]].v1);
-
-				VLOG(2) << "cut index " << cut_index << " threshold " << threshold << " pos "
-									<< sampled_pos[cut_index] << " max "
-									<< parent_.buckets_[sampled_pos[0]].v1;
-
-				//Reserve parent_.size_*P instead of parent_.entries_*P because P is not correct portion
-				//When P is smaller than real portion, reserving parent_.entries_*P slot may lead to an resize()
-				scheduled_pos.reserve(parent_.size_*cut_index/SAMPLE_SIZE);
-				if(cut_index == 0 || parent_.buckets_[sampled_pos[0]].priority == threshold){
-					//to avoid non eligible records
-					for(int i = 0; i < parent_.size_; i++){
-						if(!parent_.buckets_[i].in_use || !pick_pred(i)) continue;
-
-						if(parent_.buckets_[i].priority >= threshold){// >=
-							scheduled_pos.push_back(i);
-						}
+*/
+				for(int i = 0; i < parent_.size_; i++){
+					if(parent_.buckets_[i].in_use && pick_pred(i)){
+						sampled_pos.push_back(i);
 					}
+				}
+				int cut_index = parent_.entries_ * parent_.info_.schedule_portion;
+				if(sampled_pos.size() <= cut_index+1){
+					scheduled_pos=move(sampled_pos);
 				}else{
-					for(int i = 0; i < parent_.size_; i++){
-						if(!parent_.buckets_[i].in_use || !pick_pred(i)) continue;
+					
+					scheduled_pos = move(sampled_pos);
+					partial_sort(scheduled_pos.begin(), scheduled_pos.begin()+(cut_index+1), scheduled_pos.end(), compare_priority(parent_));
+					scheduled_pos.erase(scheduled_pos.begin()+cut_index, scheduled_pos.end());
 
-						if(parent_.buckets_[i].priority > threshold){// >
-							scheduled_pos.push_back(i);
+					/*
+					//get the cut index, everything larger than the cut will be scheduled
+					sort(sampled_pos.begin(), sampled_pos.end(), compare_priority(parent_));
+					V1 threshold = parent_.buckets_[sampled_pos[cut_index]].priority;
+					sampled_pos.clear();					
+					VLOG(2) << "cut index " << cut_index << " threshold " << threshold << " pos "
+										<< sampled_pos[cut_index] << " max "
+										<< parent_.buckets_[sampled_pos[0]].v1;
+					//Reserve parent_.size_*P instead of parent_.entries_*P because P is not correct portion
+					//When P is smaller than real portion, reserving parent_.entries_*P slot may lead to an resize()
+					//scheduled_pos.reserve(parent_.size_*cut_index/SAMPLE_SIZE);
+					if(cut_index == 0 || parent_.buckets_[sampled_pos[0]].priority == threshold){
+						//to avoid non eligible records
+						for(int i = 0; i < parent_.size_; i++){
+							if(!parent_.buckets_[i].in_use || !pick_pred(i)) continue;
+
+							if(parent_.buckets_[i].priority >= threshold){// >=
+								scheduled_pos.push_back(i);
+							}
 						}
-					}
+					}else{
+						for(int i = 0; i < parent_.size_; i++){
+							if(!parent_.buckets_[i].in_use || !pick_pred(i)) continue;
+
+							if(parent_.buckets_[i].priority > threshold){// >
+								scheduled_pos.push_back(i);
+							}
+						}
+					} */
 				}
 			}
 
@@ -372,6 +377,8 @@ public:
 			buckets_[i].in_use = 0;
 		}
 		entries_ = 0;
+		total_curr_value=0;
+		total_curr_default=0;
 	}
 
 	void reset(){
@@ -407,7 +414,7 @@ public:
 	void serializeToNet(KVPairCoder *out);
 	void deserializeFromFile(TableCoder *in, DecodeIteratorBase *itbase);
 	void deserializeFromNet(KVPairCoder *in, DecodeIteratorBase *itbase);
-	void serializeToSnapshot(const string& f, uint64_t* updates, double* totalF2, uint64_t* defaultF2);
+	void serializeToSnapshot(const string& f, uint64_t* receives, uint64_t* updates, double* totalF2, uint64_t* defaultF2);
 
 	Marshal<K>* kmarshal(){return ((Marshal<K>*)info_.key_marshal);}
 	Marshal<V1>* v1marshal(){return ((Marshal<V1>*)info_.value1_marshal);}
@@ -469,8 +476,9 @@ private:
 	// local sum, for termination checking
 	V2 default_v;
 	double total_curr_value;
-	int64_t total_curr_default;
-	int64_t total_updates;
+	uint64_t total_curr_default;
+	uint64_t total_receive; // number of updating delta
+	uint64_t total_updates; // number of merging delta into value
 
 	void update_local_sum(const V2& oldV, const V2& newV){
 		if(oldV == default_v)
@@ -492,7 +500,7 @@ private:
 
 template<class K, class V1, class V2, class V3>
 StateTable<K, V1, V2, V3>::StateTable(int size) :
-	buckets_(0), entries_(0), size_(0), total_curr_value(0.0), total_curr_default(0), total_updates(0)
+	buckets_(0), entries_(0), size_(0), total_curr_value(0.0), total_curr_default(0), total_receive(0), total_updates(0)
 {
 	clear();
 
@@ -582,12 +590,13 @@ void StateTable<K, V1, V2, V3>::deserializeFromNet(KVPairCoder *in, DecodeIterat
 //but focus on termination check
 template<class K, class V1, class V2, class V3>
 void StateTable<K, V1, V2, V3>::serializeToSnapshot(const string& f,
-		uint64_t* updates, double* totalF2, uint64_t* defaultF2){
+		uint64_t* receives, uint64_t* updates, double* totalF2, uint64_t* defaultF2){
 	//total_curr_value = 0;
 	//EntirePassIterator* entireIter = new EntirePassIterator(*this);
 	//total_curr_value = static_cast<double>(((TermChecker<K, V2>*)info_.termchecker)
 	//		->estimate_prog(entireIter));
 	//delete entireIter;
+	*receives = total_receive;
 	*updates = total_updates;
 	*totalF2 = total_curr_value;
 	*defaultF2 = total_curr_default;
@@ -670,7 +679,6 @@ void StateTable<K, V1, V2, V3>::updateF1(const K& k, const V1& v){
 
 	buckets_[b].v1 = v;
 	buckets_[b].priority = 0;	//didn't use priority function, assume the smallest priority is 0
-	++total_updates;
 }
 
 template<class K, class V1, class V2, class V3>
@@ -681,6 +689,8 @@ void StateTable<K, V1, V2, V3>::updateF2(const K& k, const V2& v){
 
 	update_local_sum(buckets_[b].v2, v);
 	buckets_[b].v2 = v;
+
+	++total_updates;
 }
 
 template<class K, class V1, class V2, class V3>
@@ -698,6 +708,8 @@ void StateTable<K, V1, V2, V3>::accumulateF1(const K& from, const K &to, const V
 	IterateKernel<K, V1, V3>* pk = static_cast<IterateKernel<K, V1, V3>*>(info_.iterkernel);
 	buckets_[b].update_v1_with_input(from, v, pk);
 	pk->priority(buckets_[b].priority, buckets_[b].v2, buckets_[b].v1, buckets_[b].v3);
+
+	++total_receive;
 }
 
 template<class K, class V1, class V2, class V3>
@@ -709,6 +721,7 @@ void StateTable<K, V1, V2, V3>::accumulateF1(const K& k, const V1& v){
 	pk->accumulate(buckets_[b].v1, v);
 	pk->priority(buckets_[b].priority, buckets_[b].v2, buckets_[b].v1, buckets_[b].v3);
 
+	++total_receive;
 }
 
 template<class K, class V1, class V2, class V3>
@@ -718,7 +731,9 @@ void StateTable<K, V1, V2, V3>::accumulateF2(const K& k, const V2& v){
 	CHECK_NE(b, -1)<< "No entry for requested key <" << *((int*)&k) << ">";
 	V2 old = buckets_[b].v2;
 	static_cast<IterateKernel<K, V1, V3>*>(info_.iterkernel)->accumulate(buckets_[b].v2, v);
-	update_local_sum(old, v);
+	update_local_sum(old, buckets_[b].v2);
+
+	++total_updates;
 }
 
 template<class K, class V1, class V2, class V3>
