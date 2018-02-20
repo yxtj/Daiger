@@ -3,7 +3,7 @@ cmake_policy(SET CMP0014 OLD)
 
 project (MAITER) 
 
-include(../cmake/MaiterPP.cmake)
+#include(../cmake/MaiterPP.cmake)
 include(../cmake/FindProtobuf.cmake)
 #include(../cmake/PcFromUcontext.cmake)
 
