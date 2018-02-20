@@ -1,0 +1,202 @@
+syntax = "proto2";
+package dsm;
+
+import "msg/mtype.proto";
+import "msg/common.proto";
+option optimize_for = SPEED;
+
+message EmptyMessage {}
+
+message ReplyMessage {
+  required MessageTypes type = 1;
+  optional bool result = 2 [ default = true ];
+}
+
+enum CheckpointType {
+  CP_NONE = 0;
+  CP_SYNC = 1;
+  CP_SYNC_SIG = 2;
+  CP_ASYNC = 3;
+};
+
+message CheckpointInfo {
+  required int32 checkpoint_epoch = 1;
+  required int32 kernel_epoch = 2;
+}
+
+message CheckpointRequest {
+  required int32 epoch = 1;
+  repeated int32 table = 2;
+}
+
+message CheckpointSyncSig {
+  required int32 wid = 1;
+  required int32 epoch = 2;
+}
+
+message CheckpointLocalDone {
+  required int32 wid = 1;
+  required int32 epoch = 2;
+}
+
+message RegisterWorkerRequest {
+  required int32 id = 1;
+}
+
+message WorkerIDMapList {
+  message WorkerIDMap {
+    required int32 worker_id = 1;
+    required int32 network_id = 2;
+  }
+  repeated WorkerIDMap workers = 1;
+}
+
+message ShardAssignmentRequest {
+  message ShardAssignment {
+    required int32 table = 1;
+    required int32 shard = 2;
+//    required int32 old_worker = 3;
+    required int32 new_worker = 4;
+  }
+  repeated ShardAssignment assign = 1;
+}
+
+message ShardInfo {
+  required uint32 table = 1;
+  required uint32 shard = 2;
+  required uint64 entries = 3;
+  required int32 owner = 4 [default = -1];
+}
+
+message MethodStats {
+  required double total_time = 1;
+  required double shard_time = 2;
+  required int32 calls = 3;
+  required int32 shard_calls = 4;
+};
+
+message KernelRequest {
+  required string kernel = 1;
+  required string method = 2;
+  optional int32 table = 3;
+  optional int32 shard = 4;
+  required Args args = 5;
+  required CheckpointType cp_type = 6;
+  required bool termcheck = 7;
+  required bool restore = 8;
+  optional int32 restore_from_epoch = 9 [default = -1]; //-1 means no restore
+}
+
+message KernelDone {
+  required KernelRequest kernel = 1;
+  required int32 wid = 2;
+  // updated information about the state of this workers
+  // table shards.
+  repeated ShardInfo shards = 5;
+}
+
+message IteratorRequest {
+  required uint32 table = 1;
+  required uint32 shard = 2;  
+  optional int32 id = 3 [default = -1];
+  optional uint32 row_count = 4 [default = 1];
+}
+
+message IteratorResponse {
+  required uint32 id = 1;
+  required bool done = 2;
+  repeated bytes key = 3;
+  repeated bytes value = 4;
+  required uint32 row_count = 5;
+}
+
+message HashGet {
+  required uint32 table = 1;
+  required uint32 shard = 2;
+  optional bytes key = 3;
+  optional uint32 index = 4;
+}
+
+message TableData {
+  required uint32 source = 1;
+  required uint32 table = 2;
+  required uint32 shard = 3;
+  required bool done = 4;
+  
+  optional bytes table_data = 5;
+  repeated Record rec_data = 6;
+  
+  optional int32 epoch = 11;
+  optional int32 marker = 12 [default = -1];
+  
+  optional bool missing_key = 13;
+}
+
+message KVPairData {
+  required uint32 source = 1;
+  required uint32 table = 2;
+  required uint32 shard = 3;
+  required bool done = 4;
+  
+  optional bytes table_data = 5;
+  repeated Arg kv_data = 6;
+  
+  optional int32 epoch = 11;
+  optional int32 marker = 12 [default = -1];
+  
+  optional bool missing_key = 13;
+}
+
+message TerminationNotification {
+  required int32 epoch = 1;
+}
+
+message RestoreRequest {
+  required int32 epoch = 1;
+}
+
+message SwapTable {
+  required int32 table_a = 1;
+  required int32 table_b = 2;
+}
+
+message ClearTable {
+  required int32 table = 1;
+}
+
+message EnableTrigger {
+  required int32 trigger_id = 1;
+  required int32 table = 2;
+  required bool enable = 3;
+}
+
+// init in-neighbors
+message InNeighborUnit {
+  required bytes from = 1;
+  required bytes to = 2;
+  optional bytes weight = 3;
+}
+
+message InNeighborData {
+  required uint32 table = 1;
+  repeated InNeighborUnit data = 2;
+}
+
+// load graph changes
+message GraphChangeReq {
+  required string filename = 1;
+  required uint32 table = 2;
+}
+
+message ChangedEdge{
+  required bytes src = 1;
+  required bytes dst = 2;
+  required float weight = 3;
+}
+
+message GraphChangeInfo{
+  repeated ChangedEdge added = 1;
+  repeated ChangedEdge removed = 2;
+  repeated ChangedEdge increased = 3;
+  repeated ChangedEdge decreased = 4;
+}
