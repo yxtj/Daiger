@@ -77,7 +77,6 @@ include_directories( ${CMAKE_CURRENT_SOURCE_DIR}
 include_directories(SYSTEM
                      external/${GFLAGS_DIR}
                      external/${GLOG_DIR}
-                     external/webgraph 
 	               )
 		     
 
@@ -90,6 +89,7 @@ add_subdirectory (util2)
 add_subdirectory (network)
 add_subdirectory (msg)
 add_subdirectory (driver)
+add_subdirectory (holder)
 add_subdirectory (master)
 add_subdirectory (worker)
 add_subdirectory (application)
