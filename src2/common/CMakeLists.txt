@@ -1,5 +1,6 @@
 set(HEADERS
-
+	def.h
+	Node.h
 )
 set(SOURCES
 

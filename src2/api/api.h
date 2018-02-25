@@ -4,14 +4,21 @@
 #include <string>
 #include <vector>
 
-template <V, N>
+template <typename V, typename N>
 struct Kernel {
 	using value_t = V;
 	using neighbor_t = N;
 	using neighbor_list_t = std::vector<N>;
 
 	// understand the neighbor type
-	virtual key_t get_key(const N& n) = 0;
+	template <class T>
+	key_t get_key(const T& n) { 
+		static_assert(std::false_type::value, "Neighbor type should be key_t or pair<key_t, W>"); 
+	}
+	template <>
+	key_t get_key(const key_t& n) { return n; }
+	template <class W>
+	key_t get_key(const std::pair<key_t, W>& n) { return n.first; }
 
 	// load graph
 	virtual std::pair<key_t, neighbor_list_t> load_graph(std::string& line) = 0;
@@ -40,11 +47,21 @@ struct Kernel {
 	virtual bool better(const value_t& a, const value_t& b); // only matters when is_selective() is true
 	
 	// scheduling - priority
-	virtual priority_t priority(const key_t& t, const value_t& value, const neighbor_list_t& neighbors) = 0;
+	virtual priority_t priority(const Node& n) = 0;
 	virtual bool prioritized(const priority_t a, const priority_t b); // default a > b
 
 	virtual ~Kernel()=default;
-}
+};
+
+template <V, W>
+struct WeightedKernel :
+	public Kernel<V, std::pair<key_t, W>>
+{};
+
+template <V>
+struct UnWeightedKernel : 
+	public Kernel<V, key_t>
+{};
 
 template <V, N>
 void Kernel::func(const key_t& k, const value_t& v, const neighbor_list_t& neighbors,
