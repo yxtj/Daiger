@@ -11,7 +11,7 @@ struct ConnectedComponent
 {
 	bool pri_degree;
 	bool pri_delta;
-	bool parse(const string& arg_line);
+	virtual bool parse(const std::vector<std::string>& arg_line){}
 
 	virtual std::pair<key_t, neighbor_list_t> load_graph(std::string& line){
 		return common::load_graph_unweighted(line);
@@ -28,15 +28,14 @@ struct ConnectedComponent
 		return k;
 	}
 
-	virtual const value_t& default_v() const{
+	virtual const value_t& identity_element() const{
 		return numeric_limits<value_t>::min();
 	}
-	virtual void oplus(value_t& a, const value_t& b){
-		//a = max(a, b);
-		a = (a<b)?b:a;
+	virtual value_t oplus(value_t& a, const value_t& b){
+		//return max(a, b);
+		return (a<b)?b:a;
 	}
-	virtual value_t func(const key_t& k, const value_t& v, const neighbor_t& neighbor,
-		const key_t& dst){
+	virtual value_t func(const node_t& n, const neighbor_t& neighbor){
 		return v;
 	}
 
@@ -46,12 +45,12 @@ struct ConnectedComponent
 	}
 	
 	// scheduling - priority
-	virtual priority_t priority(const Node& n){
+	virtual priority_t priority(const node_t& n){
 		return n.v;
 	}
 };
 
-bool ConnectedComponent::parse(const string& arg_line){
+bool ConnectedComponent::parse(const std::vector<std::string>& arg_line){
 
 	return true;
 }
