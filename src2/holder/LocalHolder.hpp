@@ -13,7 +13,7 @@ class LocalHolder{
     using value_t = node_t::value_t;
 	using neighbor_t = node_t::neighbor_t;
 	using neighbor_list_t = node_t::neighbor_list_t;
-    LocalHolder(kernel_t& kernel);
+    LocalHolder(kernel_t& kernel, size_t n);
 
     // -------- basic functions --------
 	bool add(const node_t& n);
@@ -60,7 +60,7 @@ class LocalHolder{
 };
 
 template <class V, class N>
-LocalHolder<V, N>::LocalHolder(kernel_t& kernel)
+LocalHolder<V, N>::LocalHolder(kernel_t& kernel, size_t n)
     : knl(kernel)
 {
     if(knl.is_accumuative()){
@@ -73,6 +73,8 @@ LocalHolder<V, N>::LocalHolder(kernel_t& kernel)
         f_update_incremental = bind(
             &LocalHolder<V, N>::inc_update_general, this, placeholders::_1, placeholders::_2);
     }
+    if(n != 0)
+        cont.reserve(n);
 }
 
 // -------- basic functions --------
