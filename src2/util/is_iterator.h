@@ -1,6 +1,6 @@
 #pragma once
 #include <type_traits>
-#include "type_trais_dummy.h"
+#include "type_traits_dummy.h"
 
 template<class T, class Enable = void>
 struct is_iterator : public std::false_type {};
