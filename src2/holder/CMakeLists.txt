@@ -1,5 +1,5 @@
 set(HEADERS
-
+	LocalHolder.hpp
 )
 set(SOURCES
 
