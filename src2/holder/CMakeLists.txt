@@ -1,5 +1,6 @@
 set(HEADERS
 	LocalHolder.hpp
+	RemoteHolder.hpp
 )
 set(SOURCES
 
