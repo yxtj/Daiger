@@ -2,8 +2,6 @@
 #include <cstdint>
 #include "serialize_general.hpp"
 #include "tuple3_ps.h"
-//#include "c_motif.h"
-#include "c_motif_ps.h"
 
 /*
 Two ways to support customize type:
@@ -14,7 +12,7 @@ Two ways to support customize type:
 	Put existing methods' declarations in a .h file and include it here.
 	Then write parial specilization version for estimateSize, serial, deserial functions in this header file.
 	The partial spec. versions should directly call the existing function.
-	A reference can be found in "c_motif" and here.
+	A reference can be found in Part III.
 */
 
 /***********************************
