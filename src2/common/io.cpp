@@ -77,4 +77,11 @@ std::pair<key_t, V> load_value(std::string& line){
 	return make_pair(k, v);
 }
 
+// dump result values
+template <typename V>
+std::string dump_value(const key_t& k, const V& v){
+	// format: "<key>\t<value>"
+	return stok(k) + "\t" + to_string(v);
+}
+
 } // namespace
