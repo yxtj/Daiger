@@ -287,6 +287,7 @@ log*/
 
 # vs-code project config file
 .vscode
+.code-workspace
 
 # temporary files:
 *~
