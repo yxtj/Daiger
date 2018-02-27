@@ -5,9 +5,9 @@ set(HEADERS
 	NetworkImplMPI.h
 )
 set(SOURCES
-	Task.cc
-	NetworkThread.cc
-	NetworkImplMPI.cc
+	Task.cpp
+	NetworkThread.cpp
+	NetworkImplMPI.cpp
 )
 add_library(network
 	${HEADERS} ${SOURCES})

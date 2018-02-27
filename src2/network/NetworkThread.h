@@ -1,21 +1,13 @@
-#ifndef NET_NETWORKTHREAD_H_
-#define NET_NETWORKTHREAD_H_
-
+#pragma once
 #include <thread>
 #include <mutex>
 #include <functional>
 #include <string>
 #include <deque>
 #include <vector>
-#include "util/common.h"
-//#include <google/protobuf/message.h>
-//#include "NetworkImplMPI.h"
 #include "Task.h"
-#include "RPCInfo.h"
+#include "serial/serialization.h"
 
-namespace dsm {
-
-typedef google::protobuf::Message Message;
 
 class NetworkImplMPI;
 
@@ -31,35 +23,47 @@ public:
 		return receive_buffer.size();
 	}
 	int64_t unpicked_bytes() const;
-
+	
 	// Blocking read for the given source and message type.
-	void ReadAny(std::string& data, int *sourcsrcRete=nullptr, int *typeRet=nullptr);
-	bool TryReadAny(std::string& data, int *sosrcReturce=nullptr, int *typeRet=nullptr);
+	void readAny(std::string& data, int *sourcsrcRete=nullptr, int *typeRet=nullptr);
+	// Unblocked read for the given source and message type.
+	bool tryReadAny(std::string& data, int *sosrcReturce=nullptr, int *typeRet=nullptr);
 
 	// Enqueue the given request to pending buffer for transmission.
-	int Send(int dst, int tag, const Message &msg);
+	template <class T>
+	int send(int dst, int tag, const T& msg) {
+		std::string s = serialize(msg);
+		return send(new Task(dst, tag, move(s)));
+	}
 	// Directly send the request bypassing the pending buffer.
-	int DSend(int dst, int method, const Message &msg);
+	template <class T>
+	int sendDirect(int dst, int tag, const T& msg) {
+		std::string s = serialize(msg);
+		return sendDirect(new Task(dst, tag, move(s)));
+	}
 
-	void Broadcast(int method, const Message& msg);
+	template <class T>
+	int broadcast(int tag, const T& msg) {
+		std::string s = serialize(msg);
+		return broadcast(new Task(Task::ANY_DST, tag, move(s)));
+	}
 
-	void Flush();
-	void Shutdown();
-
-	void start_measure_bandwidth_usage();
-	void stop_measure_bandwidth_usage();
+	void flush();
 
 	int id() const;
 	int size() const;
 
-	static NetworkThread *Get();
-	static void Init();
+	static NetworkThread *GetInstance();
+	static void Init(int argc, char* argv[]);
+	// finish current tasks and terminate
+	static void Shutdown();
+	// abandon ongoing tasks and terminate all network related functions
+	static void Terminate();
 
-	Stats stats;
 	bool pause_=false;
 
-//	static constexpr int ANY_SRC = TaskBase::ANY_SRC;
-//	static constexpr int ANY_TAG = TaskBase::ANY_TYPE;
+	uint64_t stat_send_pkg, stat_recv_pkg;
+	uint64_t stat_send_byte, stat_recv_byte;
 
 private:
 	bool running;
@@ -74,21 +78,20 @@ private:
 	mutable std::recursive_mutex ps_lock;
 
 	std::deque<std::pair<std::string,TaskBase> > receive_buffer;
-	std::deque<double> receive_time; // one-to-one mapping to receive_buffer
 	mutable std::recursive_mutex rec_lock;
 
 	// Enqueue the given request to pending buffer for transmission.
-	int Send(Task *req);
+	int send(Task *req);
 	// Directly (Physically) send the request.
-	int DSend(Task *req);
+	int sendDirect(Task *req);
+	int broadcast(Task *req);
+
 
 	bool checkReceiveQueue(std::string& data, TaskBase& info);
 
 	void Run();
 
+	static NetworkThread* self;
 	NetworkThread();
 };
 
-}
-
-#endif // NET_NETWORKTHREAD_H_

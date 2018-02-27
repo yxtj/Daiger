@@ -5,18 +5,15 @@
  *      Author: tzhou
  */
 
-#ifndef NET_NETWORKIMPLMPI_H_
-#define NET_NETWORKIMPLMPI_H_
+#pragma once
 
+#include <deque>
 #include <string>
 #include <vector>
 #include <mutex>
-#include <deque>
-#include <queue>
-#include <mpi.h>
 #include "Task.h"
-
-namespace dsm {
+#include <mpi.h>
+//#include <boost/mpi.hpp>
 
 /*
  * Code related with underlying implementation (MPI used here)
@@ -32,17 +29,16 @@ public:
 	void send(const Task* t);
 	void broadcast(const Task* t);
 
+	static void Init(int argc, char* argv[]);
 	static NetworkImplMPI* GetInstance();
 	static void Shutdown();
 	static int TransformSrc(int s_d){
-		return s_d==TaskBase::ANY_SRC ? MPI::ANY_SOURCE : s_d;
+		//boost::mpi::any_source;
+		return s_d==TaskBase::ANY_SRC ? MPI_ANY_SOURCE : s_d;
 	}
 	static int TransformTag(int tag){
-		return tag==TaskBase::ANY_TYPE ? MPI::ANY_TAG : tag;
+		return tag==TaskBase::ANY_TYPE ? MPI_ANY_TAG : tag;
 	}
-
-	void start_measure_bandwidth_usage();
-	void stop_measure_bandwidth_usage();
 
 	int id() const;
 	int size() const;
@@ -56,35 +52,21 @@ public:
 	size_t unconfirmedBytes() const;
 	std::vector<const Task*> unconfirmedTask() const;
 private:
-	NetworkImplMPI();
-	bool parseRatio();
-	void update_bandwidth_usage(const size_t size, double t_b, double t_e);
-	void dump_bandwidth_usage();
+	NetworkImplMPI(int argc, char* argv[]);
+	static NetworkImplMPI* self;
 private:
-	MPI::Intracomm world;
+	MPI_Comm world;
 	int id_;
 	int size_;
 
 	struct TaskSendMPI{
 		const Task* tsk;
-		MPI::Request req;
-		double stime;
+//		boost::mpi::request req;
+		MPI_Request req;
 	};
 
 	std::deque<TaskSendMPI> unconfirmed_send_buffer;
 	mutable std::recursive_mutex us_lock;
-
-	double ratio;
-
-	std::queue<double> net_last; // transmission bandwidth of last N messages (>=M bytes)
-	static constexpr size_t NET_MINIMUM_LEN=128;
-	static constexpr size_t NET_NUM_LAST=8;
-	double net_sum;
-
-	bool measuring;
-	double measure_start_time;
-	std::vector<size_t> bandwidth_usage;
-	size_t BANDWIDTH_WINDOW;
 };
 
 inline int NetworkImplMPI::id() const{
@@ -93,8 +75,3 @@ inline int NetworkImplMPI::id() const{
 inline int NetworkImplMPI::size() const{
 	return size_;
 }
-
-
-} /* namespace dsm */
-
-#endif /* NET_NETWORKIMPLMPI_H_ */

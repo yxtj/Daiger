@@ -1,24 +1,18 @@
+#pragma once
 /*
  * Task.h
  *
  *  Created on: Nov 29, 2015
  *      Author: tzhou
  */
-
-#ifndef NET_TASK_H_
-#define NET_TASK_H_
-
 #include <string>
 //#include <memory>
-#include "util/timer.h"
-//#include <google/protobuf/message.h>
-namespace google{
-namespace protobuf{
-class Message;
-}
-}
 
-namespace dsm {
+//namespace google{
+//	namespace protobuf{
+//		class MessageLite;
+//	}
+//}
 
 struct MsgHeader{
 	MsgHeader(const bool reply=false):is_reply(reply){}
@@ -29,6 +23,7 @@ struct TaskBase{
 	int src_dst;
 	int type;
 	static constexpr int ANY_SRC=-1;
+	static constexpr int ANY_DST=-1;
 	static constexpr int ANY_TYPE=-1;
 };
 
@@ -42,28 +37,15 @@ struct Task : public TaskBase{
 	Task(int s_d,int type,std::string&& s):TaskBase{s_d,type},payload(s){}
 	Task(int s_d,int type,const std::string& s):TaskBase{s_d,type},payload(s){}
 
-	Task(int s_d,int type,const google::protobuf::Message& msg,const MsgHeader& h=MsgHeader(false));
+//	Task(int s_d,int type,const google::protobuf::MessageLite& msg,const MsgHeader& h=MsgHeader(false));
 
-	static void Decode(google::protobuf::Message& msg, const std::string& data);
-	void decode(google::protobuf::Message& msg);
+//	static void Decode(google::protobuf::MessageLite& msg, const std::string& data);
+//	void decode(google::protobuf::MessageLite& msg);
 };
 
-inline void Task::decode(google::protobuf::Message& msg){
-	Task::Decode(msg,payload);
-}
-
-struct TaskTimed : public Task{
-	Timer t;
-	TaskTimed(int s_d,int type):Task(s_d,type){}
-	TaskTimed(int s_d,int type,std::string&& s):Task(s_d,type,s){}
-	TaskTimed(int s_d,int type,const std::string& s):Task(s_d,type,s){}
-
-	TaskTimed(int s_d,int type,const google::protobuf::Message& msg,const MsgHeader& h=MsgHeader(false)):Task(s_d,type,msg,h){}
-};
-
-//typedef std::shared_ptr<Task> Task_ptr;
-
-} /* namespace dsm */
+//inline void Task::decode(google::protobuf::MessageLite& msg){
+//	Task::Decode(msg,payload);
+//
 
 //namespace std{
 //template<>
@@ -75,5 +57,3 @@ struct TaskTimed : public Task{
 //	}
 //};
 //}
-
-#endif /* NET_TASK_H_ */
