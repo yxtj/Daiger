@@ -2,6 +2,7 @@
 #include "common/def.h"
 #include <string>
 #include <vector>
+#include <boost/lexical_cast.hpp>
 
 struct IOHelper;
 

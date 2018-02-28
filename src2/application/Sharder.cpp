@@ -3,9 +3,10 @@
 
 using namespace std;
 
-void SharderMod::parse(const size_t nworkers, const std::vector<std::string>& arg){
-	this->nworkers = nworkers;
+void SharderBase::parse(const size_t n_workers, const std::vector<std::string>& arg){
+	this->nWorker = n_workers;
 }
+
 size_t SharderMod::owner(const key_t& id){
-	return id % nworkers;
+	return id % nWorker;
 }
