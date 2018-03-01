@@ -6,7 +6,7 @@
 
 class TerminatorBase {
 public:
-	virtual void parse(const std::vector<std::string>& arg){};
+	virtual void init(const std::vector<std::string>& arg){};
 
 	// on workers:
 	//// get the progress of a single node (template function cannot be virtual)
@@ -56,7 +56,7 @@ class TerminatorDiff
 	: public TerminatorBaseT<V, N>
 {
 public:
-	virtual void parse(const std::vector<std::string>& arg);
+	virtual void init(const std::vector<std::string>& arg);
 	virtual void prepare_global_checker(const size_t n_worker);
 	virtual double update_report(const size_t wid, const std::pair<double, size_t>& report);
 	virtual bool check_term();
@@ -68,11 +68,11 @@ private:
 };
 
 template <typename V, typename N>
-void TerminatorDiff<V, N>::parse(const std::vector<std::string>& arg){
+void TerminatorDiff<V, N>::init(const std::vector<std::string>& arg){
 	try{
 		epsilon = stod(arg[0]);
 	} catch (exception& e){
-		throw invalid_argument("Unable to parse epsilon for TerminatorDiff.");
+		throw invalid_argument("Unable to get <epsilon> for TerminatorDiff.");
 	}
 }
 template <typename V, typename N>

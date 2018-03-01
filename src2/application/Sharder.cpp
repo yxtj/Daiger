@@ -3,7 +3,7 @@
 
 using namespace std;
 
-void SharderBase::parse(const size_t n_workers, const std::vector<std::string>& arg){
+void SharderBase::init(const size_t n_workers, const std::vector<std::string>& arg){
 	this->nWorker = n_workers;
 }
 

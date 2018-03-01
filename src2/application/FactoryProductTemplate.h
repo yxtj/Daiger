@@ -5,7 +5,7 @@
 class FactoryProductTemplate
 {
 public:
-	virtual bool parse(const std::vector<std::string>& param) = 0;
+	virtual bool init(const std::vector<std::string>& param) = 0;
 	virtual ~FactoryProductTemplate() = default;
 
 	// throw an exception if fails, the first one of param should be the name
