@@ -12,7 +12,7 @@ struct Node{
 	key_t id;
 	V v; // value
 	V u; // uncommitted value
-	priority_t pri; // priority
+	// priority_t pri; // priority
 	neighbor_list_t onb; // out-neighbors
 	std::unordered_map<key_t, V> cs; // caches for in-neighbors
 	key_t b; // the best source (for selective)
