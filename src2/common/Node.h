@@ -31,3 +31,12 @@ struct NodeHasher{
     }
 };
 
+// -------- static functions for understanding the neighbor type --------
+
+key_t get_key(const key_t& n) { return n; }
+template <class T>
+key_t get_key(const T& n) { 
+	static_assert(impl::type_traits::template_false_type<T>::value, "Neighbor type should be key_t or pair<key_t, W>"); 
+}
+template <class W>
+key_t get_key(const std::pair<key_t, W>& n) { return n.first; }

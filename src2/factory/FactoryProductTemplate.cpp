@@ -1,5 +1,6 @@
-#include "stdafx.h"
 #include "FactoryProductTemplate.h"
+#include <string>
+#include <stdexcept>
 
 using namespace std;
 
@@ -40,9 +41,8 @@ void FactoryProductTemplate::checkParam(const std::vector<string>& param,
 	try {
 		checkNumber(reqired, param.size());
 		checkName(param, name);
-	} catch(exception e) {
-		cerr << "error while checking sub-options for: " << name << endl;
-		throw e;
+	} catch(exception& e) {
+		throw invalid_argument(e.what()+string("\n")+"error while checking sub-options for: "+name);
 	}
 }
 
@@ -52,8 +52,7 @@ void FactoryProductTemplate::checkParam(const std::vector<std::string>& param,
 	try {
 		checkNumber(reqiredMin, requiredMax, param.size());
 		checkName(param, name);
-	} catch(exception e) {
-		cerr << "error while checking sub-options for: " << name << endl;
-		throw e;
+	} catch(exception& e) {
+		throw invalid_argument(e.what()+string("\n")+"error while checking sub-options for: "+name);
 	}
 }

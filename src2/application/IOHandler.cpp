@@ -4,7 +4,7 @@
 
 using namespace std;
 
-change_t IOBase::load_change(std::string& line){
+change_t IOHandlerBase::load_change(std::string& line){
 	return IOHelper::load_change(line);
 }
 

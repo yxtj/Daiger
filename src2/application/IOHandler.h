@@ -13,7 +13,7 @@ public:
 };
 
 template <typename V, typename N>
-class IOHandlerBaseT
+class IOHandler
 	: public IOHandlerBase 
 {
 public:
