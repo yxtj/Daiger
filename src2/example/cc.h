@@ -9,6 +9,8 @@ struct ConnectedComponent {
 	typedef key_t value_t;
 	typedef key_t neighbor_t;
 	
+	static const std::string name{"cc"};
+
 	struct Operation
 		: public Operation<value_t, neighbor_t>
 	{

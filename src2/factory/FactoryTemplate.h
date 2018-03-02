@@ -1,19 +1,15 @@
 #pragma once
-//#include "FactoryProductTemplate.h"
 #include <string>
-#include <vector>
 #include <map>
 #include <functional>
 
 /*
-Template class of simple factory which works with the Option.
-PRDCT should be a derived class of FactoryProductTemplate
+Template class of simple factory which works with string options.
 */
 template <class PRDCT>
 class FactoryTemplate
 {
 protected:
-	//using createFun = std::function<FactoryProductTemplate*()>;
 	using createFun = std::function<PRDCT*()>;
 	static std::map<std::string, createFun> contGen;
 	static std::map<std::string, std::string> contUsage;
@@ -28,23 +24,13 @@ public:
 	template <class T>
 	static void registerClass(const std::string& name);
 	template <class T>
-	static void registerClass();
-
-	static void registerUsage(const std::string& name, const std::string& usage);
-	template <class T>
-	static void registerUsage();
-
-	template <class T>
-	static void registerInOne();
-
+	static void registerClass(const std::string& name, const std::string& usage);
 
 	static std::string getUsage();
 
 	static bool isValid(const std::string& name);
-	// specialization class should give implement following function
-	//static void init();
 
-	static FactoryProductTemplate* generate(const std::string& name);
+	static PRDCT* generate(const std::string& name);
 };
 
 
@@ -58,27 +44,9 @@ inline void FactoryTemplate<PRDCT>::registerClass(const std::string& name) {
 
 template <class PRDCT>
 template <class T>
-inline void FactoryTemplate<PRDCT>::registerClass() {
-	registerClass<T>(T::name);
-}
-
-template<class PRDCT>
-inline void FactoryTemplate<PRDCT>::registerUsage(const std::string & name, const std::string & usage) {
+inline void FactoryTemplate<PRDCT>::registerClass(const std::string & name, const std::string & usage) {
+	registerClass<T>(name);
 	contUsage[name] = usage;
-}
-
-template <class PRDCT>
-template <class T>
-inline void FactoryTemplate<PRDCT>::registerUsage() {
-	registerUsage(T::name, T::usage);
-}
-
-template<class PRDCT>
-template<class T>
-inline void FactoryTemplate<PRDCT>::registerInOne()
-{
-	registerClass<T>();
-	registerUsage<T>();
 }
 
 template<class PRDCT>
@@ -99,9 +67,9 @@ inline bool FactoryTemplate<PRDCT>::isValid(const std::string & name) {
 }
 
 template<class PRDCT>
-inline FactoryProductTemplate * FactoryTemplate<PRDCT>::generate(const std::string & name)
+inline PRDCT* FactoryTemplate<PRDCT>::generate(const std::string & name)
 {
-	FactoryProductTemplate* res = nullptr;
+	PRDCT* res = nullptr;
 	if(isValid(name)) {
 		res = contGen.at(name)();
 	}
