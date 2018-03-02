@@ -1,6 +1,6 @@
 #pragma once
-#include "../util/is_container.h"
-#include "../util/is_stl_container.h"
+#include "../type_traits/is_container.h"
+#include "../type_traits/is_stl_container.h"
 #include "serializer_basic.hpp"
 #include <vector>
 #include <string>

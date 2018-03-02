@@ -1,5 +1,6 @@
 #pragma once
 #include "def.h"
+#include "type_traits/type_traits_dummy.h"
 #include <vector>
 #include <unordered_map>
 

@@ -1,16 +1,12 @@
 set(HEADERS
-	common.h
-	file.h
-	hash.h
-	marshal.hpp
-	marshalled_map.hpp
-	timer.h
+	serialization.h
+	serialize_general.hpp
+	serializer_basic.hpp
+	serializer_iter.hpp
+	tuple3_ps.h
 )
 set(SOURCES
-	common.cc 
-	file.cc 
-	timer.cc
-	static-initializers.cc
+
 )
-add_library(common
+add_library(serial
 	${HEADERS} ${SOURCES})
