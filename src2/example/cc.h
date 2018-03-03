@@ -28,11 +28,13 @@ struct ConnectedComponent {
 		virtual priority_t priority(const node_t& n);
 	};
 
-	Operation op;
+	typedef Operation operation_t;
+	typedef IOHandler<value_t, neighbor_t> iohandler_t;
+	typedef TerminatorDiff<value_t, neighbor_t> teminator_t;
 
-	IOHandler<value_t, neighbor_t> io;
-
-	TerminatorDiff<value_t, neighbor_t> tm;
+	operation_t op;
+	iohandler_t io;
+	teminator_t tm;
 
 };
 
