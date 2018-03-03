@@ -1,5 +1,4 @@
 #include "common/def.h"
-#include "common/Node.h"
 #include <vector>
 
 class SchedulerBase {
@@ -64,15 +63,6 @@ private:
 	std::vector<key_t> data;
 };
 
-template <typename V, typename N>
-class SchedulerRoundRobinT
-	: public SchedulerRoundRobin<V, N>
-{
-public:
-	// calculate the priority of a node
-	virtual priority_t priority(const Node<V, N>& n) = 0;
-};
-
 // -------- predefined priority-based Scheduler --------
 
 struct SCH_PrioritizedHolder;
@@ -102,15 +92,6 @@ private:
 	SCH_PrioritizedHolder* data;
 };
 
-template <typename V, typename N>
-class SchedulerPriorityT
-	: public SchedulerPriority<V, N>
-{
-public:
-	// calculate the priority of a node
-	virtual priority_t priority(const Node<V, N>& n) = 0;
-};
-
 // -------- predefined FIFO Scheduler --------
 
 struct SCH_FIFOHolder;
@@ -137,13 +118,4 @@ public:
 
 private:
 	SCH_FIFOHolder* data;
-};
-
-template <typename V, typename N>
-class SchedulerFIFOT
-	: public SchedulerFIFO<V, N>
-{
-public:
-	// calculate the priority of a node
-	virtual priority_t priority(const Node<V, N>& n) = 0;
 };
