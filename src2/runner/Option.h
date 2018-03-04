@@ -19,7 +19,14 @@ public:
 	std::string prefix_value;
 	std::string prefix_result;
 
-	std::vector<std::string> application_parameter;
+	std::string app_name;
+	std::vector<std::string> app_args;
+	std::vector<std::string> sharder_args;
+	std::vector<std::string> scheduler_args;
+
+	//float schedule_portion;
+	//bool priority_degree; // use degree of out-neighbors
+	//bool priority_diff; // use <u>-<v> instead of <u>
 
 	bool balence_load; // used to support data loading from arbitrary number of input files
 	size_t nPart; // optional, used to check whether a correct number of instance is started
@@ -32,10 +39,6 @@ public:
 	float apply_interval;
 	float send_interval;
 	int send_batch_size;
-
-	float schedule_portion;
-	//bool priority_degree; // use degree of out-neighbors
-	//bool priority_diff; // use <u>-<v> instead of <u>
 
 public:
 	Option();

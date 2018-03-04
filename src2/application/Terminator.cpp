@@ -13,6 +13,7 @@ void TerminatorBase::prepare_global_checker(const size_t n_worker){
 }
 double TerminatorBase::update_report(const size_t wid, const std::pair<double, size_t>& report){
 	sum_gp += report.first - curr[wid].first;
+	sum_gc += report.second - curr[wid].second;
 	curr[wid] = report;
 }
 double TerminatorBase::helper_global_progress_sum(){
@@ -21,8 +22,8 @@ double TerminatorBase::helper_global_progress_sum(){
 double TerminatorBase::helper_global_progress_sqrt(){
 	return sqrt(sum_gp);
 }
-bool TerminatorBase::check_term(){
-	for(const auto& r : curr){
+bool TerminatorBase::helper_no_change(const std::vector<std::pair<double, size_t>>& reports){
+	for(const auto& r : reports){
 		if(r.second != 0)
 			return false;
 	}

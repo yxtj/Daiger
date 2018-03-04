@@ -27,3 +27,12 @@ bool ConnectedComponent::Operation::better(const value_t& a, const value_t& b){
 priority_t ConnectedComponent::Operation::priority(const node_t& n){
 	return n.v;
 }
+
+AppArguments ConnectedComponent::Separator::separate(const std::vector<std::string>& args){
+	AppArguments res;
+	res.name = ConnectedComponent::name;
+	res.operation_arg = {};
+	res.iohandler_arg = {};
+	res.terminator_arg = {};
+	return res;
+}

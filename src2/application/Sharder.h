@@ -5,7 +5,7 @@
 
 class SharderBase {
 public:
-	virtual void init(const size_t n_workers, const std::vector<std::string>& arg){};
+	virtual void init(const std::vector<std::string>& args){};
 	// the the worker id of a node key
 	virtual size_t owner(const key_t& id) = 0;
 protected:
@@ -18,6 +18,6 @@ class SharderMod
 	: public SharderBase
 {
 public:
-	virtual void init(const size_t n_workers, const std::vector<std::string>& arg);
+	virtual void init(const std::vector<std::string>& args);
 	virtual size_t owner(const key_t& id);
 };

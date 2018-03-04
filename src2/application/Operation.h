@@ -4,7 +4,10 @@
 #include <string>
 #include <vector>
 
-struct OperationBase {};
+struct OperationBase {
+	// parse the given parameters
+	virtual bool init(const std::vector<std::string>& args){}
+};
 
 template <typename V, typename N>
 struct Operation 
@@ -14,9 +17,6 @@ struct Operation
 	using neighbor_t = N;
 	using neighbor_list_t = std::vector<N>;
 	using node_t = Node<V, N>;
-
-	// parse the given parameters
-	virtual bool parse(const std::vector<std::string>& arg_line){}
 
 	// initialize the starting value
 	virtual value_t init_value(const key_t& k, const neighbor_list_t& neighbors) = 0;

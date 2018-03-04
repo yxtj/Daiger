@@ -4,12 +4,11 @@
 #include <vector>
 #include <boost/lexical_cast.hpp>
 
-struct IOHelper;
-
 class IOHandlerBase {
 public:
 	// load graph changes
 	virtual change_t load_change(std::string& line); // default: use IOHelper::load_change
+	virtual void init(std::vector<std::string>& args){}
 };
 
 template <typename V, typename N>

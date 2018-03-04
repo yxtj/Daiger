@@ -1,8 +1,6 @@
 #pragma once
 #include "common/def.h"
-#include "application/Operation.h"
-#include "application/IOHandler.h"
-#include "application/Terminator.h"
+#include "api/api.h"
 #include <string>
 
 struct ConnectedComponent {
@@ -11,9 +9,7 @@ struct ConnectedComponent {
 	
 	static const std::string name{"cc"};
 
-	struct Operation
-		: public Operation<value_t, neighbor_t>
-	{
+	struct Operation : public Operation<value_t, neighbor_t> {
 		virtual bool parse(const std::vector<std::string>& arg_line);
 
 		virtual value_t init_value(const key_t& k, const neighbor_list_t& neighbors);
@@ -28,13 +24,19 @@ struct ConnectedComponent {
 		virtual priority_t priority(const node_t& n);
 	};
 
+	class Separator : public ArgumentSeparator {
+		virtual AppArguments separate(const std::vector<std::string>& args);
+	}
+
 	typedef Operation operation_t;
 	typedef IOHandler<value_t, neighbor_t> iohandler_t;
-	typedef TerminatorDiff<value_t, neighbor_t> teminator_t;
+	typedef TerminatorStop<value_t, neighbor_t> terminator_t;
+	typedef Separator separator_t;
 
-	operation_t op;
-	iohandler_t io;
-	teminator_t tm;
+	operation_t opr;
+	iohandler_t ioh;
+	terminator_t tmt;
+	separator_t sep;
 
 };
 
