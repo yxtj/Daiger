@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <vector>
 #include <map>
 #include <functional>
 
@@ -27,6 +28,9 @@ public:
 	static void registerClass(const std::string& name, const std::string& usage);
 
 	static std::string getUsage();
+
+	static std::vector<std::string> getNames();
+	static std::string getNamesInOne(const std::string& sep);
 
 	static bool isValid(const std::string& name);
 
@@ -57,6 +61,27 @@ std::string FactoryTemplate<PRDCT>::getUsage()
 	for(const auto& usg : contUsage) {
 		res += "Option " + std::to_string(++cnt) + ": " + usg.first
 			+ "\n" + usg.second + "\n";
+	}
+	return res;
+}
+
+template<class PRDCT>
+std::vector<std::string> FactoryTemplate<PRDCT>::getNames(){
+	std::vector<std::string> res;
+	for(auto& n : contGen){
+		res.push_back(n.first);
+	}
+	return res;
+}
+
+template<class PRDCT>
+std::string FactoryTemplate<PRDCT>::getNamesInOne(const std::string& sep){
+	std::string res;
+	std::vector<std::string> names = getNames();
+	res = names[0];
+	for(size_t i = 1 ; i < names.size(); ++i) {
+		res.push_back(sep);
+		res.push_back(names[i]);
 	}
 	return res;
 }
