@@ -36,6 +36,8 @@ public:
 	bool do_incremental; // when path_delta and path_value are given
 	bool do_output; // when path_result is given
 
+	float timeout; // time threshold for determining error
+	// float sleep_interval;
 	float apply_interval;
 	float send_interval;
 	int send_batch_size;

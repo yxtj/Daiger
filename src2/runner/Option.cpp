@@ -37,6 +37,7 @@ Option::Option()
 		("scheduler", value<vector<string>>(&scheduler_args)->multitoken()->default_value({"priority", ""}, ""),
 			"Scheduler name and parameters. Supports: rr, priority, fifo.")
 		("async", value<bool>(&async)->default_value(1), "Whether to perform asynchronous computation.")
+		("timeout", value<float>(&timeout)->default_value(1.0f), "[float] time threshold (second) for determining error.")
 		//("schedule_portion", value<float>(&schedule_portion)->default_value(1.0f), "[float] the portion of nodes used in each run.")
 		//("priority_degree", value<bool>(&priority_degree)->default_value(0), "Whether to use degree information in priority function.")
 		("apply_interval", value<float>(&apply_interval)->default_value(0.5f), "[float] the maximum interval (second) of performing apply.")
