@@ -80,8 +80,8 @@ std::string FactoryTemplate<PRDCT>::getNamesInOne(const std::string& sep){
 	std::vector<std::string> names = getNames();
 	res = names[0];
 	for(size_t i = 1 ; i < names.size(); ++i) {
-		res.push_back(sep);
-		res.push_back(names[i]);
+		res += sep;
+		res += names[i];
 	}
 	return res;
 }

@@ -23,24 +23,24 @@ class RemoteHolder
 	size_t size() const;
 	void clear();
 
-	bool exist(const key_t& k) const;
-	bool exist(const key_t& from, const key_t& to) const;
-	bool remove(const key_t& k);
-	bool remove(const key_t& from, const key_t& to);
-	std::pair<bool, std::vector<std::pair<key_t, value_t>>> get(const key_t& k) const;
-	std::pair<bool, value_t> get(const key_t& from, const key_t& to) const;
+	bool exist(const id_t& k) const;
+	bool exist(const id_t& from, const id_t& to) const;
+	bool remove(const id_t& k);
+	bool remove(const id_t& from, const id_t& to);
+	std::pair<bool, std::vector<std::pair<id_t, value_t>>> get(const id_t& k) const;
+	std::pair<bool, value_t> get(const id_t& from, const id_t& to) const;
 
 	// replace the old value with v, return whether a new entry is inserted
-	bool set(const key_t& from, const key_t& to, const value_t& v);
+	bool set(const id_t& from, const id_t& to, const value_t& v);
 	// merge the old value and v using oplus, return whether a new entry is inserted
-	bool merge(const key_t& from, const key_t& to, const value_t& v);
+	bool merge(const id_t& from, const id_t& to, const value_t& v);
 
-	std::vector<std::pair<key_t, std::pair<key_t, valuee_t>>> collect(); // collect and remove from the table
-	std::vector<std::pair<key_t, std::pair<key_t, valuee_t>>> collect(const size_t num);
+	std::vector<std::pair<id_t, std::pair<id_t, valuee_t>>> collect(); // collect and remove from the table
+	std::vector<std::pair<id_t, std::pair<id_t, valuee_t>>> collect(const size_t num);
 
 	private:
 	Kernel<V, N> knl;
-	std::unordered_map<key_t, std::vector<std::pair<key_t, value_t>>> cont;
+	std::unordered_map<id_t, std::vector<std::pair<id_t, value_t>>> cont;
 
 };
 
@@ -65,29 +65,29 @@ void RemoteHolder<V, N>::clear(){
 }
 
 template <class V, class N>
-bool RemoteHolder<V, N>::exist(const key_t& k) const{
+bool RemoteHolder<V, N>::exist(const id_t& k) const{
 	return cont.find(k) != cont.end();
 }
 template <class V, class N>
-bool RemoteHolder<V, N>::exist(const key_t& from, const key_t& to) const{
+bool RemoteHolder<V, N>::exist(const id_t& from, const id_t& to) const{
 	auto it=cont.find(to);
 	if(it==cont.end())
 		return false;
-	auto jt=std::find_if(it->second.begin(), it->second.end(), [](const std::pair<key_t, value_t>& p){
+	auto jt=std::find_if(it->second.begin(), it->second.end(), [](const std::pair<id_t, value_t>& p){
 		return p.first == from;
 	});
 	return jt!=it->second.end();
 }
 template <class V, class N>
-bool RemoteHolder<V, N>::remove(const key_t& k){
+bool RemoteHolder<V, N>::remove(const id_t& k){
 	return cont.erase(k) != 0;
 }
 template <class V, class N>
-bool RemoteHolder<V, N>::remove(const key_t& from, const key_t& to){
+bool RemoteHolder<V, N>::remove(const id_t& from, const id_t& to){
 	auto it=cont.find(to);
 	if(it==cont.end())
 		return false;
-	auto jt=std::find_if(it->second.begin(), it->second.end(), [](const std::pair<key_t, value_t>& p){
+	auto jt=std::find_if(it->second.begin(), it->second.end(), [](const std::pair<id_t, value_t>& p){
 		return p.first == from;
 	});
 	if(jt==it->second.end())
@@ -96,7 +96,7 @@ bool RemoteHolder<V, N>::remove(const key_t& from, const key_t& to){
 	return true;
 }
 template <class V, class N>
-std::pair<bool, std::vector<std::pair<key_t, value_t>>> RemoteHolder<V, N>::get(const key_t& k) const{
+std::pair<bool, std::vector<std::pair<id_t, value_t>>> RemoteHolder<V, N>::get(const id_t& k) const{
 	auto it = cont.find(k);
 	if(it == cont.end()){
 		return make_pair(false, {});
@@ -105,11 +105,11 @@ std::pair<bool, std::vector<std::pair<key_t, value_t>>> RemoteHolder<V, N>::get(
 	}
 }
 template <class V, class N>
-std::pair<bool, value_t> RemoteHolder<V, N>::get(const key_t& from, const key_t& to) const{
+std::pair<bool, value_t> RemoteHolder<V, N>::get(const id_t& from, const id_t& to) const{
 	auto it=cont.find(to);
 	if(it==cont.end())
 		return make_pair(false, value_t());
-	auto jt=std::find_if(it->second.begin(), it->second.end(), [](const std::pair<key_t, value_t>& p){
+	auto jt=std::find_if(it->second.begin(), it->second.end(), [](const std::pair<id_t, value_t>& p){
 		return p.first == from;
 	});
 	if(jt==it->second.end())
@@ -119,9 +119,9 @@ std::pair<bool, value_t> RemoteHolder<V, N>::get(const key_t& from, const key_t&
 
 
 template <class V, class N>
-bool RemoteHolder<V, N>::set(const key_t& from, const key_t& to, const value_t& v){
+bool RemoteHolder<V, N>::set(const id_t& from, const id_t& to, const value_t& v){
 	auto& vec=cont[to];
-	auto jt=std::find_if(vec.begin(), vec.end(), [](const std::pair<key_t, value_t>& p){
+	auto jt=std::find_if(vec.begin(), vec.end(), [](const std::pair<id_t, value_t>& p){
 		return p.first == from;
 	});
 	if(jt==vec.end()){
@@ -133,9 +133,9 @@ bool RemoteHolder<V, N>::set(const key_t& from, const key_t& to, const value_t& 
 	}
 }
 template <class V, class N>
-bool RemoteHolder<V, N>::merge(const key_t& from, const key_t& to, const value_t& v){
+bool RemoteHolder<V, N>::merge(const id_t& from, const id_t& to, const value_t& v){
 	auto& vec=cont[to];
-	auto jt=std::find_if(vec.begin(), vec.end(), [](const std::pair<key_t, value_t>& p){
+	auto jt=std::find_if(vec.begin(), vec.end(), [](const std::pair<id_t, value_t>& p){
 		return p.first == from;
 	});
 	if(jt==vec.end()){
@@ -147,12 +147,12 @@ bool RemoteHolder<V, N>::merge(const key_t& from, const key_t& to, const value_t
 	}
 }
 template <class V, class N>
-std::vector<std::pair<key_t, std::pair<key_t, valuee_t>>> RemoteHolder<V, N>::collect(){
+std::vector<std::pair<id_t, std::pair<id_t, valuee_t>>> RemoteHolder<V, N>::collect(){
 	return collect(size());
 }
 template <class V, class N>
-std::vector<std::pair<key_t, std::pair<key_t, valuee_t>>> RemoteHolder<V, N>::collect(const size_t num){
-	std::vector<std::pair<key_t, std::pair<key_t, valuee_t>>> res;
+std::vector<std::pair<id_t, std::pair<id_t, valuee_t>>> RemoteHolder<V, N>::collect(const size_t num){
+	std::vector<std::pair<id_t, std::pair<id_t, valuee_t>>> res;
 	auto it=cont.begin();
 	for(size_t i=0; i<num && it!=cont.end(); ++i, ++it){
 		res.emplace(move(it->first), move(it->second));

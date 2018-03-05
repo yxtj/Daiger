@@ -13,7 +13,7 @@ AppBase makeApplication(const std::string& app_name, const std::vector<std::stri
 	const std::vector<std::string>& arg_sharder, const std::vector<std::string>& arg_scheduler)
 {
 	AppBase app;
-	ArgumentSeparator* sep = ArgumentSeparatorFactory::generate(app_name);
+	ArgumentSpearator* sep = ArgumentSeparatorFactory::generate(app_name);
 	AppArguments aa = sep->separate(arg_app);
 	delete sep;
 	app.opt = OperationFactory::generate(app_name);
@@ -25,7 +25,7 @@ AppBase makeApplication(const std::string& app_name, const std::vector<std::stri
 
 	app.shd = SharderFactory::generate(arg_sharder[0]);
 	app.shd->init(arg_sharder);
-	app.scd = SharderFactory::generate(arg_scheduler[0]);
+	app.scd = SchedulerFactory::generate(arg_scheduler[0]);
 	app.scd->init(arg_scheduler);
 	return app;
 }

@@ -19,7 +19,7 @@ struct Operation
 	typedef Node<V, N> node_t;
 
 	// initialize the starting value
-	virtual value_t init_value(const key_t& k, const neighbor_list_t& neighbors) = 0;
+	virtual value_t init_value(const id_t& k, const neighbor_list_t& neighbors) = 0;
 
 	// operations: identity_element, oplus, f-function
 	virtual value_t identity_element() const = 0; // identity_element
@@ -27,7 +27,7 @@ struct Operation
 	virtual value_t func(const node_t& n, const neighbor_t& neighbor) = 0; // transition function for a message, only on given <neighbor> instead local variable
 
 	// helper operations: group-level f-function, ominus for accumulative, better for selective
-	virtual std::vector<std::pair<key_t, value_t>> func(const node_t& n); // for all neighbors, default: use the previous func for all
+	virtual std::vector<std::pair<id_t, value_t>> func(const node_t& n); // for all neighbors, default: use the previous func for all
 	virtual bool is_accumuative(); // default: false
 	virtual bool is_selective(); // default: false
 	// subtype for accumulative
@@ -43,20 +43,20 @@ struct Operation
 
 template <class V, typename W>
 struct WeightedOperation :
-	public Operation<V, std::pair<key_t, W>>
+	public Operation<V, std::pair<id_t, W>>
 {};
 
 template <class V>
 struct UnWeightedOperation : 
-	public Operation<V, key_t>
+	public Operation<V, id_t>
 {};
 
 template <class V, class N>
-std::vector<std::pair<key_t, value_t>> Operation::func(const node_t& n)
+std::vector<std::pair<id_t, V>> Operation<V, N>::func(const node_t& n)
 {
-	std::vector<std::pair<key_t, value_t>> output;
-	output.reserve(n.neighbors.size());
-	for(const auto& dst: neighbors){
+	std::vector<std::pair<id_t, value_t>> output;
+	output.reserve(n.onb.size());
+	for(const auto& dst: n.onb){
 		output.emplace_back(get_key(dst), func(n, dst));
 	}
 }

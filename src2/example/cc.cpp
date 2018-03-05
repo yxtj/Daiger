@@ -14,25 +14,25 @@ ConnectedComponent::ConnectedComponent(){
 	ArgumentSeparatorFactory::registerClass<separator_t>(name);
 }
 
-void ConnectedComponent::Operation::init(const std::vector<std::string>& arg_line){
+void ConnectedComponent::MyOperation::init(const std::vector<std::string>& arg_line){
 }
 
-value_t ConnectedComponent::Operation::identity_element() const{
+ConnectedComponent::value_t ConnectedComponent::MyOperation::identity_element() const{
 	return std::numeric_limits<value_t>::min();
 }
-value_t ConnectedComponent::Operation::oplus(value_t& a, const value_t& b){
+ConnectedComponent::value_t ConnectedComponent::MyOperation::oplus(value_t& a, const value_t& b){
 	//return max(a, b);
 	return (a<b)?b:a;
 }
-value_t ConnectedComponent::Operation::func(const node_t& n, const neighbor_t& neighbor){
+ConnectedComponent::value_t ConnectedComponent::MyOperation::func(const node_t& n, const neighbor_t& neighbor){
 	return n.v;
 }
-bool ConnectedComponent::Operation::better(const value_t& a, const value_t& b){
+bool ConnectedComponent::MyOperation::better(const value_t& a, const value_t& b){
 	return a > b;
 }
 // scheduling - priority
-priority_t ConnectedComponent::Operation::priority(const node_t& n){
-	return n.v;
+priority_t ConnectedComponent::MyOperation::priority(const node_t& n){
+	return static_cast<priority_t>(n.v);
 }
 
 AppArguments ConnectedComponent::Separator::separate(const std::vector<std::string>& args){

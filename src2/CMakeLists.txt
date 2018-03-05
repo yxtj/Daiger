@@ -65,30 +65,26 @@ string(REPLACE " " ";" MPI_LINK_FLAGS "${MPI_LINK_FLAGS}")
 string(REPLACE " " ";" MPI_LIBDIRS "${MPI_LIBDIRS}")
 string(REPLACE " " ";" MPI_LIBS "${MPI_LIBS}")
 
-set(CMAKE_CXX_FLAGS "${CXX_DEFAULT} -fPIC -fno-omit-frame-pointer -O2 -g0 ${CXX_DEFINE}")
-
-#add_subdirectory (external)
+set(CMAKE_CXX_FLAGS "${CXX_DEFAULT} -fPIC -fno-omit-frame-pointer ${CXX_DEFINE}")
 
 include_directories( ${CMAKE_CURRENT_SOURCE_DIR}
                      ${MAITER_BINARY_DIR}
                      ${PROTOBUF_INCLUDE_DIRS}
                      ${MPI_INCDIRS}
                    )
-include_directories(SYSTEM
-                     external/${GFLAGS_DIR}
-                     external/${GLOG_DIR}
-	               )
-		     
+include_directories(SYSTEM)
 
 link_directories(${MPI_LIBDIRS})
 
-set(CMAKE_CXX_FLAGS "${CXX_DEFAULT} -fPIC -fno-omit-frame-pointer -std=c++0x -ggdb1 ${CXX_WARN} ${CXX_DEFINE}")
+set(CMAKE_CXX_FLAGS "${CXX_DEFAULT} -fPIC -fno-omit-frame-pointer -std=c++11 ${CXX_WARN} ${CXX_DEFINE}")
 add_subdirectory (dbg)
 add_subdirectory (util)
 add_subdirectory (network)
-add_subdirectory (msg)
+#add_subdirectory (msg)
 add_subdirectory (driver)
 add_subdirectory (holder)
-add_subdirectory (runner)
 add_subdirectory (application)
-
+add_subdirectory (type_traits)
+add_subdirectory (serial)
+add_subdirectory (example)
+add_subdirectory (runner)

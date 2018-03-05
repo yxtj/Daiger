@@ -1,6 +1,8 @@
 set(HEADERS
 	AppBase.h
+	ArgumentSeparator.h
 	IOHandler.h
+	IOHandler_Helper.h
 	Scheduler.h
 	Sharder.h
 	Terminator.h
@@ -8,6 +10,7 @@ set(HEADERS
 set(SOURCES
 	AppBase.cpp
 	IOHandler.cpp
+	IOHandler_Helper.cpp
 	Scheduler.cpp
 	Sharder.cpp
 	Terminator.cpp

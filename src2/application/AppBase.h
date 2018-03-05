@@ -6,7 +6,7 @@ class OperationBase;
 class TerminatorBase;
 class SharderBase;
 class SchedulerBase;
-class IOHanderBase;
+class IOHandlerBase;
 
 /*
 class LocalHolderBase;
@@ -29,21 +29,11 @@ public:
 
 struct AppBase {
 	// application-related (also type-related)
-	OperationBase* opr;
+	OperationBase* opt;
 	TerminatorBase* tmt;
-	IOHanderBase* ioh;
+	IOHandlerBase* ioh;
 
 	// application-independent
-	SharderBase* shd;
-	SchedulerBase* scd;
-};
-
-template <typename V, typename N>
-struct App {
-	Operation<V, N>* opr;
-	Terminator<V, N>* tmt;
-	IOHander<V, N>* ioh;
-
 	SharderBase* shd;
 	SchedulerBase* scd;
 };

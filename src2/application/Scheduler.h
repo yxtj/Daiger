@@ -10,24 +10,24 @@ public:
 
 	virtual void init(const std::vector<std::string>& arg);
 	// let the scheduler know each node
-	virtual void regist(const key_t& k){ ++nNode; }
+	virtual void regist(const id_t& k){ ++nNode; }
 	// make the scheduler ready to run (call after all nodes are registed)
 	virtual void ready() {}
 
 	// update/set the priority of a node
-	virtual void update(const key_t& k, const priority_t& p) = 0;
+	virtual void update(const id_t& k, const priority_t& p) = 0;
 	// get the node id with top priority
-	virtual key_t top() = 0;
+	virtual id_t top() = 0;
 	// reset the top node's priority to the lowest
 	virtual void pop() = 0;
 	// get the top <n> nodes and reset their priorities to the lowest
-	virtual std::vector<key_t> pick_n(const size_t n) = 0;
-	virtual key_t pick_one() = 0; // as a special version of pick_n(1);
-	virtual std::vector<key_t> pick() = 0; // get the top group
+	virtual std::vector<id_t> pick_n(const size_t n) = 0;
+	virtual id_t pick_one() = 0; // as a special version of pick_n(1);
+	virtual std::vector<id_t> pick() = 0; // get the top group
 
 public:
 	struct Unit{
-		key_t k;
+		id_t k;
 		priority_t p;
 	};
 	struct CmpUnit{
@@ -49,18 +49,18 @@ class SchedulerRoundRobin
 {
 public:
 	virtual void init(const std::vector<std::string>& args);
-	virtual void regist(const key_t& k);
+	virtual void regist(const id_t& k);
 
-	virtual void update(const key_t& k, const priority_t& p);
-	virtual key_t top();
+	virtual void update(const id_t& k, const priority_t& p);
+	virtual id_t top();
 	virtual void pop();
-	virtual std::vector<key_t> pick_n(const size_t n);
-	virtual key_t pick_one();
-	virtual std::vector<key_t> pick();
+	virtual std::vector<id_t> pick_n(const size_t n);
+	virtual id_t pick_one();
+	virtual std::vector<id_t> pick();
 
 private:
 	size_t loop_pointer;
-	std::vector<key_t> data;
+	std::vector<id_t> data;
 };
 
 // -------- predefined priority-based Scheduler --------
@@ -79,12 +79,12 @@ public:
 	virtual void init(const std::vector<std::string>& args);
 	virtual void ready();
 
-	virtual void update(const key_t& k, const priority_t& p);
-	virtual key_t top();
+	virtual void update(const id_t& k, const priority_t& p);
+	virtual id_t top();
 	virtual void pop();
-	virtual std::vector<key_t> pick_n(const size_t n);
-	virtual key_t pick_one();
-	virtual std::vector<key_t> pick();
+	virtual std::vector<id_t> pick_n(const size_t n);
+	virtual id_t pick_one();
+	virtual std::vector<id_t> pick();
 
 private:
 	double portion;
@@ -106,15 +106,15 @@ public:
 	virtual ~SchedulerFIFO();
 
 	virtual void init(const std::vector<std::string>& args);
-	virtual void regist(const key_t& k);
+	virtual void regist(const id_t& k);
 	virtual void ready();
 
-	virtual void update(const key_t& k, const priority_t& p);
-	virtual key_t top();
+	virtual void update(const id_t& k, const priority_t& p);
+	virtual id_t top();
 	virtual void pop();
-	virtual std::vector<key_t> pick_n(const size_t n);
-	virtual key_t pick_one();
-	virtual std::vector<key_t> pick();
+	virtual std::vector<id_t> pick_n(const size_t n);
+	virtual id_t pick_one();
+	virtual std::vector<id_t> pick();
 
 private:
 	SCH_FIFOHolder* data;

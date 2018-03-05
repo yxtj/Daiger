@@ -3,6 +3,8 @@
 #include <vector>
 #include <string>
 #include <utility>
+#include <stdexcept>
+#include <numeric>
 
 class TerminatorBase {
 public:
@@ -43,10 +45,10 @@ public:
 	virtual double progress(const Node<V, N>& n){ return helper_progress_value(n); };
 
 protected:
-	virtual double helper_progress_value(const Node<V, N>& n){
+	static double helper_progress_value(const Node<V, N>& n){
 		return static_cast<double>(n.v);
 	}
-	virtual double helper_progress_vsquare(const Node<V, N>& n){
+	static double helper_progress_vsquare(const Node<V, N>& n){
 		return static_cast<double>(n.v*n.v);
 	}
 };
@@ -73,26 +75,25 @@ template <typename V, typename N>
 void TerminatorDiff<V, N>::init(const std::vector<std::string>& args){
 	try{
 		epsilon = stod(args[0]);
-	} catch (exception& e){
-		throw invalid_argument("Unable to get <epsilon> for TerminatorDiff.");
+	} catch (std::exception& e){
+		throw std::invalid_argument("Unable to get <epsilon> for TerminatorDiff.");
 	}
 }
 template <typename V, typename N>
 void TerminatorDiff<V, N>::prepare_global_checker(const size_t n_worker){
-	curr.resize(n_worker);
+	TerminatorBase::prepare_global_checker(n_worker);
 	last.resize(n_worker);
-	sum_gp=0.0;
-	sum_gp_last=0.0;
+	sum_gp_last=std::numeric_limits<double>::lowest();
 }
 template <typename V, typename N>
 double TerminatorDiff<V, N>::update_report(const size_t wid, const std::pair<double, size_t>& report){
-	sum_gp_last += curr[wid].first - last[wid];
-	last[wid] = curr[wid].first;
+	sum_gp_last += TerminatorBase::curr[wid].first - last[wid];
+	last[wid] = TerminatorBase::curr[wid].first;
 	TerminatorBase::update_report(wid, report);
 }
 template <typename V, typename N>
 bool TerminatorDiff<V, N>::check_term(){
-	return TerminatorBase::helper_no_change(curr) && abs(sum_gp_last - sum_gp) < epsilon;
+	return TerminatorBase::sum_gc == 0 && abs(sum_gp_last - TerminatorBase::sum_gp) < epsilon;
 }
 
 // -------- an example which stops when no one changes --------
@@ -113,18 +114,17 @@ private:
 
 template <typename V, typename N>
 void TerminatorStop<V, N>::prepare_global_checker(const size_t n_worker){
-	curr.resize(n_worker);
+	TerminatorBase::prepare_global_checker(n_worker);
 	last.resize(n_worker);
-	sum_gc=0;
 	sum_gc_last=std::numeric_limits<size_t>::max();
 }
 template <typename V, typename N>
 double TerminatorStop<V, N>::update_report(const size_t wid, const std::pair<double, size_t>& report){
-	sum_gc_last += curr[wid].second - last[wid];
-	last[wid] = curr[wid].second;
+	sum_gc_last += TerminatorBase::curr[wid].second - last[wid];
+	last[wid] = TerminatorBase::curr[wid].second;
 	TerminatorBase::update_report(wid, report);
 }
 template <typename V, typename N>
 bool TerminatorStop<V, N>::check_term(){
-	return sum_gc == 0 && sum_gc_last == 0;
+	return TerminatorBase::sum_gc == 0 && sum_gc_last == 0;
 }

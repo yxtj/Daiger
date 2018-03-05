@@ -11,6 +11,6 @@ void SharderBase::init(const std::vector<std::string>& args){
 	}
 }
 
-size_t SharderMod::owner(const key_t& id){
+size_t SharderMod::owner(const id_t& id){
 	return id % nWorker;
 }

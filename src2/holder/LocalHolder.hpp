@@ -22,44 +22,44 @@ class LocalHolder
 	// -------- basic functions --------
 	bool add(const node_t& n);
 	bool add(node_t&& n);
-	bool remove(const key_t& k);
-	bool exist(const key_t& k);
-	node_t& get(const key_t& k);
-	const node_t& get(const key_t& k) const;
+	bool remove(const id_t& k);
+	bool exist(const id_t& k);
+	node_t& get(const id_t& k);
+	const node_t& get(const id_t& k) const;
 	bool empty() const;
 	size_t size() const;
 	void clear();
 	
 	// -------- node modification functions --------
-	bool modify(const key_t& k, const valut_t& v); // change value
-	bool modify(const key_t& k, const neighbor_list_t& nl); // change neighbor list
-	bool modify(const key_t& k, neighbor_list_t&& nl);
-	bool modify_onb_add(const key_t& k, const neighbor_t& n); // add an out-neighbor
-	bool modify_onb_rmv(const key_t& k, const neighbor_t& n);
-	bool modify_cache_add(const key_t& k, const key_t& src, const value_t& v); // add a cache entry
-	bool modify_cache_rmv(const key_t& k, const key_t& src);
+	bool modify(const id_t& k, const valut_t& v); // change value
+	bool modify(const id_t& k, const neighbor_list_t& nl); // change neighbor list
+	bool modify(const id_t& k, neighbor_list_t&& nl);
+	bool modify_onb_add(const id_t& k, const neighbor_t& n); // add an out-neighbor
+	bool modify_onb_rmv(const id_t& k, const neighbor_t& n);
+	bool modify_cache_add(const id_t& k, const id_t& src, const value_t& v); // add a cache entry
+	bool modify_cache_rmv(const id_t& k, const id_t& src);
 
 	// -------- key functions (assume every key exists) --------
-	void update_cache(const key_t& from, const key_t& to, const value_t& m); // update cache with received message
-	void cal_general(const key_t& k); // merge all caches, the result is stored in <u>
-	bool need_commit(const key_t& t) const; // whether <u> is different from <v>
-	bool commit(const key_t& k); // update <v> to <u>
-	std::vector<std::pair<key_t, value_t>> spread(const key_t& k); // generate outgoing messages
+	void update_cache(const id_t& from, const id_t& to, const value_t& m); // update cache with received message
+	void cal_general(const id_t& k); // merge all caches, the result is stored in <u>
+	bool need_commit(const id_t& t) const; // whether <u> is different from <v>
+	bool commit(const id_t& k); // update <v> to <u>
+	std::vector<std::pair<id_t, value_t>> spread(const id_t& k); // generate outgoing messages
 
 	// -------- incremetnal update functions (assume every key exists, assume the cache is not updated by m) --------
-	void cal_incremental(onst key_t& from, const key_t& to, const value_t& m)
+	void cal_incremental(onst id_t& from, const id_t& to, const value_t& m)
 		{ f_update_incremental(from, to, m); }
-	void inc_cal_general(const key_t& from, const key_t& to, const value_t& m); // incremental update using recalculate
-	void inc_cal_accumulative(const key_t& from, const key_t& to, const value_t& m); // incremental update
-	void inc_cal_selective(const key_t& from, const key_t& to, const value_t& m); // incremental update
+	void inc_cal_general(const id_t& from, const id_t& to, const value_t& m); // incremental update using recalculate
+	void inc_cal_accumulative(const id_t& from, const id_t& to, const value_t& m); // incremental update
+	void inc_cal_selective(const id_t& from, const id_t& to, const value_t& m); // incremental update
 	
 	// -------- others --------
-	void update_priority(const key_t& k);
+	void update_priority(const id_t& k);
 	
 	private:
 	Kernel<V, N> knl;
-	std::unordered_map<key_t, node_t, NodeHasher<V, N>> cont;
-	std::function<void(onst key_t&, const key_t&, const value_t&)> f_update_incremental;
+	std::unordered_map<id_t, node_t, NodeHasher<V, N>> cont;
+	std::function<void(onst id_t&, const id_t&, const value_t&)> f_update_incremental;
 
 };
 
@@ -92,19 +92,19 @@ bool LocalHolder<V, N>::add(node_t&& n){
 	cont[n.id]=move(n);
 }
 template <class V, class N>
-bool LocalHolder<V, N>::remove(const key_t& k){
+bool LocalHolder<V, N>::remove(const id_t& k){
 	return cont.erase(k) != 0;
 }
 template <class V, class N>
-bool LocalHolder<V, N>::exist(const key_t& k){
+bool LocalHolder<V, N>::exist(const id_t& k){
 	return cont.find(k) != cont.end();
 }
 template <class V, class N>
-node_t& LocalHolder<V, N>::get(const key_t& k){
+node_t& LocalHolder<V, N>::get(const id_t& k){
 	return cont.at(k);
 }
 template <class V, class N>
-const node_t& LocalHolder<V, N>::get(const key_t& k) const{
+const node_t& LocalHolder<V, N>::get(const id_t& k) const{
 	return cont.at(k);
 }
 template <class V, class N>
@@ -126,23 +126,23 @@ void LocalHolder<V, N>::clear(){
  if(it==cont.end()) return false; operation; return true; }
 
 template <class V, class N>
-bool LocalHolder<V, N>::modify(const key_t& k, const valut_t& v){
+bool LocalHolder<V, N>::modify(const id_t& k, const valut_t& v){
 	MODIFY_TEMPLATE( it->second.v=v; )
 }
 template <class V, class N>
-bool LocalHolder<V, N>::modify(const key_t& k, const neighbor_list_t& nl){
+bool LocalHolder<V, N>::modify(const id_t& k, const neighbor_list_t& nl){
 	MODIFY_TEMPLATE( it->second.onb=nl; )
 }
 template <class V, class N>
-bool LocalHolder<V, N>::modify(const key_t& k, neighbor_list_t&& nl){
+bool LocalHolder<V, N>::modify(const id_t& k, neighbor_list_t&& nl){
 	MODIFY_TEMPLATE( it->second.onb=move(nl); )
 }
 template <class V, class N>
-bool LocalHolder<V, N>::modify_onb_add(const key_t& k, const neighbor_t& n){
+bool LocalHolder<V, N>::modify_onb_add(const id_t& k, const neighbor_t& n){
 	MODIFY_TEMPLATE( it->second.onb.append(n); )
 }
 template <class V, class N>
-bool LocalHolder<V, N>::modify_onb_rmv(const key_t& k, const neighbor_t& n){
+bool LocalHolder<V, N>::modify_onb_rmv(const id_t& k, const neighbor_t& n){
 	MODIFY_TEMPLATE( 
 		auto jt = std::find_if(it->second.onb.begin(), it->second.onb.end(), [](const N& nb){
 			return knl.get_key(nb) == knl.get_key(n);
@@ -153,11 +153,11 @@ bool LocalHolder<V, N>::modify_onb_rmv(const key_t& k, const neighbor_t& n){
 	)
 }
 template <class V, class N>
-bool LocalHolder<V, N>::modify_cache_add(const key_t& k, const key_t& src, const value_t& v){
+bool LocalHolder<V, N>::modify_cache_add(const id_t& k, const id_t& src, const value_t& v){
 	MODIFY_TEMPLATE( it->second.c[src]=v; )
 }
 template <class V, class N>
-bool LocalHolder<V, N>::modify_cache_rmv(const key_t& k, const key_t& src){
+bool LocalHolder<V, N>::modify_cache_rmv(const id_t& k, const id_t& src){
 	MODIFY_TEMPLATE( return it->second.c.erase(src) != 0; )
 }
 
@@ -165,12 +165,12 @@ bool LocalHolder<V, N>::modify_cache_rmv(const key_t& k, const key_t& src){
 
 // update cache with received message
 template <class V, class N>
-void LocalHolder<V, N>::update_cache(const key_t& from, const key_t& to, const value_t& m){
+void LocalHolder<V, N>::update_cache(const id_t& from, const id_t& to, const value_t& m){
 	cont[to].cs[from]=m;
 }
 // merge all caches, the result is stored in <u>
 template <class V, class N>
-void LocalHolder<V, N>::cal_general(const key_t& k){
+void LocalHolder<V, N>::cal_general(const id_t& k){
 	node_t& n=cont[k];
 	value_t tmp=knl.identity_element();
 	for(auto& p : n.cs){
@@ -180,13 +180,13 @@ void LocalHolder<V, N>::cal_general(const key_t& k){
 }
 // whether <u> is different from <v>
 template <class V, class N>
-bool LocalHolder<V, N>::need_commit(const key_t& t) const{
+bool LocalHolder<V, N>::need_commit(const id_t& t) const{
 	const node_t& n=cont[k];
 	return n.v == n.u;
 }
 // update <v> to <u>
 template <class V, class N>
-bool LocalHolder<V, N>::commit(const key_t& k){
+bool LocalHolder<V, N>::commit(const id_t& k){
 	node_t& n=cont[k];
 	if(n.v == n.u)
 		return false;
@@ -195,7 +195,7 @@ bool LocalHolder<V, N>::commit(const key_t& k){
 }
 // generate outgoing messages
 template <class V, class N>
-std::vector<std::pair<key_t, value_t>> LocalHolder<V, N>::spread(const key_t& k){
+std::vector<std::pair<id_t, value_t>> LocalHolder<V, N>::spread(const id_t& k){
 	node_t& n=cont[k];
 	return knl.func(k);
 }
@@ -205,7 +205,7 @@ std::vector<std::pair<key_t, value_t>> LocalHolder<V, N>::spread(const key_t& k)
 
 // incremental update using recalculation
 template <class V, class N>
-void LocalHolder<V, N>::inc_cal_general(const key_t& from, const key_t& to, const value_t& m){
+void LocalHolder<V, N>::inc_cal_general(const id_t& from, const id_t& to, const value_t& m){
 	node_t& n=cont[to];
 	value_t tmp=knl.identity_element();
 	for(auto& c : n.cs){
@@ -218,13 +218,13 @@ void LocalHolder<V, N>::inc_cal_general(const key_t& from, const key_t& to, cons
 }
 // incremental update for cache-based accumulative
 template <class V, class N>
-void LocalHolder<V, N>::inc_cal_accumulative(const key_t& from, const key_t& to, const value_t& m){
+void LocalHolder<V, N>::inc_cal_accumulative(const id_t& from, const id_t& to, const value_t& m){
 	node_t& n=cont[to];
 	n.u = knl.oplus( knl.ominus(n.u, n.cs[from]), m)
 }
 // incremental update for cache-based selective
 template <class V, class N>
-void LocalHolder<V, N>::inc_cal_selective(const key_t& from, const key_t& to, const value_t& m){
+void LocalHolder<V, N>::inc_cal_selective(const id_t& from, const id_t& to, const value_t& m){
 	node_t& n=cont[to];
 	value_t old=n.u;
 	if(knl.better(m, old)){
@@ -232,7 +232,7 @@ void LocalHolder<V, N>::inc_cal_selective(const key_t& from, const key_t& to, co
 		n.b = from;
 	}else if(from == n.b){
 		value_t tmp=knl.identity_element();
-		key_t bp;
+		id_t bp;
 		for(auto& c : n.cs){
 			const value_t& v = c.first!=from?c.second:m;
 			if(knl.better(v, tmp)){
@@ -248,7 +248,7 @@ void LocalHolder<V, N>::inc_cal_selective(const key_t& from, const key_t& to, co
 // -------- others --------
 
 template <class V, class N>
-void LocalHolder<V, N>::update_priority(const key_t& k){
+void LocalHolder<V, N>::update_priority(const id_t& k){
 	node_t& n=cont[k];
 	n.pri = knl.priority(n);
 }

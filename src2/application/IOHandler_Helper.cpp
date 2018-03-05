@@ -1,26 +1,19 @@
-#include "IOHandler.h"
-#include <boost/lexical_cast.hpp>
-#include <exception>
+#include "IOHandler_Helper.h"
+#include <stdexcept>
 
 using namespace std;
 
-change_t IOHandlerBase::load_change(std::string& line){
-	return IOHelper::load_change(line);
-}
-
-// -------- IOHelper --------
-
 // load graph
-std::pair<key_t, std::vector<key_t> > IOHelper::load_graph_unweighted(std::string& line){
+std::pair<id_t, std::vector<id_t> > IOHelper::load_graph_unweighted(std::string& line){
 	//line: "k\ta b c "
 	size_t pos = line.find('\t');
-	key_t k = stok(line.substr(0, pos));
+	id_t k = stoid(line.substr(0, pos));
 	++pos;
 
-	vector<key_t> data;
+	vector<id_t> data;
 	size_t spacepos;
 	while((spacepos = line.find(' ',pos)) != line.npos){
-		key_t to = stok(line.substr(pos, spacepos-pos));
+		id_t to = stoid(line.substr(pos, spacepos-pos));
 		data.push_back(to);
 		pos=spacepos+1;
 	}
@@ -43,9 +36,9 @@ change_t IOHelper::load_change(std::string& line){
 		default: throw invalid_argument("Cannot parse change line: "+line);
 	}
 	size_t p1=line.find(',', 2);
-	res.src=stok(line.substr(2,p1-2));
+	res.src=stoid(line.substr(2,p1-2));
 	size_t p2=line.find(',', p1+1);
-	res.dst=stok(line.substr(p1+1, p2-p1-1));
+	res.dst=stoid(line.substr(p1+1, p2-p1-1));
 	if(res.type == ChangeEdgeType::INCREASE || res.type == ChangeEdgeType::DECREASE)
 		res.weight=stof(line.substr(p2+1));
 	return res;

@@ -7,7 +7,7 @@
 #include "factory/SharderFactory.h"
 #include "factory/SchedulerFactory.h"
 
+#include "application/ArgumentSeparator.h"
 #include "application/Operation.h"
 #include "application/IOHandler.h"
 #include "application/Terminator.h"
-#include "application/ArgumentSeparator.h"
