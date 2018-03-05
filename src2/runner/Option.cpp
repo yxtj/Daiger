@@ -81,7 +81,7 @@ bool Option::parseInput(int argc, char* argv[]) {
 		sortUpPath(path_value);
 		sortUpPath(path_result);
 
-		if(path_delta.empty() || path_delta.empty())
+		if(path_delta.empty() || path_value.empty())
 			do_incremental=false;
 		
 		if(path_result.empty())

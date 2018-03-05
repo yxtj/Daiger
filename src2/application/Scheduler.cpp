@@ -131,7 +131,7 @@ SchedulerPriority::~SchedulerPriority(){
 void SchedulerPriority::init(const std::vector<std::string>& args){
 	data = new SCH_PrioritizedHolder();
 	try{
-		portion = stod(arg[0]);
+		portion = stod(args[0]);
 	} catch(exception& e){
 		throw invalid_argument("Unable to get <portion> for SchedulerPriority.");
 	}
