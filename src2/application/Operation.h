@@ -6,17 +6,17 @@
 
 struct OperationBase {
 	// parse the given parameters
-	virtual bool init(const std::vector<std::string>& args){}
+	virtual void init(const std::vector<std::string>& args){}
 };
 
 template <typename V, typename N>
 struct Operation 
 	: public OperationBase
 {
-	using value_t = V;
-	using neighbor_t = N;
-	using neighbor_list_t = std::vector<N>;
-	using node_t = Node<V, N>;
+	typedef V value_t;
+	typedef N neighbor_t;
+	typedef std::vector<neighbor_t> neighbor_list_t;
+	typedef Node<V, N> node_t;
 
 	// initialize the starting value
 	virtual value_t init_value(const key_t& k, const neighbor_list_t& neighbors) = 0;

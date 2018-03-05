@@ -48,7 +48,7 @@ class SchedulerRoundRobin
 	: public SchedulerBase
 {
 public:
-	virtual void init(const std::vector<std::string>& arg);
+	virtual void init(const std::vector<std::string>& args);
 	virtual void regist(const key_t& k);
 
 	virtual void update(const key_t& k, const priority_t& p);
@@ -76,7 +76,7 @@ public:
 	SchedulerPriority();
 	virtual ~SchedulerPriority();
 
-	virtual void init(const std::vector<std::string>& arg);
+	virtual void init(const std::vector<std::string>& args);
 	virtual void ready();
 
 	virtual void update(const key_t& k, const priority_t& p);
@@ -105,7 +105,7 @@ public:
 	SchedulerFIFO();
 	virtual ~SchedulerFIFO();
 
-	virtual void init(const std::vector<std::string>& arg);
+	virtual void init(const std::vector<std::string>& args);
 	virtual void regist(const key_t& k);
 	virtual void ready();
 

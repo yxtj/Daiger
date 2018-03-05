@@ -6,9 +6,9 @@
 
 class IOHandlerBase {
 public:
+	virtual void init(const std::vector<std::string>& args){}
 	// load graph changes
 	virtual change_t load_change(std::string& line); // default: use IOHelper::load_change
-	virtual void init(std::vector<std::string>& args){}
 };
 
 template <typename V, typename N>
@@ -23,9 +23,31 @@ public:
 	// load graph
 	virtual std::pair<key_t, neighbor_list_t> load_graph(std::string& line) = 0;
 	// load starting values
-	virtual std::pair<key_t, value_t> load_value(std::string& line) = 0;
+	virtual std::pair<key_t, value_t> load_value(std::string& line) {
+		return IOHelper::load_value<value_t>(line);
+	}
 	// dump result
-	std::string dump_value(const key_t& k, const valut_t& v);
+	virtual std::string dump_value(const key_t& k, const valut_t& v);
+};
+
+template <typename V>
+class IOHandlerUnweighted
+	: public IOHandler<V, key_t> 
+{
+public:
+	virtual std::pair<key_t, neighbor_list_t> load_graph(std::string& line){
+		return IOHelper::load_graph_unweighted(line);
+	}
+};
+
+template <typename V, typename N>
+class IOHandlerWeighted
+	: public IOHandler<V, N> 
+{
+public:
+	virtual std::pair<key_t, neighbor_list_t> load_graph(std::string& line){
+		return IOHelper::load_graph_weighted<typename N::second_type>(line);
+	}
 };
 
 // -------- a helper class with some predefined useful IO-functions --------

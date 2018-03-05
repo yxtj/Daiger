@@ -22,7 +22,7 @@ priority_t SchedulerBase::lowest() const{
 
 // -------- predefined class SchedulerRoundRobin --------
 
-void SchedulerRoundRobin::init(const std::vector<std::string>& arg){
+void SchedulerRoundRobin::init(const std::vector<std::string>& args){
 	loop_pointer = 0;
 }
 void SchedulerRoundRobin::regist(const key_t& k){
@@ -128,7 +128,7 @@ SchedulerPriority::SchedulerPriority()
 SchedulerPriority::~SchedulerPriority(){
 	delete data;
 }
-void SchedulerPriority::init(const std::vector<std::string>& arg){
+void SchedulerPriority::init(const std::vector<std::string>& args){
 	data = new SCH_PrioritizedHolder();
 	try{
 		portion = stod(arg[0]);
@@ -209,7 +209,7 @@ SchedulerFIFO::~SchedulerFIFO(){
 	delete data;
 }
 
-void SchedulerFIFO::init(const std::vector<std::string>& arg){
+void SchedulerFIFO::init(const std::vector<std::string>& args){
 	data = new SCH_FIFOHolder();
 }
 void SchedulerFIFO::ready(){

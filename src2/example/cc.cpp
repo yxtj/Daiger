@@ -5,9 +5,16 @@
 
 using namespace std;
 
-bool ConnectedComponent::Operation::parse(const std::vector<std::string>& arg_line){
+const std::string ConnectedComponent::name("cc");
 
-	return true;
+ConnectedComponent::ConnectedComponent(){
+	OperationFactory::registerClass<operation_t>(name);
+	IOHandlerFactory::registerClass<iohandler_t>(name);
+	TerminatorFactory::registerClass<terminator_t>(name);
+	ArgumentSeparatorFactory::registerClass<separator_t>(name);
+}
+
+void ConnectedComponent::Operation::init(const std::vector<std::string>& arg_line){
 }
 
 value_t ConnectedComponent::Operation::identity_element() const{
