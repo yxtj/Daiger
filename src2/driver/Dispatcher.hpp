@@ -1,10 +1,3 @@
-/*
- * Dispatcher.h
- *
- *  Created on: Dec 15, 2015
- *      Author: tzhou
- */
-
 #ifndef DRIVER_DISPATCHER_HPP_
 #define DRIVER_DISPATCHER_HPP_
 
@@ -14,8 +7,6 @@
 #include <functional>
 
 static constexpr int InitTypeNum=50;
-
-namespace dsm {
 
 template<class... Params>
 class Dispatcher{
@@ -117,7 +108,5 @@ void Dispatcher<Params...>::launch(
 	}
 	target(param...);
 }
-
-} /* namespace dsm */
 
 #endif /* DRIVER_DISPATCHER_HPP_ */

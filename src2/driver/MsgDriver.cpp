@@ -10,8 +10,6 @@
 
 using namespace std;
 
-namespace dsm {
-
 //Helper
 MsgDriver::callback_t MsgDriver::GetDummyHandler(){
 	static callback_t dummy=[](const std::string&, const RPCInfo&){};
@@ -123,5 +121,3 @@ bool MsgDriver::popData(){
 //	return processOutput(d, r);
 	return processOutput(p.first,p.second);
 }
-
-} /* namespace dsm */

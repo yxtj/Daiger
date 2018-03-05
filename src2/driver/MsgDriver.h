@@ -1,21 +1,13 @@
-/*
- * MsgDriver.h
- *
- *  Created on: Dec 15, 2015
- *      Author: tzhou
- */
-
+#pragma once
 #ifndef DRIVER_MSGDRIVER_H_
 #define DRIVER_MSGDRIVER_H_
 
 #include "Dispatcher.hpp"
-#include "net/RPCInfo.h"
+#include "network/RPCInfo.h"
 #include <deque>
 #include <string>
 #include <mutex>
 #include <functional>
-
-namespace dsm {
 
 /*
  * The data flow is as below:
@@ -82,7 +74,5 @@ private:
 	Dispatcher<const std::string&, const RPCInfo&> outDisper; //response when processed
 	callback_t defaultHandler;
 };
-
-} /* namespace dsm */
 
 #endif /* DRIVER_MSGDRIVER_H_ */

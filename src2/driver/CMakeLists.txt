@@ -1,13 +1,13 @@
 set(TOOLS
 	tools/ReplyHandler.h
-	tools/ReplyHandler.cc
+	tools/ReplyHandler.cpp
 	tools/SyncUnit.h
-	tools/SyncUnit.cc
+	tools/SyncUnit.cpp
 )
 
 add_library(driver
 	Dispatcher.hpp
 	MsgDriver.h
-	MsgDriver.cc
+	MsgDriver.cpp
 	${TOOLS}
 )
