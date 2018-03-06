@@ -2,6 +2,8 @@
 
 using namespace std;
 
+std::chrono::system_clock::time_point Timer::_boot_time = chrono::system_clock::now();
+
 Timer::Timer()
 {
 	restart();
@@ -30,3 +32,12 @@ double Timer::elapseMin() const
 	return passed.count();
 }
 
+double Timer::Now(){
+	return std::chrono::duration<double>(
+		chrono::system_clock::now().time_since_epoch()).count();
+}
+
+double NowSinceBoot(){
+	return std::chrono::duration_cast<double>(
+		chrono::system_clock::now() - _boot_time).count();
+}

@@ -1,8 +1,10 @@
 #pragma once
 #include <chrono>
+
 class Timer
 {
 	std::chrono::system_clock::time_point _time;
+	static std::chrono::system_clock::time_point _boot_time;
 public:
 	Timer();
 	void restart();
@@ -14,5 +16,7 @@ public:
 	long long elapseMS() const;
 	long long elapseS() const;
 	double elapseMin() const;
-};
 
+	static double Now();
+	static double NowSinceBoot();
+};
