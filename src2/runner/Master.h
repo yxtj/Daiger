@@ -1,5 +1,7 @@
 #pragma once
 #include "Runner.h"
+#include "driver/tools/SyncUnit.h"
+#include "runner_helpers.h"
 #include <string>
 
 class NetworkThread;
@@ -22,17 +24,30 @@ protected:
 	virtual void procedureUpdate();
 	virtual void procedureOutput();
 
+// local logic functions
+private:
+	int assignWid(const int nid); // bind to specific implementation
+	bool checkProgress();
+
 // handlers
 private:
 	//using callback_t = void (Master::*)(const std::string&, const RPCInfo&);
 	//typedef void (Master::*callback_t)(const string&, const RPCInfo&);
 	using typename Runner::callback_t;
-	callback_t localBinder(void (Master::*fp)(const std::string&, const RPCInfo&));
+	callback_t localCBBinder(void (Master::*fp)(const std::string&, const RPCInfo&));
 	virtual void registerHandlers();
+
+public:
+	void handleReply(const std::string& d, const RPCInfo& info);
 
 	void handleRegister(const std::string& d, const RPCInfo& info);
 	void handleProgressReport(const std::string& d, const RPCInfo& info);
 
 private:
+	WorkerMonitor wm;
+
+	SyncUnit su_regw;
+	SyncUnit su_procedure;
+	SyncUnit su_term;
 
 };

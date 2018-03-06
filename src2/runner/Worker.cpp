@@ -11,13 +11,43 @@ Worker::Worker(const AppBase& app, Option& opt)
 }
 
 void Worker::start() {
-	start_running();
+	registerHandlers();
+	startMsgLoop();
     registerWorker();
 
 }
 
 void Worker::finish() {
     terminateWorker();
-	stop_running();
+	stopMsgLoop();
     tmsg.join();
 }
+
+void Worker::registerWorker(){
+	// processed by handleRegister() and handleWorkers()
+}
+
+void Worker::terminateWorker(){
+
+}
+
+void Worker::procedureLoadGraph(){
+	
+}
+
+void Worker::procedureLoadValue(){
+	
+}
+
+void Worker::procedureLoadDelta(){
+	
+}
+
+void Worker::procedureUpdate(){
+	
+}
+
+void Worker::procedureOutput(){
+	
+}
+

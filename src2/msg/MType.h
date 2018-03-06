@@ -6,9 +6,10 @@ struct MType {
 	// Basic Control
 	static constexpr int CReply = 0;
 	static constexpr int CRegister = 1;
-	static constexpr int CReady = 2;
-	static constexpr int CEnd = 3;
-	static constexpr int CEndForce = 4;
+	static constexpr int CWorkers = 2;
+	static constexpr int CReady = 4;
+	static constexpr int CFinished = 5;
+	static constexpr int CEndForce = 6;
 	static constexpr int CAlive = 9;
 
 	// Procedure Control

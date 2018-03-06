@@ -1,6 +1,7 @@
 #pragma once
 #include "Runner.h"
 #include "network/RPCInfo.h"
+#include "runner_helpers.h"
 #include <string>
 
 class NetworkThread;
@@ -23,14 +24,23 @@ protected:
 	virtual void procedureUpdate();
 	virtual void procedureOutput();
 
-// handlers
+// handler helpers
 private:
 	//using callback_t = void (Worker::*)(const std::string&, const RPCInfo&);
 	//typedef void (Worker::*callback_t)(const string&, const RPCInfo&);
 	using typename Runner::callback_t;
-	callback_t localBinder(void (Worker::*fp)(const std::string&, const RPCInfo&));
+	callback_t localCBBinder(void (Worker::*fp)(const std::string&, const RPCInfo&));
 	virtual void registerHandlers();
 
+// handlers
+public:
+	void handleReply(const std::string& d, const RPCInfo& info);
+
+	void handleRegister(const std::string& d, const RPCInfo& info);
+	void handleWorkers(const std::string& d, const RPCInfo& info);
+
 private:
+	int master_net_id;
+	WorkerIDMapper wm;
 
 };

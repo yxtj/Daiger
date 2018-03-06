@@ -1,14 +1,20 @@
 #pragma once
+#include "ArgumentSeparator.h"
+#include "Operation.h"
+#include "IOHandler.h"
+#include "Terminator.h"
+#include "Sharder.h"
+#include "Scheduler.h"
 #include <string>
 #include <vector>
 
+/*
 class OperationBase;
 class TerminatorBase;
 class SharderBase;
 class SchedulerBase;
 class IOHandlerBase;
 
-/*
 class LocalHolderBase;
 class RemoteHolderBase;
 class AppBase{

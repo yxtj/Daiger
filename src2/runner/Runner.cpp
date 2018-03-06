@@ -2,7 +2,7 @@
 #include "network/NetworkThread.h"
 #include "serial/serialization.h"
 #include "msg/MType.h"
-#include "IdTranslate.h"
+#include "runner_helpers.h"
 #include <cassert>
 #include <chrono>
 #include <functional>
@@ -10,20 +10,25 @@
 using namespace std;
 using namespace std::placeholders;
 
-using namespace std;
-
 Runner::Runner(const AppBase& app, Option& opt)
-	: app(app), opt(move(opt)), running(false)
+	: app(app), opt(move(opt)), running(false), timeout(opt.timeout)
 {
     net = NetworkThread::GetInstance();
     assert(net != nullptr);
-	registerHandlers();
-    tmsg = thread(bind(&Runner::msgLoop, this));
 }
 
 void Runner::sleep() {
 	static auto d = chrono::duration<double>(0.01);
 	this_thread::sleep_for(d);
+}
+
+void Runner::startMsgLoop(){
+	running = true;
+    tmsg = thread(bind(&Runner::msgLoop, this));
+}
+void Runner::stopMsgLoop(){
+	running = false;
+    tmsg.join();
 }
 
 void Runner::msgLoop() {
@@ -58,14 +63,18 @@ void Runner::regDSPDefault(callback_t fp) {
     //driver.registerDefaultOutHandler(bind(fp, this, _1, _2));
 	driver.registerDefaultOutHandler(fp);
 }
-void Runner::addReplyHandler(
-    const int mtype, std::function<void()> fun, const bool newThread) {
-    rph.addType(mtype,
-        ReplyHandler::condFactory(ReplyHandler::EACH_ONE, opt.nPart),
+void Runner::addRPHEach(
+    const int type, std::function<void()> fun, const int n, const bool newThread)
+{
+    rph.addType(type,
+        ReplyHandler::condFactory(ReplyHandler::EACH_ONE, n),
         fun, newThread);
+	rph.activateType(type);
+}
+void addRPHEachSU(const int type, SyncUnit& su){
+	addRPHEach(type, bind(&SyncUnit::notify, &su), opt.nPart, false);
 }
 
-void Runner::handleReply(const std::string& d, const RPCInfo& info) {
-    msg_t type = deserialize<msg_t>(d);
-    rph.input(type, nidtrans(info.source).second);
+void Runner::sendReply(const RPCInfo& info){
+	net->send(info.source, MType::CReply, info.tag);
 }

@@ -6,6 +6,7 @@
 #include "Option.h"
 #include <string>
 #include <thread>
+#include <chrono>
 
 class NetworkThread;
 
@@ -20,8 +21,8 @@ public:
 protected:
 	void msgLoop();
 	void sleep();
-	void start_running();
-	void stop_running();
+	void startMsgLoop();
+	void stopMsgLoop();
 
 	virtual void registerWorker() = 0;
 	virtual void terminateWorker() = 0;
@@ -32,19 +33,25 @@ protected:
 	virtual void procedureUpdate() = 0;
 	virtual void procedureOutput() = 0;
 
-// handlers
+// handler helpers
 protected:
 	using callback_t = std::function<void(const std::string&, const RPCInfo&)>;
 	//using callback_t = void (Master::*)(const std::string&, const RPCInfo&);
 	//typedef void (Master::*callback_t)(const string&, const RPCInfo&);
 	//using replier_t = std::function<void()>;
 	virtual void registerHandlers() = 0;
-	void addReplyHandler(const int mtype, std::function<void()> fun,const bool spwanThread=false);
 	void regDSPImmediate(const int type, callback_t fp);
 	void regDSPProcess(const int type, callback_t fp);
 	void regDSPDefault(callback_t fp);
 
-	void handleReply(const std::string& d, const RPCInfo& info);
+	void addRPHEach(const int type, std::function<void()> fun, const int n, const bool spwanThread=false);
+	void addRPHEachSU(const int type, SyncUnit& su);
+
+	void sendReply(const RPCInfo& info);
+
+// handlers
+public:
+	// void handleReply(const std::string& d, const RPCInfo& info);
 
 protected:
 	AppBase app;
@@ -53,6 +60,7 @@ protected:
 	ReplyHandler rph;
 	NetworkThread* net;
 
+	std::chrono::duration<float> timeout;
 	std::thread tmsg;
 	bool running;
 };
