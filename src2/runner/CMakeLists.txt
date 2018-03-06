@@ -1,15 +1,17 @@
 set(HEADERS
 	Option.h
-	IdTranslate.h
-	Worker.h
+	runner_helpers.h
+	Runner.h
 	Master.h
+	Worker.h
 )
 set(SOURCES
 	main.cpp
 	Option.cpp
-	IdTranslate.cpp
-	Worker.cpp
+	runner_helpers.cpp
+	Runner.h
 	Master.cpp
+	Worker.cpp
 )
 add_library(runner
 	${HEADERS} ${SOURCES})
