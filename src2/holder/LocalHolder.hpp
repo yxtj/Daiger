@@ -17,7 +17,10 @@ class LocalHolder
 	using value_t = node_t::value_t;
 	using neighbor_t = node_t::neighbor_t;
 	using neighbor_list_t = node_t::neighbor_list_t;
+
+	LocalHolder() = default;
 	LocalHolder(operation_t* opt, size_t n);
+	void init(operation_t* opt, size_t n);
 
 	// -------- basic functions --------
 	bool add(const node_t& n);
@@ -65,8 +68,13 @@ class LocalHolder
 
 template <class V, class N>
 LocalHolder<V, N>::LocalHolder(operation_t* opt, size_t n)
-	: opt(opt)
 {
+	init(opt, n);
+}
+template <class V, class N>
+void LocalHolder<V, N>::init(operation_t* opt, size_t n)
+{
+	this->opt = opt;
 	if(opt->is_accumulative()){
 		f_update_incremental = bind(
 			&LocalHolder<V, N>::inc_update_accumulative, this, placeholders::_1, placeholders::_2);
@@ -80,6 +88,7 @@ LocalHolder<V, N>::LocalHolder(operation_t* opt, size_t n)
 	if(n != 0)
 		cont.reserve(n);
 }
+
 
 // -------- basic functions --------
 
