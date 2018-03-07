@@ -2,7 +2,7 @@ cmake_minimum_required (VERSION 2.6)
 
 project(Daiger)
 
-include(../cmake/FindProtobuf.cmake)
+#include(../cmake/FindProtobuf.cmake)
 
 include(CheckIncludeFile)
 include(CheckIncludeFileCXX)
@@ -17,13 +17,13 @@ find_package(Boost REQUIRED)
 #find_package(SWIG)
 
 # -------- Protobuf --------
-find_package(HAVE_PROTOBUF protobuf)
-find_program(HAVE_PROTOC "protoc")
-if (NOT HAVE_PROTOBUF OR NOT HAVE_PROTOC)
-  message(FATAL_ERROR "Required protocol buffer headers and compiler not found.")
-else()
-  set(PROTOBUF_LIBS protobuf)
-endif()
+#find_package(HAVE_PROTOBUF protobuf)
+#find_program(HAVE_PROTOC "protoc")
+#if (NOT HAVE_PROTOBUF OR NOT HAVE_PROTOC)
+#  message(FATAL_ERROR "Required protocol buffer headers and compiler not found.")
+#else()
+#  set(PROTOBUF_LIBS protobuf)
+#endif()
 
 # -------- MPI --------
 find_program(HAVE_MPICC "mpic++")

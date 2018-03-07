@@ -9,7 +9,6 @@ set(HEADERS
 )
 set(SOURCES
 	AppBase.cpp
-	IOHandler.cpp
 	IOHandler_Helper.cpp
 	Scheduler.cpp
 	Sharder.cpp

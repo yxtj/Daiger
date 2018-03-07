@@ -25,7 +25,7 @@ struct ConnectedComponent {
 		virtual value_t init_value(const id_t& k, const neighbor_list_t& neighbors);
 
 		virtual value_t identity_element() const;
-		virtual value_t oplus(value_t& a, const value_t& b);
+		virtual value_t oplus(const value_t& a, const value_t& b);
 		virtual value_t func(const node_t& n, const neighbor_t& neighbor);
 
 		virtual bool is_selective(){ return true; }
@@ -34,7 +34,7 @@ struct ConnectedComponent {
 		virtual priority_t priority(const node_t& n);
 	};
 
-	class Separator : public ArgumentSpearator {
+	class Separator : public ArgumentSeparator {
 	public:
 		virtual AppArguments separate(const std::vector<std::string>& args);
 	};

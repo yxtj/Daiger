@@ -6,7 +6,7 @@ set(HEADERS
 	tuple3_ps.h
 )
 set(SOURCES
-
 )
-add_library(serial
-	${HEADERS} ${SOURCES})
+add_library(serial INTERFACE)
+#	${HEADERS} ${SOURCES})
+target_include_directories(serial INTERFACE ./)

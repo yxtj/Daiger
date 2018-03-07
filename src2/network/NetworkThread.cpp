@@ -10,9 +10,10 @@ static inline void Sleep(){
 }
 
 NetworkThread::NetworkThread() :
-		stat_send_pkg(0), stat_send_byte(0),
-		stat_recv_pkg(0), stat_recv_byte(0),
-		running(false), done(false), net(nullptr){
+		stat_send_pkg(0), stat_recv_pkg(0),
+		stat_send_byte(0), stat_recv_byte(0),
+		running(false), done(false), net(nullptr)
+{
 	net = NetworkImplMPI::GetInstance();
 
 	running = true;

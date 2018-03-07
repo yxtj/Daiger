@@ -1,5 +1,7 @@
+#pragma once
 #include "common/def.h"
 #include <vector>
+#include <string>
 
 class SchedulerBase {
 public:
@@ -31,7 +33,7 @@ public:
 		priority_t p;
 	};
 	struct CmpUnit{
-		bool operator()(const Unit& a, const Unit& b){
+		bool operator()(const Unit& a, const Unit& b) const {
 			return a.p > b.p;
 		}
 	};

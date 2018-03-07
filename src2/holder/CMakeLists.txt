@@ -5,5 +5,6 @@ set(HEADERS
 set(SOURCES
 
 )
-add_library(holder
-	${HEADERS} ${SOURCES})
+add_library(holder INTERFACE)
+#	${HEADERS} ${SOURCES})
+target_include_directories(holder INTERFACE ./)

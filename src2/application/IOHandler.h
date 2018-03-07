@@ -7,6 +7,7 @@
 
 class IOHandlerBase {
 public:
+	virtual ~IOHandlerBase() = default;
 	virtual void init(const std::vector<std::string>& args){}
 	// load graph changes
 	virtual change_t load_change(std::string& line){

@@ -4,10 +4,11 @@
 #include <string>
 #include <utility>
 #include <stdexcept>
-#include <numeric>
+#include <limits>
 
 class TerminatorBase {
 public:
+	virtual ~TerminatorBase() = default;
 	virtual void init(const std::vector<std::string>& args){};
 
 	// on workers:
@@ -19,7 +20,7 @@ public:
 	// initialize the curr variable, only needed on master
 	virtual void prepare_global_checker(const size_t n_worker);
 	// report format: (local progress, # ndoes whose v changed after last report)
-	virtual double update_report(const size_t wid, const std::pair<double, size_t>& report);
+	virtual void update_report(const size_t wid, const std::pair<double, size_t>& report);
 	// check whetherto terminate via progress reports, default: no-one changed;
 	virtual bool check_term() = 0;
 	// get the current global progress value
@@ -62,7 +63,7 @@ class TerminatorDiff
 public:
 	virtual void init(const std::vector<std::string>& args);
 	virtual void prepare_global_checker(const size_t n_worker);
-	virtual double update_report(const size_t wid, const std::pair<double, size_t>& report);
+	virtual void update_report(const size_t wid, const std::pair<double, size_t>& report);
 	virtual bool check_term();
 	
 private:
@@ -74,7 +75,7 @@ private:
 template <typename V, typename N>
 void TerminatorDiff<V, N>::init(const std::vector<std::string>& args){
 	try{
-		epsilon = stod(args[0]);
+		epsilon = std::stod(args[0]);
 	} catch (std::exception& e){
 		throw std::invalid_argument("Unable to get <epsilon> for TerminatorDiff.");
 	}
@@ -86,7 +87,7 @@ void TerminatorDiff<V, N>::prepare_global_checker(const size_t n_worker){
 	sum_gp_last=std::numeric_limits<double>::lowest();
 }
 template <typename V, typename N>
-double TerminatorDiff<V, N>::update_report(const size_t wid, const std::pair<double, size_t>& report){
+void TerminatorDiff<V, N>::update_report(const size_t wid, const std::pair<double, size_t>& report){
 	sum_gp_last += TerminatorBase::curr[wid].first - last[wid];
 	last[wid] = TerminatorBase::curr[wid].first;
 	TerminatorBase::update_report(wid, report);
@@ -104,7 +105,7 @@ class TerminatorStop
 {
 public:
 	virtual void prepare_global_checker(const size_t n_worker);
-	virtual double update_report(const size_t wid, const std::pair<double, size_t>& report);
+	virtual void update_report(const size_t wid, const std::pair<double, size_t>& report);
 	virtual bool check_term();
 	
 private:
@@ -119,7 +120,7 @@ void TerminatorStop<V, N>::prepare_global_checker(const size_t n_worker){
 	sum_gc_last=std::numeric_limits<size_t>::max();
 }
 template <typename V, typename N>
-double TerminatorStop<V, N>::update_report(const size_t wid, const std::pair<double, size_t>& report){
+void TerminatorStop<V, N>::update_report(const size_t wid, const std::pair<double, size_t>& report){
 	sum_gc_last += TerminatorBase::curr[wid].second - last[wid];
 	last[wid] = TerminatorBase::curr[wid].second;
 	TerminatorBase::update_report(wid, report);

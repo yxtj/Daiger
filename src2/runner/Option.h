@@ -21,7 +21,6 @@ public:
 	//bool priority_degree; // use degree of out-neighbors
 	//bool priority_diff; // use <u>-<v> instead of <u>
 
-	bool balance_load; // used to support data loading from arbitrary number of input files
 	size_t nPart; // optional, used to check whether a correct number of instance is started
 	size_t nNode; // optional, used to preactively allocate space
 

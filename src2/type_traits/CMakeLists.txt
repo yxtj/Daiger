@@ -1,5 +1,5 @@
 set(HEADERS
-	type_trais_dummy.h
+	type_traits_dummy.h
 	is_container.h
 	is_stl_container.h
 	is_sequential_container.h
@@ -9,7 +9,7 @@ set(HEADERS
 	is_tuple.h
 )
 set(SOURCES
-
 )
-add_library(type_traits
-	${HEADERS} ${SOURCES})
+add_library(type_traits INTERFACE)
+	#${HEADERS} ${SOURCES})
+target_include_directories(type_traits INTERFACE ./)

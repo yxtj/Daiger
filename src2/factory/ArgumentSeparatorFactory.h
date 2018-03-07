@@ -4,10 +4,10 @@
 #include <string>
 
 class ArgumentSeparatorFactory
-	: public FactoryTemplate<ArgumentSpearator>
+	: public FactoryTemplate<ArgumentSeparator>
 {
 public:
-	using parent_t = FactoryTemplate<ArgumentSpearator>;
+	using parent_t = FactoryTemplate<ArgumentSeparator>;
 
 	static void init();
 };

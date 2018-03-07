@@ -12,7 +12,7 @@ void TerminatorBase::prepare_global_checker(const size_t n_worker){
 	sum_gp = 0.0;
 	sum_gc = 0;
 }
-double TerminatorBase::update_report(const size_t wid, const std::pair<double, size_t>& report){
+void TerminatorBase::update_report(const size_t wid, const std::pair<double, size_t>& report){
 	sum_gp += report.first - curr[wid].first;
 	sum_gc += report.second - curr[wid].second;
 	curr[wid] = report;

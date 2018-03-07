@@ -3,6 +3,7 @@
 
 struct ConfData {
 	int nPart;
+	bool balance_load; // used to support data loading from arbitrary number of input files
 
 	std::string path_graph;
 	std::string path_delta;

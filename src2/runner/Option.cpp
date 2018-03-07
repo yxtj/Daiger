@@ -17,7 +17,7 @@ Option::Option()
 	pimpl->desc.add_options()
 		("help", "Print help messages")
 		("show_info", value<bool>(&show)->default_value(1), "Print the initializing information.")
-		("load_balance", value<bool>(&balance_load)->default_value(1), "Support loading from arbitrary number of files.")
+		("load_balance", value<bool>(&conf.balance_load)->default_value(1), "Support loading from arbitrary number of files.")
 		("part", value<size_t>(&nPart)->default_value(0), 
 			"[integer] # of workers, used check whether a correct number of instance is started.")
 		("node", value<size_t>(&nNode)->default_value(-1), 
@@ -72,20 +72,20 @@ bool Option::parseInput(int argc, char* argv[]) {
 	}
 
 	while(!flag_help) { // technique for condition checking
-		if(path_graph.empty()) {
+		if(conf.path_graph.empty()) {
 			cerr << "Graph path is not given" << endl;
 			flag_help = true;
 			break;
 		}
-		sortUpPath(path_graph);
-		sortUpPath(path_delta);
-		sortUpPath(path_value);
-		sortUpPath(path_result);
+		sortUpPath(conf.path_graph);
+		sortUpPath(conf.path_delta);
+		sortUpPath(conf.path_value);
+		sortUpPath(conf.path_result);
 
-		if(path_delta.empty() || path_value.empty())
+		if(conf.path_delta.empty() || conf.path_value.empty())
 			do_incremental=false;
 		
-		if(path_result.empty())
+		if(conf.path_result.empty())
 			do_output=false;
 
 		break;

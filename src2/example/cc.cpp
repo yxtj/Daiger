@@ -20,7 +20,7 @@ void ConnectedComponent::MyOperation::init(const std::vector<std::string>& arg_l
 ConnectedComponent::value_t ConnectedComponent::MyOperation::identity_element() const{
 	return std::numeric_limits<value_t>::min();
 }
-ConnectedComponent::value_t ConnectedComponent::MyOperation::oplus(value_t& a, const value_t& b){
+ConnectedComponent::value_t ConnectedComponent::MyOperation::oplus(const value_t& a, const value_t& b){
 	//return max(a, b);
 	return (a<b)?b:a;
 }

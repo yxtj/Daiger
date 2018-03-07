@@ -5,6 +5,7 @@
 #include <vector>
 
 struct OperationBase {
+	virtual ~OperationBase() = default;
 	// parse the given parameters
 	virtual void init(const std::vector<std::string>& args){}
 };
@@ -28,10 +29,10 @@ struct Operation
 
 	// helper operations: group-level f-function, ominus for accumulative, better for selective
 	virtual std::vector<std::pair<id_t, value_t>> func(const node_t& n); // for all neighbors, default: use the previous func for all
-	virtual bool is_accumuative(); // default: false
+	virtual bool is_accumulative(); // default: false
 	virtual bool is_selective(); // default: false
 	// subtype for accumulative
-	virtual void ominus(value_t& a, const value_t& b); // when is_accumuative() is true, default: a-=b
+	virtual void ominus(value_t& a, const value_t& b); // when is_accumulative() is true, default: a-=b
 	// subtype for selective
 	virtual bool better(const value_t& a, const value_t& b); // when is_selective() is true, default: false
 	
@@ -59,10 +60,11 @@ std::vector<std::pair<id_t, V>> Operation<V, N>::func(const node_t& n)
 	for(const auto& dst: n.onb){
 		output.emplace_back(get_key(dst), func(n, dst));
 	}
+	return output;
 }
 
 template <class V, class N>
-bool Operation<V, N>::is_accumuative(){
+bool Operation<V, N>::is_accumulative(){
 	return false;
 }
 template <class V, class N>

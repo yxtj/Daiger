@@ -5,7 +5,8 @@
 
 class SharderBase {
 public:
-	virtual void init(const std::vector<std::string>& args){};
+	virtual ~SharderBase() = default;
+	virtual void init(const std::vector<std::string>& args);
 	// the the worker id of a node key
 	virtual size_t owner(const id_t& id) = 0;
 protected:
