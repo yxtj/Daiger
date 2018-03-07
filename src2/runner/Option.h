@@ -1,4 +1,5 @@
 #pragma once
+#include "common/ConfData.h"
 #include <string>
 #include <vector>
 
@@ -9,15 +10,7 @@ class Option
 public:
 	bool show;
 
-	std::string path_graph;
-	std::string path_delta;
-	std::string path_value;
-	std::string path_result;
-
-	std::string prefix_graph;
-	std::string prefix_delta;
-	std::string prefix_value;
-	std::string prefix_result;
+	ConfData conf;
 
 	std::string app_name;
 	std::vector<std::string> app_args;
@@ -28,19 +21,17 @@ public:
 	//bool priority_degree; // use degree of out-neighbors
 	//bool priority_diff; // use <u>-<v> instead of <u>
 
-	bool balence_load; // used to support data loading from arbitrary number of input files
+	bool balance_load; // used to support data loading from arbitrary number of input files
 	size_t nPart; // optional, used to check whether a correct number of instance is started
 	size_t nNode; // optional, used to preactively allocate space
 
 	bool async;
+	bool cache_free;
 	bool do_incremental; // when path_delta and path_value are given
 	bool do_output; // when path_result is given
 
 	float timeout; // time threshold for determining error
 	// float sleep_interval;
-	float apply_interval;
-	float send_interval;
-	int send_batch_size;
 
 public:
 	Option();
