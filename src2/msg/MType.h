@@ -7,17 +7,14 @@ struct MType {
 	static constexpr int CReply = 0;
 	static constexpr int CRegister = 1;
 	static constexpr int CWorkers = 2;
-	static constexpr int CReady = 4;
-	static constexpr int CFinished = 5;
-	static constexpr int CEndForce = 6;
+	static constexpr int CClear = 3;
+	static constexpr int CShutdown = 4;
+	static constexpr int CTerminate = 8;
 	static constexpr int CAlive = 9;
 
 	// Procedure Control
-	static constexpr int PLoadGraph = 10;
-	static constexpr int PLoadValue = 11;
-	static constexpr int PLoadDelta = 12;
-	static constexpr int PUpdate = 13;
-	static constexpr int POutput = 14;
+	static constexpr int CProcedure = 10;
+	static constexpr int CFinish = 11;
 
 	// Graph Loading and related
 	static constexpr int LGraph = 20;
