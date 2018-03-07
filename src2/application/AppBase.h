@@ -34,6 +34,8 @@ public:
 */
 
 struct AppBase {
+	AppBase(); // set every pointer to null
+
 	// application-related (also type-related)
 	OperationBase* opt;
 	TerminatorBase* tmt;
@@ -42,6 +44,8 @@ struct AppBase {
 	// application-independent
 	SharderBase* shd;
 	SchedulerBase* scd;
+
+	bool check() const;
 };
 
 AppBase makeApplication(const std::string& app_name, const std::vector<std::string>& arg_app, 

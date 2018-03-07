@@ -3,12 +3,12 @@
 #include "common/ConfData.h"
 #include "application/AppBase.h"
 
-struct GlobalHolderImpl;
+class GlobalHolderBase;
 
-class GlobalHolder {
+class GraphContainer {
 public:
-	GlobalHolder(const AppBase& app, const ConfData& conf);
-	~GlobalHolder();
+	GraphContainer(AppBase& app, const ConfData& conf);
+	~GraphContainer();
 	void init();
 
 	void loadGraph();
@@ -19,7 +19,8 @@ public:
 
 private:
 	AppBase app;
-	ConfData conf;
-	GlobalHolderImpl* impl;
+	const ConfData& conf;
+
+	GlobalHolderBase* holder;
 };
 

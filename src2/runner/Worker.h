@@ -2,7 +2,7 @@
 #include "Runner.h"
 #include "network/RPCInfo.h"
 #include "runner_helpers.h"
-#include "holder/GlobalHolder.h"
+#include "holder/GraphContainer.h"
 #include <string>
 #include <thread>
 
@@ -11,7 +11,7 @@ class NetworkThread;
 class Worker : public Runner {
 public:
     Worker() = default;
-    Worker(const AppBase& app, Option& opt);
+    Worker(AppBase& app, Option& opt);
 	
 	virtual void start();
 	virtual void finish();
@@ -56,7 +56,7 @@ private:
 	int master_net_id;
 	WorkerIDMapper wm;
 	
-	GlobalHolder holder;
+	GraphContainer graph;
 
 	std::thread tprcd; // thread for procedures
 };

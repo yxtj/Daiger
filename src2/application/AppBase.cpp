@@ -9,6 +9,15 @@
 
 using namespace std;
 
+AppBase::AppBase()
+	: opt(nullptr), tmt(nullptr), ioh(nullptr), shd(nullptr), scd(nullptr)
+{}
+
+bool AppBase::check() const {
+	return opt!=nullptr && tmt!=nullptr && ioh!=nullptr
+		&& shd!=nullptr && scd!=nullptr;
+}
+
 AppBase makeApplication(const std::string& app_name, const std::vector<std::string>& arg_app, 
 	const std::vector<std::string>& arg_sharder, const std::vector<std::string>& arg_scheduler)
 {

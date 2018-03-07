@@ -10,7 +10,7 @@
 using namespace std;
 using namespace std::placeholders;
 
-Runner::Runner(const AppBase& app, Option& opt)
+Runner::Runner(AppBase& app, Option& opt)
 	: app(app), opt(move(opt)), running(false), timeout(opt.timeout)
 {
     net = NetworkThread::GetInstance();

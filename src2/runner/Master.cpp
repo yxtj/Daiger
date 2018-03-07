@@ -8,7 +8,7 @@
 
 using namespace std;
 
-Master::Master(const AppBase& app, Option& opt)
+Master::Master(AppBase& app, Option& opt)
 	: Runner(app, opt)
 {
 }

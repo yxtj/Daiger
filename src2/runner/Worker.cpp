@@ -6,8 +6,8 @@
 
 using namespace std;
 
-Worker::Worker(const AppBase& app, Option& opt)
-	: Runner(app, opt), holder(app, opt.conf)
+Worker::Worker(AppBase& app, Option& opt)
+	: Runner(app, opt), graph(app, opt.conf)
 {
 }
 

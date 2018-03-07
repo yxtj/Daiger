@@ -9,7 +9,7 @@ class NetworkThread;
 class Master : public Runner {
 public:
 	Master() = default;
-	Master(const AppBase& app, Option& opt);
+	Master(AppBase& app, Option& opt);
 	
 	virtual void start();
 	virtual void finish();

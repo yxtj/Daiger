@@ -1,10 +1,11 @@
 set(HEADERS
 	LocalHolder.hpp
 	RemoteHolder.hpp
+	GlobalHolder.hpp
+	GraphHolder.hpp
 )
 set(SOURCES
-
+	GraphHolder.cpp
 )
-add_library(holder INTERFACE)
-#	${HEADERS} ${SOURCES})
-target_include_directories(holder INTERFACE ./)
+add_library(holder
+	${HEADERS} ${SOURCES})

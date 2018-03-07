@@ -14,7 +14,7 @@ class NetworkThread;
 class Runner {
 public:
 	Runner() = default;
-	Runner(const AppBase& app, Option& opt);
+	Runner(AppBase& app, Option& opt);
 
 	virtual void start() = 0;
 	virtual void finish() = 0;
