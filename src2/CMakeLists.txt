@@ -10,7 +10,8 @@ include(CheckLibraryExists)
 include(CheckFunctionExists)
 
 # -------- Boost --------
-find_package(Boost REQUIRED)
+find_package(Boost REQUIRED COMPONENTS filesystem system program_options)
+include_directories(${Boost_INCLUDE_DIRS}) 
 
 # -------- Python interface --------
 #find_package(PythonLibs)
@@ -79,11 +80,13 @@ link_directories(${MPI_LIBDIRS})
 set(CMAKE_CXX_FLAGS "${CXX_DEFAULT} -fPIC -fno-omit-frame-pointer -std=c++11 ${CXX_WARN} ${CXX_DEFINE}")
 add_subdirectory (dbg)
 add_subdirectory (util)
+add_subdirectory (common)
 add_subdirectory (network)
 #add_subdirectory (msg)
 add_subdirectory (driver)
 add_subdirectory (holder)
 add_subdirectory (application)
+add_subdirectory (factory)
 add_subdirectory (type_traits)
 add_subdirectory (serial)
 add_subdirectory (example)

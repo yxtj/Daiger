@@ -9,9 +9,9 @@ set(HEADERS
 set(SOURCES
 	ArgumentSeparatorFactory.cpp
 	IOHandlerFactory.cpp
-	SchedulerFactory.cpp
+	SchedulerFacrory.cpp
 	SharderFactory.cpp
 	TerminatorFactory.cpp
 )
-add_library(application
+add_library(factory
 	${HEADERS} ${SOURCES})

@@ -34,11 +34,11 @@ struct NodeHasher{
 
 // -------- static functions for understanding the neighbor type --------
 
-id_t get_key(const id_t& n) { return n; }
+inline id_t get_key(const id_t& n) { return n; }
 template <class T>
-id_t get_key(const T& n) { 
+inline id_t get_key(const T& n) { 
 	static_assert(impl::type_traits::template_false_type<T>::value, "Neighbor type should be id_t or pair<id_t, W>");
 	return 0;
 }
 template <class W>
-id_t get_key(const std::pair<id_t, W>& n) { return n.first; }
+inline id_t get_key(const std::pair<id_t, W>& n) { return n.first; }

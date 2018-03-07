@@ -4,5 +4,5 @@ set(HEADERS
 set(SOURCES
     cc.cpp
 )
-add_library(examples
+add_library(example
 	${HEADERS} ${SOURCES})
