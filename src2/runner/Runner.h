@@ -1,6 +1,7 @@
 #pragma once
 #include "application/AppBase.h"
 #include "driver/MsgDriver.h"
+#include "driver/tools/SyncUnit.h"
 #include "driver/tools/ReplyHandler.h"
 #include "network/RPCInfo.h"
 #include "Option.h"
@@ -23,8 +24,13 @@ protected:
 	void sleep();
 	void startMsgLoop();
 	void stopMsgLoop();
+	void msgPausePush();
+	void msgPausePop();
+	void msgResumePush();
+	void msgResumePop();
 
 	virtual void registerWorker() = 0;
+	virtual void shutdownWorker() = 0;
 	virtual void terminateWorker() = 0;
 
 	virtual void procedureLoadGraph() = 0;
@@ -56,11 +62,13 @@ public:
 protected:
 	AppBase app;
 	Option opt;
-	MsgDriver driver;
 	ReplyHandler rph;
 	NetworkThread* net;
 
 	std::chrono::duration<float> timeout;
 	std::thread tmsg;
+	MsgDriver driver;
+	bool msg_do_push;
+	bool msg_do_pop;
 	bool running;
 };

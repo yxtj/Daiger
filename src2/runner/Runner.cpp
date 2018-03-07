@@ -30,20 +30,32 @@ void Runner::stopMsgLoop(){
 	running = false;
     tmsg.join();
 }
-
+void Runner::msgPausePush(){
+	msg_do_push = false;
+}
+void Runner::msgPausePop(){
+	msg_do_pop = false;
+}
+void Runner::msgResumePush(){
+	msg_do_push = true;
+}
+void Runner::msgResumePop(){
+	msg_do_push = true;
+}
 void Runner::msgLoop() {
 	// DLOG(INFO)<<"Message loop of master started";
 	string data;
 	RPCInfo info;
 	info.dest = net->id();
 	while(running){
-		while(net->tryReadAny(data, &info.source, &info.tag)){
+		int n = 16; // prevent spending too much time in pushing but never popping 
+		while(msg_do_push && n-->=0 && net->tryReadAny(data, &info.source, &info.tag)){
 			// DVLOG(1)<<"Got a pkg from "<<info.source<<" to "<<info.dest<<", type "<<info.tag<<
 			//		", queue length="<<driver.queSize();
 			driver.pushData(data, info);
 		}
-		while(!driver.empty()){
-//			DVLOG(1)<<"pop a message. driver left "<<driver_.queSize()<<" , net left "<<network_->unpicked_pkgs();
+		while(msg_do_pop && !driver.empty()){
+			// DVLOG(1)<<"pop a message. driver left "<<driver.queSize()<<" , net left "<<net->unpicked_pkgs();
 			driver.popData();
 		}
 		sleep();
