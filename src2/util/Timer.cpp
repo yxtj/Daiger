@@ -28,16 +28,16 @@ long long Timer::elapseS() const
 
 double Timer::elapseMin() const
 {
-	std::chrono::duration<double, ratio<60> > passed = chrono::system_clock::now() - _time;
+	chrono::duration<double, ratio<60> > passed = chrono::system_clock::now() - _time;
 	return passed.count();
 }
 
 double Timer::Now(){
-	return std::chrono::duration<double>(
+	return chrono::duration<double>(
 		chrono::system_clock::now().time_since_epoch()).count();
 }
 
-double NowSinceBoot(){
-	return std::chrono::duration_cast<double>(
+double Timer::NowSinceBoot(){
+	return chrono::duration_cast<chrono::duration<double>>(
 		chrono::system_clock::now() - _boot_time).count();
 }
