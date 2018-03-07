@@ -16,7 +16,8 @@ public:
 
 protected:
 	virtual void registerWorker();
-	virtual void terminateWorker();
+	virtual void shutdownWorker(); // normal exit
+	virtual void terminateWorker(); // force exit (error happened)
 
 	virtual void procedureLoadGraph();
 	virtual void procedureLoadValue();
@@ -28,6 +29,9 @@ protected:
 private:
 	int assignWid(const int nid); // bind to specific implementation
 	bool checkProgress();
+
+	void startProcedure(const int pid);
+	void finishProcedure(const int pid);
 
 // handlers
 private:
@@ -45,9 +49,11 @@ public:
 
 private:
 	WorkerMonitor wm;
+	int cpid; // current procedure id
 
 	SyncUnit su_regw;
 	SyncUnit su_procedure;
 	SyncUnit su_term;
+	SyncUnit su_clear;
 
 };

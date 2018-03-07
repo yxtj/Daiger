@@ -2,11 +2,12 @@
 #include "network/NetworkThread.h"
 #include <functional>
 #include <chrono>
+#include <iostream>
 
 using namespace std;
 
 Worker::Worker(const AppBase& app, Option& opt)
-	: Runner(app, opt)
+	: Runner(app, opt), holder(app, opt.conf)
 {
 }
 
@@ -27,27 +28,43 @@ void Worker::registerWorker(){
 	// processed by handleRegister() and handleWorkers()
 }
 
-void Worker::terminateWorker(){
+void Worker::shutdownWorker(){
 
+}
+
+void Worker::terminateWorker(){
+	cerr<<"Terminated by Master."<<endl;
+	NetworkThread::Terminate();
+	exit(0);
+}
+
+void Worker::clearMessages(){
+	net->flush();
+	// TODO: wait until all incomming messages are processed or ignored.
+	while(!driver.empty()){
+		sleep();
+		sleep();
+	}
+	net->flush();
 }
 
 void Worker::procedureLoadGraph(){
-	
+	holder.loadGraph();
 }
 
 void Worker::procedureLoadValue(){
-	
+	holder.loadValue();
 }
 
 void Worker::procedureLoadDelta(){
-	
+	holder.loadDelta();
 }
 
 void Worker::procedureUpdate(){
-	
+	holder.update();
 }
 
 void Worker::procedureOutput(){
-	
+	holder.output();
 }
 

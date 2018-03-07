@@ -20,24 +20,28 @@ Master::callback_t Master::localCBBinder(
 }
 
 void Master::registerHandlers() {
-	int nw=opt.nPart;
+	int nw=opt.conf.nPart;
 	ReplyHandler::ConditionType EACH_ONE=ReplyHandler::EACH_ONE;
 	
 	// part 1: message handler
-	regDSPProcess(MType::CReady, localCBBinder(&Master::handleReply));
+	regDSPProcess(MType::CReply, localCBBinder(&Master::handleReply));
 	regDSPProcess(MType::CRegister, localCBBinder(&Master::handleRegister));
 	regDSPProcess(MType::TReport, localCBBinder(&Master::handleProgressReport));
 
 	// part 2: reply handler:
 	//type 1: called by handleReply() directly
+	addRPHEachSU(MType::CClear, su_procedure);
+	addRPHEachSU(MType::CProcedure, su_procedure);
+	addRPHEachSU(MType::CFinish, su_procedure);
+	addRPHEachSU(MType::CShutdown, su_procedure);
 
 	//type 2: called by specific functions (handlers)
 	// by handlerRegisterWorker()
-	addRPHEachSU(MType::CRegister, &su_regw);
+	addRPHEachSU(MType::CRegister, su_regw);
 	// by handlerRegisterWorker()
-	addRPHEachSU(MType::CWorkers, &su_regw);
+	addRPHEachSU(MType::CWorkers, su_regw);
 	// by handleProgressReport()
-	addRPHEachSU(MType::TReport, &su_procedure);
+	addRPHEachSU(MType::TReport, su_term);
 }
 
 void Master::handleReply(const std::string& d, const RPCInfo& info) {

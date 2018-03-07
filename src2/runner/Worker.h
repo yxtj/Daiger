@@ -2,7 +2,9 @@
 #include "Runner.h"
 #include "network/RPCInfo.h"
 #include "runner_helpers.h"
+#include "holder/GlobalHolder.h"
 #include <string>
+#include <thread>
 
 class NetworkThread;
 
@@ -16,6 +18,7 @@ public:
 
 protected:
 	virtual void registerWorker();
+	virtual void shutdownWorker();
 	virtual void terminateWorker();
 
 	virtual void procedureLoadGraph();
@@ -23,6 +26,10 @@ protected:
 	virtual void procedureLoadDelta();
 	virtual void procedureUpdate();
 	virtual void procedureOutput();
+
+// local logic functions
+private:
+	void clearMessages();
 
 // handler helpers
 private:
@@ -38,9 +45,18 @@ public:
 
 	void handleRegister(const std::string& d, const RPCInfo& info);
 	void handleWorkers(const std::string& d, const RPCInfo& info);
+	void handleShutdown(const std::string& d, const RPCInfo& info); // normal exit
+	void handleTerminate(const std::string& d, const RPCInfo& info); // force exit
+
+	void handleClear(const std::string& d, const RPCInfo& info);
+	void handleProcedure(const std::string& d, const RPCInfo& info);
+	void handleFinish(const std::string& d, const RPCInfo& info);
 
 private:
 	int master_net_id;
 	WorkerIDMapper wm;
+	
+	GlobalHolder holder;
 
+	std::thread tprcd; // thread for procedures
 };

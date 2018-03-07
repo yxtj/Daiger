@@ -1,5 +1,6 @@
 #include "Worker.h"
 #include "msg/MType.h"
+#include "msg/messages.h"
 #include "network/NetworkThread.h"
 #include "serial/serialization.h"
 #include "runner_helpers.h"
@@ -7,6 +8,7 @@
 #include <functional>
 #include <string>
 #include <thread>
+#include <iostream>
 
 using namespace std;
 
@@ -18,20 +20,22 @@ Worker::callback_t Worker::localCBBinder(
 }
 
 void Worker::registerHandlers() {
-	int nw=opt.nPart;
+	int nw=opt.conf.nPart;
 	ReplyHandler::ConditionType EACH_ONE=ReplyHandler::EACH_ONE;
 	
 	// part 1: message handler
-	regDSPProcess(MType::CReady, localCBBinder(&Worker::handleReply));
+	regDSPProcess(MType::CReply, localCBBinder(&Worker::handleReply));
 	regDSPProcess(MType::CRegister, localCBBinder(&Worker::handleRegister));
 	regDSPProcess(MType::CWorkers, localCBBinder(&Worker::handleWorkers));
+	regDSPProcess(MType::CShutdown, localCBBinder(&Worker::handleShutdown));
+	regDSPImmediate(MType::CTerminate, localCBBinder(&Worker::handleTerminate));
 
 	// part 2: reply handler:
 	//type 1: called by handleReply() directly
 
 	//type 2: called by specific functions (handlers)
 	// by handlerRegisterWorker()
-	// addRPHEachSU(MType::CRegister, &su_regw);
+	// addRPHEachSU(MType::CRegister, su_regw);
 }
 
 void Worker::handleReply(const std::string& d, const RPCInfo& info) {
@@ -53,3 +57,42 @@ void Worker::handleWorkers(const std::string& d, const RPCInfo& info){
 	}
 	sendReply(info);
 }
+void Worker::handleShutdown(const std::string& d, const RPCInfo& info){
+	shutdownWorker();
+}
+void Worker::handleTerminate(const std::string& d, const RPCInfo& info){
+	terminateWorker();
+}
+
+void Worker::handleClear(const std::string& d, const RPCInfo& info){
+	clearMessages();
+	sendReply(info);
+}
+void Worker::handleProcedure(const std::string& d, const RPCInfo& info){
+	int pid = deserialize<int>(d);
+	function<void()> fun;
+	switch(pid){
+		case ProcedureType::LoadGraph:
+			fun = bind(&Worker::procedureLoadGraph, this); break;
+		case ProcedureType::LoadValue:
+			fun = bind(&Worker::procedureLoadValue, this); break;
+		case ProcedureType::LoadDelta:
+			fun = bind(&Worker::procedureLoadDelta, this); break;
+		case ProcedureType::Update:
+			fun = bind(&Worker::procedureUpdate, this); break;
+		case ProcedureType::Output:
+			fun = bind(&Worker::procedureOutput, this); break;
+		default:
+			cerr<<"Wrong Procedure ID."<<endl;
+	}
+	tprcd = thread(fun);
+	sendReply(info);
+}
+void Worker::handleFinish(const std::string& d, const RPCInfo& info){
+	net->flush();
+	// TODO: abandon unprocessed procedure-related messages.
+	// TODO: clear the resources for this procedure (if something left).
+	tprcd.join();
+	sendReply(info);
+}
+

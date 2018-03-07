@@ -1,6 +1,7 @@
 #include "Master.h"
 #include "network/NetworkThread.h"
 #include "msg/MType.h"
+#include "msg/messages.h"
 #include <functional>
 #include <vector>
 #include <iostream>
@@ -44,7 +45,7 @@ void Master::registerWorker(){
 	if(!su_regw.wait_for(timeout)){
 	}
 	vector<pair<int, int>> idmapping; // nid -> wid
-	idmapping.reserve(opt.nPart);
+	idmapping.reserve(opt.conf.nPart);
 	for(auto& w : wm.cont){
 		idmapping.emplace_back(w.first, w.second.wid);
 	}
@@ -54,42 +55,63 @@ void Master::registerWorker(){
 		cerr<<"Timeout"<<endl;
 		exit(1);
 	}
-	cout<<"All workers are registed"<<endl;
+	cout<<"All workers are registered"<<endl;
+}
+
+void Master::shutdownWorker(){
+	su_procedure.reset();
+	net->broadcast(MType::CShutdown, net->id());
+	su_procedure.wait();
 }
 
 void Master::terminateWorker(){
-	su_procedure.reset();
+	net->broadcast(MType::CTerminate, net->id());
+}
 
+void Master::startProcedure(const int pid){
+	su_procedure.reset();
+	net->broadcast(MType::CClear, net->id());
+	su_procedure.wait();
+
+	su_procedure.reset();
+	net->broadcast(MType::CProcedure, pid);
+	su_procedure.wait();
+}
+
+void Master::finishProcedure(const int pid){
+	su_procedure.reset();
+	net->broadcast(MType::CFinish, net->id());
 	su_procedure.wait();
 }
 
 void Master::procedureLoadGraph(){
-	su_procedure.reset();
-
-	su_procedure.wait();
+	cpid = ProcedureType::LoadGraph;
+	startProcedure(cpid);
+	finishProcedure(cpid);
 }
 
 void Master::procedureLoadValue(){
-	su_procedure.reset();
-
-	su_procedure.wait();
+	cpid = ProcedureType::LoadValue;
+	startProcedure(cpid);
+	finishProcedure(cpid);
 }
 
 void Master::procedureLoadDelta(){
-	su_procedure.reset();
-
-	su_procedure.wait();
+	cpid = ProcedureType::LoadDelta;
+	startProcedure(cpid);
+	finishProcedure(cpid);
 }
 
 void Master::procedureUpdate(){
-	su_procedure.reset();
-
-	su_procedure.wait();
+	cpid = ProcedureType::Update;
+	startProcedure(cpid);
+	// TODO: control progress report and termination check
+	finishProcedure(cpid);
 }
 
 void Master::procedureOutput(){
-	su_procedure.reset();
-
-	su_procedure.wait();
+	cpid = ProcedureType::Output;
+	startProcedure(cpid);
+	finishProcedure(cpid);
 }
 
