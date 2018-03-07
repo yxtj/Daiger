@@ -11,3 +11,5 @@
 #include "application/Operation.h"
 #include "application/IOHandler.h"
 #include "application/Terminator.h"
+
+#include "holder/GlobalHolder.hpp"

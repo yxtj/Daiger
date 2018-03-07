@@ -10,12 +10,13 @@
 using namespace std;
 
 AppBase::AppBase()
-	: opt(nullptr), tmt(nullptr), ioh(nullptr), shd(nullptr), scd(nullptr)
+	: opt(nullptr), tmt(nullptr), ioh(nullptr),
+	shd(nullptr), scd(nullptr), gh(nullptr)
 {}
 
 bool AppBase::check() const {
 	return opt!=nullptr && tmt!=nullptr && ioh!=nullptr
-		&& shd!=nullptr && scd!=nullptr;
+		&& shd!=nullptr && scd!=nullptr && gh!=nullptr;
 }
 
 AppBase makeApplication(const std::string& app_name, const std::vector<std::string>& arg_app, 
@@ -36,5 +37,8 @@ AppBase makeApplication(const std::string& app_name, const std::vector<std::stri
 	app.shd->init(arg_sharder);
 	app.scd = SchedulerFactory::generate(arg_scheduler[0]);
 	app.scd->init(arg_scheduler);
+
+	// TODO: set gh
+	
 	return app;
 }

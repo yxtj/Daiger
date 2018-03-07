@@ -5,6 +5,7 @@
 #include "Terminator.h"
 #include "Sharder.h"
 #include "Scheduler.h"
+#include "holder/GlobalHolder.hpp"
 #include <string>
 #include <vector>
 
@@ -44,6 +45,8 @@ struct AppBase {
 	// application-independent
 	SharderBase* shd;
 	SchedulerBase* scd;
+
+	GlobalHolderBase* gh; // graph holder
 
 	bool check() const;
 };

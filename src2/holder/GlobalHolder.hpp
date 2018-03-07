@@ -17,6 +17,8 @@ public:
 	using neighbor_t = node_t::neighbor_t;
 	using neighbor_list_t = node_t::neighbor_list_t;
 
+	void init(operation_t* opt, const size_t nPart);
+
 	void loadGraph();
 	void loadValue();
 	void loadDelta();
