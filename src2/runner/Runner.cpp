@@ -83,8 +83,20 @@ void Runner::addRPHEach(
         fun, newThread);
 	rph.activateType(type);
 }
-void addRPHEachSU(const int type, SyncUnit& su){
+void Runner::addRPHEachSU(const int type, SyncUnit& su){
 	addRPHEach(type, bind(&SyncUnit::notify, &su), opt.nPart, false);
+}
+void Runner::addRPHAny(
+    const int type, std::function<void()> fun, const bool newThread)
+{
+    rph.addType(type,
+        ReplyHandler::condFactory(ReplyHandler::ANY_ONE),
+        fun, newThread);
+	rph.activateType(type);
+}
+void Runner::addRPHAnySU(const int type, SyncUnit& su)
+{
+    addRPHAny(type, bind(&SyncUnit::notify, &su), false);
 }
 
 void Runner::sendReply(const RPCInfo& info){

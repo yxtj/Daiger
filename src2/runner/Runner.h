@@ -50,8 +50,10 @@ protected:
 	void regDSPProcess(const int type, callback_t fp);
 	void regDSPDefault(callback_t fp);
 
-	void addRPHEach(const int type, std::function<void()> fun, const int n, const bool spwanThread=false);
+	void addRPHEach(const int type, std::function<void()> fun, const int n, const bool spawnThread=false);
 	void addRPHEachSU(const int type, SyncUnit& su);
+	void addRPHAny(const int type, std::function<void()> fun, const bool spawnThread=false);
+	void addRPHAnySU(const int type, SyncUnit& su);
 
 	void sendReply(const RPCInfo& info);
 
