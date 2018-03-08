@@ -23,7 +23,7 @@ Option::Option()
 		("node", value<size_t>(&nNode)->default_value(-1), 
 			"[integer] # of nodes, used for preactively allocate space.")
 		("path_graph", value<string>(&conf.path_graph), "Path of the input graph files.")
-		("prefix_graph", value<string>(&conf.prefix_graph)->default_value(string("Part-")), "Prefix of the input graph files.")
+		("prefix_graph", value<string>(&conf.prefix_graph)->default_value(string("part-")), "Prefix of the input graph files.")
 		("path_delta", value<string>(&conf.path_delta), "Path of the delta graph files. If not given, do non-incremental computation.")
 		("prefix_delta", value<string>(&conf.prefix_delta)->default_value(string("delta-")), "Prefix of the delta graph files.")
 		("path_value", value<string>(&conf.path_value), "Path of the initial value files. If not given, do non-incremental computation.")
