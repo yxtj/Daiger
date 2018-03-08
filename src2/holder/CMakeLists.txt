@@ -1,11 +1,12 @@
 set(HEADERS
 	LocalHolder.hpp
 	RemoteHolder.hpp
-	GlobalHolder.hpp
-	GraphHolder.hpp
+	GlobalHolder.h
+	GlobalHolderImpl.hpp
+	GraphContainer.h
 )
 set(SOURCES
-	GraphHolder.cpp
+	GraphContainer.cpp
 )
 add_library(holder
 	${HEADERS} ${SOURCES})

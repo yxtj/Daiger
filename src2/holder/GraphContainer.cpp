@@ -1,5 +1,4 @@
 #include "GraphContainer.h"
-#include "GlobalHolder.hpp"
 #include <vector>
 
 using namespace std;

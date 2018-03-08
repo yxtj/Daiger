@@ -2,8 +2,7 @@
 #include <string>
 #include "common/ConfData.h"
 #include "application/AppBase.h"
-
-class GlobalHolderBase;
+#include "GlobalHolder.h"
 
 class GraphContainer {
 public:

@@ -11,7 +11,7 @@ template <class V, class N>
 class RemoteHolder
 	: public RemoteHolderBase
 {
-	public:
+public:
 	using operation_t = Operation<V, N>;
 	using node_t = Node<V, N>;
 	using value_t = node_t::value_t;
@@ -41,8 +41,8 @@ class RemoteHolder
 	std::vector<std::pair<id_t, std::pair<id_t, value_t>>> collect(); // collect and remove from the table
 	std::vector<std::pair<id_t, std::pair<id_t, value_t>>> collect(const size_t num);
 
-	private:
-	Kernel<V, N> opt;
+private:
+	operation_t* opt;
 	std::unordered_map<id_t, std::vector<std::pair<id_t, value_t>>> cont;
 
 };

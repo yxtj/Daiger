@@ -7,15 +7,18 @@
 class GlobalHolderBase{};
 
 template <class V, class N>
-class GlobalHolderBaseT
+class GlobalHolderImpl;
+
+template <class V, class N>
+class GlobalHolder
 	: public GlobalHolderBase
 {
 public:
 	using operation_t = Operation<V, N>;
 	using node_t = Node<V, N>;
-	using value_t = node_t::value_t;
-	using neighbor_t = node_t::neighbor_t;
-	using neighbor_list_t = node_t::neighbor_list_t;
+	using value_t = typename node_t::value_t;
+	using neighbor_t = typename node_t::neighbor_t;
+	using neighbor_list_t = typename node_t::neighbor_list_t;
 
 	void init(operation_t* opt, const size_t nPart);
 
@@ -29,12 +32,13 @@ protected:
 	virtual void receiveMessage(const std::string& d);
 
 protected:
-	operation* opt;
+	operation_t* opt;
+	GlobalHolderImpl<V, N>* impl;
 	size_t nPart;
 };
 
 template <class V, class N>
-void GlobalHolderBaseT::init(operation_t* opt, const size_t nPart){
+void GlobalHolder<V, N>::init(operation_t* opt, const size_t nPart){
 	this->opt = opt;
 	this->nPart = nPart;
 }
