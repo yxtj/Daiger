@@ -54,9 +54,12 @@ public:
 
 private:
 	int master_net_id;
+	int my_net_id;
 	WorkerIDMapper wm;
 	
 	GraphContainer graph;
 
 	std::thread tprcd; // thread for procedures
+
+	SyncUnit su_worker;
 };

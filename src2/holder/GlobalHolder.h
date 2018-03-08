@@ -4,7 +4,20 @@
 #include <vector>
 #include <string>
 
-class GlobalHolderBase{};
+class GlobalHolderBase{
+public:
+	virtual void init(OperationBase* opt, const size_t nPart);
+
+	virtual void loadGraph(const std::string& line);
+	virtual void loadValue(const std::string& line);
+	virtual void loadDelta(const std::string& line);
+
+	virtual void output(const std::string& line);
+
+	virtual void msgUpdate(const std::string& line);
+	virtual void msgRequest(const std::string& line);
+	virtual void msgReply(const std::string& line);
+};
 
 template <class V, class N>
 class GlobalHolderImpl;
@@ -20,16 +33,17 @@ public:
 	using neighbor_t = typename node_t::neighbor_t;
 	using neighbor_list_t = typename node_t::neighbor_list_t;
 
-	void init(operation_t* opt, const size_t nPart);
+	virtual void init(operation_t* opt, const size_t nPart);
 
-	virtual void loadGraph(const std::string& fn);
-	virtual void loadValue(const std::string& fn);
-	virtual void loadDelta(const std::string& fn);
-	virtual void update();
-	virtual void output(const std::string& fn);
+	virtual void loadGraph(const std::string& line);
+	virtual void loadValue(const std::string& line);
+	virtual void loadDelta(const std::string& line);
+	
+	virtual void output(const std::string& line);
 
-protected:
-	virtual void receiveMessage(const std::string& d);
+	virtual void msgUpdate(const std::string& line);
+	virtual void msgRequest(const std::string& line);
+	virtual void msgReply(const std::string& line);
 
 protected:
 	operation_t* opt;

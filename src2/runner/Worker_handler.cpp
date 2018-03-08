@@ -35,7 +35,7 @@ void Worker::registerHandlers() {
 
 	//type 2: called by specific functions (handlers)
 	// by handlerRegisterWorker()
-	// addRPHEachSU(MType::CRegister, su_regw);
+	addRPHAnySU(MType::CWorkers, su_worker);
 }
 
 void Worker::handleReply(const std::string& d, const RPCInfo& info) {
@@ -51,10 +51,12 @@ void Worker::handleRegister(const std::string& d, const RPCInfo& info){
 }
 
 void Worker::handleWorkers(const std::string& d, const RPCInfo& info){
-	vector<pair<int, int>> idmapping;
+	vector<pair<int, int>> idmapping = deserialize<vector<pair<int, int>>>(d);
 	for(auto& p : idmapping){
 		wm.register_worker(p.first, p.second);
 	}
+	registerWorker();
+	//rph.input(MType::CWorkers, master_net_id);
 	sendReply(info);
 }
 void Worker::handleShutdown(const std::string& d, const RPCInfo& info){

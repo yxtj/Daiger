@@ -9,6 +9,7 @@ using namespace std;
 Worker::Worker(AppBase& app, Option& opt)
 	: Runner(app, opt), graph(app, opt.conf)
 {
+	my_net_id = net->id();
 }
 
 void Worker::start() {
@@ -25,7 +26,9 @@ void Worker::finish() {
 }
 
 void Worker::registerWorker(){
-	// processed by handleRegister() and handleWorkers()
+	// processed in handleRegister() and handleWorkers()
+	//su_worker.wait();
+	graph.init(wm.nid2wid(my_net_id), app.gh);
 }
 
 void Worker::shutdownWorker(){
@@ -40,7 +43,6 @@ void Worker::terminateWorker(){
 
 void Worker::clearMessages(){
 	net->flush();
-	// TODO: wait until all incomming messages are processed or ignored.
 	while(!driver.empty()){
 		sleep();
 		sleep();
@@ -49,22 +51,22 @@ void Worker::clearMessages(){
 }
 
 void Worker::procedureLoadGraph(){
-	holder.loadGraph();
+	graph.loadGraph();
 }
 
 void Worker::procedureLoadValue(){
-	holder.loadValue();
+	graph.loadValue();
 }
 
 void Worker::procedureLoadDelta(){
-	holder.loadDelta();
+	graph.loadDelta();
 }
 
 void Worker::procedureUpdate(){
-	holder.update();
+	graph.update();
 }
 
 void Worker::procedureOutput(){
-	holder.output();
+	graph.output();
 }
 
