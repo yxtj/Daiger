@@ -7,12 +7,33 @@ using namespace std;
 
 const std::string ConnectedComponent::name("cc");
 
-ConnectedComponent::ConnectedComponent(){
+std::string ConnectedComponent::getName() const {
+	return name;
+}
+
+void ConnectedComponent::reg(){
+	AppKernelFactory::registerClass<ConnectedComponent>(name);
+	
+	ArgumentSeparatorFactory::registerClass<separator_t>(name);
 	OperationFactory::registerClass<operation_t>(name);
 	IOHandlerFactory::registerClass<iohandler_t>(name);
 	TerminatorFactory::registerClass<terminator_t>(name);
-	ArgumentSeparatorFactory::registerClass<separator_t>(name);
 }
+
+ArgumentSeparator* ConnectedComponent::generateSeparator(){
+	return new separator_t();
+}
+OperationBase* ConnectedComponent::generateOperation(){
+	return new operation_t();
+}
+IOHandlerBase* ConnectedComponent::generateIOHandler(){
+	return new iohandler_t();
+}
+TerminatorBase* ConnectedComponent::generateTerminator(){
+	return new terminator_t();
+}
+
+// -------- Components --------
 
 void ConnectedComponent::MyOperation::init(const std::vector<std::string>& arg_line){
 }

@@ -3,16 +3,15 @@
 #include "api/api.h"
 #include <string>
 
-struct ConnectedComponent {
+struct ConnectedComponent
+	: public AppKernel
+{
 	typedef id_t value_t;
 	typedef id_t neighbor_t;
 	// typedef std::vector<neighbor_t> neighbor_list_t;
 	// typedef Node<id_t, value_t> node_t;
 	
 	static const std::string name;
-	
-	 // regist operation, io-handler, terminator, arg-separator into factories
-	ConnectedComponent();
 
 	struct MyOperation : public Operation<value_t, neighbor_t> {
 		using typename Operation<value_t, neighbor_t>::value_t;
@@ -39,10 +38,20 @@ struct ConnectedComponent {
 		virtual AppArguments separate(const std::vector<std::string>& args);
 	};
 
+	typedef Separator separator_t;
 	typedef MyOperation operation_t;
 	typedef IOHandlerUnweighted<value_t> iohandler_t;
 	typedef TerminatorStop<value_t, neighbor_t> terminator_t;
-	typedef Separator separator_t;
+	typedef GlobalHolder<value_t, neighbor_t> graph_t;
+
+	virtual std::string getName() const;
+
+	virtual void reg();
+
+	virtual ArgumentSeparator* generateSeparator();
+	virtual OperationBase* generateOperation();
+	virtual IOHandlerBase* generateIOHandler();
+	virtual TerminatorBase* generateTerminator();
 
 };
 

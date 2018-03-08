@@ -1,5 +1,6 @@
 set(HEADERS
 	AppBase.h
+	AppKernel.h
 	ArgumentSeparator.h
 	IOHandler.h
 	IOHandler_Helper.h

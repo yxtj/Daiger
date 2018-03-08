@@ -1,5 +1,6 @@
 set(HEADERS
 	FactoryTemplate.h
+	AppKernelFactory.h
 	ArgumentSeparatorFactory.h
 	IOHandlerFactory.h
 	SchedulerFactory.h
@@ -7,6 +8,7 @@ set(HEADERS
 	TerminatorFactory.h
 )
 set(SOURCES
+	AppKernelFactory.cpp
 	ArgumentSeparatorFactory.cpp
 	IOHandlerFactory.cpp
 	SchedulerFacrory.cpp

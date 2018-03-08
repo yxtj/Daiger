@@ -69,15 +69,15 @@ string(REPLACE " " ";" MPI_LIBS "${MPI_LIBS}")
 set(CMAKE_CXX_FLAGS "${CXX_DEFAULT} -fPIC -fno-omit-frame-pointer ${CXX_DEFINE}")
 
 include_directories( ${CMAKE_CURRENT_SOURCE_DIR}
-                     ${MAITER_BINARY_DIR}
-                     ${PROTOBUF_INCLUDE_DIRS}
+#                     ${MAITER_BINARY_DIR}
+#                     ${PROTOBUF_INCLUDE_DIRS}
                      ${MPI_INCDIRS}
                    )
 include_directories(SYSTEM)
 
 link_directories(${MPI_LIBDIRS})
 
-set(CMAKE_CXX_FLAGS "${CXX_DEFAULT} -fPIC -fno-omit-frame-pointer -std=c++11 ${CXX_WARN} ${CXX_DEFINE}")
+set(CMAKE_CXX_FLAGS "${CXX_DEFAULT} -fPIC -fno-omit-frame-pointer -std=c++11 ${CXX_WARN} ${CXX_DEFINE} ${MPI_COMPILE_FLAGS}")
 add_subdirectory (dbg)
 add_subdirectory (util)
 add_subdirectory (common)

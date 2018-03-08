@@ -1,8 +1,9 @@
 #include "AppBase.h"
-#include "factory/ArgumentSeparatorFactory.h"
-#include "factory/OperationFactory.h"
-#include "factory/IOHandlerFactory.h"
-#include "factory/TerminatorFactory.h"
+#include "factory/AppKernelFactory.h"
+//#include "factory/ArgumentSeparatorFactory.h"
+//#include "factory/OperationFactory.h"
+//#include "factory/IOHandlerFactory.h"
+//#include "factory/TerminatorFactory.h"
 
 #include "factory/SharderFactory.h"
 #include "factory/SchedulerFactory.h"
@@ -23,22 +24,24 @@ AppBase makeApplication(const std::string& app_name, const std::vector<std::stri
 	const std::vector<std::string>& arg_sharder, const std::vector<std::string>& arg_scheduler)
 {
 	AppBase app;
-	ArgumentSeparator* sep = ArgumentSeparatorFactory::generate(app_name);
+	AppKernel* apk = AppKernelFactory::generate(app_name);
+	ArgumentSeparator* sep = apk->generateSeparator();
 	AppArguments aa = sep->separate(arg_app);
 	delete sep;
-	app.opt = OperationFactory::generate(app_name);
+	app.opt = apk->generateOperation();
 	app.opt->init(aa.operation_arg);
-	app.ioh = IOHandlerFactory::generate(app_name);
+	app.ioh = apk->generateIOHandler();
 	app.ioh->init(aa.iohandler_arg);
-	app.tmt = TerminatorFactory::generate(app_name);
+	app.tmt = apk->generateTerminator();
 	app.tmt->init(aa.terminator_arg);
+	// TODO: set gh
+
+	delete apk;
 
 	app.shd = SharderFactory::generate(arg_sharder[0]);
 	app.shd->init(arg_sharder);
 	app.scd = SchedulerFactory::generate(arg_scheduler[0]);
 	app.scd->init(arg_scheduler);
 
-	// TODO: set gh
-	
 	return app;
 }

@@ -4,5 +4,6 @@ set(HEADERS
 set(SOURCES
 
 )
-add_library(api
-	${HEADERS} ${SOURCES})
+add_library(api INTERFACE)
+#	${HEADERS} ${SOURCES})
+target_include_directories(api INTERFACE ./)

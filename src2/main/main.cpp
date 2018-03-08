@@ -2,6 +2,7 @@
 #include <string>
 #include "application/AppBase.h"
 #include "network/NetworkThread.h"
+#include "example/example_reg.h"
 #include "runner/Option.h"
 #include "runner/Master.h"
 #include "runner/Worker.h"
@@ -14,6 +15,7 @@ int main(int argc, char* argv[]){
 		cerr<<"Failed in parsing arguments."<<endl;
 		return 1;
 	}
+	registerExamples();
 	NetworkThread::Init(argc, argv);
 	if(opt.show){
 
