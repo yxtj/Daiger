@@ -34,12 +34,13 @@ AppBase makeApplication(const std::string& app_name, const std::vector<std::stri
 	app.ioh->init(aa.iohandler_arg);
 	app.tmt = apk->generateTerminator();
 	app.tmt->init(aa.terminator_arg);
-	// TODO: set gh
-
+	app.gh = apk->generateTerminator();
+	// gh should be initialized later in Worker::registerWorkers()
 	delete apk;
 
 	app.shd = SharderFactory::generate(arg_sharder[0]);
 	app.shd->init(arg_sharder);
+	// shd should be given number of worker later in main()
 	app.scd = SchedulerFactory::generate(arg_scheduler[0]);
 	app.scd->init(arg_scheduler);
 

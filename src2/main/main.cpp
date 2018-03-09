@@ -35,6 +35,7 @@ int main(int argc, char* argv[]){
 		cerr<<"The number of network instances does not match the number of workers."<<endl;
 		return 3;
 	}
+	app.shd->setParts(net->size());
 	
 	// Run
 	if(net->id() == 0){ // master

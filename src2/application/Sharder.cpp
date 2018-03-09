@@ -3,12 +3,8 @@
 
 using namespace std;
 
-void SharderBase::init(const std::vector<std::string>& args){
-	try{
-		this->nWorker = stoi(args[0]);
-	} catch(exception& e){
-		throw invalid_argument("Unable to get <nWorker> for SharderBase");
-	}
+void SharderBase::setParts(const size_t n){
+	nWorker = n;
 }
 
 size_t SharderMod::owner(const id_t& id){
