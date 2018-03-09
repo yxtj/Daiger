@@ -6,6 +6,7 @@ class ArgumentSeparator;
 class OperationBase;
 class IOHandlerBase;
 class TerminatorBase;
+class GlobalHolderBase;
 
 struct AppKernel {
 	virtual ~AppKernel() = default;
@@ -17,4 +18,5 @@ struct AppKernel {
 	virtual OperationBase* generateOperation() = 0;
 	virtual IOHandlerBase* generateIOHandler() = 0;
 	virtual TerminatorBase* generateTerminator() = 0;
+	virtual GlobalHolderBase* generateGraph() = 0;
 };

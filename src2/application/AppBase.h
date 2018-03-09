@@ -5,7 +5,7 @@
 #include "Terminator.h"
 #include "Sharder.h"
 #include "Scheduler.h"
-#include "holder/GlobalHolder.h"
+#include "holder/GlobalHolderBase.h"
 #include <string>
 #include <vector>
 

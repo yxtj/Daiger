@@ -52,6 +52,7 @@ struct ConnectedComponent
 	virtual OperationBase* generateOperation();
 	virtual IOHandlerBase* generateIOHandler();
 	virtual TerminatorBase* generateTerminator();
+	virtual GlobalHolderBase* generateGraph();
 
 };
 

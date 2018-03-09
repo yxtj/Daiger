@@ -14,10 +14,10 @@ std::string ConnectedComponent::getName() const {
 void ConnectedComponent::reg(){
 	AppKernelFactory::registerClass<ConnectedComponent>(name);
 	
-	ArgumentSeparatorFactory::registerClass<separator_t>(name);
-	OperationFactory::registerClass<operation_t>(name);
-	IOHandlerFactory::registerClass<iohandler_t>(name);
-	TerminatorFactory::registerClass<terminator_t>(name);
+	// ArgumentSeparatorFactory::registerClass<separator_t>(name);
+	// OperationFactory::registerClass<operation_t>(name);
+	// IOHandlerFactory::registerClass<iohandler_t>(name);
+	// TerminatorFactory::registerClass<terminator_t>(name);
 }
 
 ArgumentSeparator* ConnectedComponent::generateSeparator(){
@@ -31,6 +31,9 @@ IOHandlerBase* ConnectedComponent::generateIOHandler(){
 }
 TerminatorBase* ConnectedComponent::generateTerminator(){
 	return new terminator_t();
+}
+GlobalHolderBase* ConnectedComponent::generateGraph(){
+	return new graph_t();
 }
 
 // -------- Components --------
