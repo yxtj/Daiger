@@ -17,9 +17,10 @@ struct MType {
 	static constexpr int CFinish = 11;
 
 	// Graph Loading and related
-	static constexpr int LGraph = 20;
-	static constexpr int LValue = 21;
-	static constexpr int LDelta = 22;
+	static constexpr int GNode = 20;
+	static constexpr int GValue = 21;
+	static constexpr int GDelta = 22;
+	static constexpr int GINCache = 22;
 
 	// Value Update 
 	static constexpr int VUpdate = 30;
@@ -27,8 +28,8 @@ struct MType {
 	static constexpr int VReply = 32;
 
 	// Progress and Termination
-	static constexpr int TReport = 40;
-	static constexpr int TRequest = 41;
+	static constexpr int PReport = 40;
+	static constexpr int PRequest = 41;
 
 	// Staticstics
 	static constexpr int SGather = 60;
