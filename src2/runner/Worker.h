@@ -52,6 +52,16 @@ public:
 	void handleProcedure(const std::string& d, const RPCInfo& info);
 	void handleFinish(const std::string& d, const RPCInfo& info);
 
+	void handleGNode(const std::string& d, const RPCInfo& info);
+	void handleGValue(const std::string& d, const RPCInfo& info);
+	void handleGDelta(const std::string& d, const RPCInfo& info);
+
+	void handleINCache(const std::string& d, const RPCInfo& info);
+
+	void handleVUpdate(const std::string& d, const RPCInfo& info);
+	void handleVRequest(const std::string& d, const RPCInfo& info);
+	void handleVReply(const std::string& d, const RPCInfo& info);
+
 private:
 	int master_net_id;
 	int my_net_id;

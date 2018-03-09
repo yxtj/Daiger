@@ -30,6 +30,18 @@ void Worker::registerHandlers() {
 	regDSPProcess(MType::CShutdown, localCBBinder(&Worker::handleShutdown));
 	regDSPImmediate(MType::CTerminate, localCBBinder(&Worker::handleTerminate));
 
+	regDSPProcess(MType::CProcedure, localCBBinder(&Worker::handleProcedure));
+	regDSPProcess(MType::CFinish, localCBBinder(&Worker::handleFinish));	
+
+	regDSPProcess(MType::GNode, localCBBinder(&Worker::handlerGNode));
+	regDSPProcess(MType::GValue, localCBBinder(&Worker::handlerGValue));
+	regDSPProcess(MType::GDelta, localCBBinder(&Worker::handlerGDelta));
+	regDSPProcess(MType::GINCache, localCBBinder(&Worker::handlerINCache));
+
+	regDSPProcess(MType::VUpdate, localCBBinder(&Worker::handlerVUpdate));
+	regDSPProcess(MType::VRequest, localCBBinder(&Worker::handlerVRequest));
+	regDSPProcess(MType::VReply, localCBBinder(&Worker::handlerVReply));
+
 	// part 2: reply handler:
 	//type 1: called by handleReply() directly
 
@@ -97,4 +109,29 @@ void Worker::handleFinish(const std::string& d, const RPCInfo& info){
 	tprcd.join();
 	sendReply(info);
 }
+
+void Worker::handleGNode(const std::string& d, const RPCInfo& info){
+	graph->loadGraphPiece(d);
+}
+void Worker::handleGValue(const std::string& d, const RPCInfo& info){
+	graph->loadValuePiece(d);
+}
+void Worker::handleGDelta(const std::string& d, const RPCInfo& info){
+	graph->loadDeltaPiece(d);
+}
+
+void Worker::handleINCache(const std::string& d, const RPCInfo& info){
+	graph->takeINCache(d);
+}
+
+void Worker::handleVUpdate(const std::string& d, const RPCInfo& info){
+	graph->msgUpdate(d);
+}
+void Worker::handleVRequest(const std::string& d, const RPCInfo& info){
+	graph->msgRequest(d);
+}
+void Worker::handleVReply(const std::string& d, const RPCInfo& info){
+	graph->msgReply(d);
+}
+
 
