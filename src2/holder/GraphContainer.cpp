@@ -16,6 +16,7 @@ GraphContainer::~GraphContainer(){
 void GraphContainer::init(int wid, GlobalHolderBase* holder){
 	this->wid = wid;
 	this->holder = holder;
+	holder->init(app, conf.nPart, wid)
 }
 
 void GraphContainer::loadGraph(){
@@ -66,13 +67,17 @@ void GraphContainer::loadDelta(){
 	}
 }
 
-void GraphContainer::update(){
-
-}
-
-void GraphContainer::output(){
+void GraphContainer::dumpResult(){
 	string fn = conf.prefix_result + to_string(wid);
-	holder->output(conf.path_result + "/" + fn);
+	ofstream fout(fn);
+	if(!fout){
+		throw runtime_error("Cannot create output file \"" + fn + "\"");
+	}
+	std::pair<bool, std::string> p = holder->dumpResult();
+	while(p.first){
+		fout<<p.second<<"\n";
+		p = holder->dumpResult();	
+	}
 }
 
 // --------
@@ -108,3 +113,23 @@ void GraphContainer::loadDeltaPiece(const std::string& line){
 	holder->loadDelta(line);
 }
 
+void GraphContainer::takeINCache(const std::string& line){
+	holder->takeINCache(line);
+}
+std::string GraphContainer::sendINCache(){
+	return holder->sendINCache();
+}
+
+void GraphContainer::msgUpdate(const std::string& line){
+	holder->msgUpdate(line);
+}
+void GraphContainer::msgRequest(const std::string& line){
+	holder->msgReply(line);
+}
+void GraphContainer::msgReply(const std::string& line){
+	holder->msgReply(line);
+}
+
+std::string GraphContainer::msgSend(){
+	return holder->msgSend();
+}
