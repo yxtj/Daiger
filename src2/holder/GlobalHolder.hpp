@@ -24,14 +24,14 @@ public:
 	virtual void init(OperationBase* opt, IOHandlerBase* ioh, SchedulerBase* scd, SharderBase* shd,
 		const size_t nPart, const int localId, const bool localProcess);
 
-	virtual bool loadGraph(const std::string& line);
-	virtual bool loadValue(const std::string& line);
-	virtual bool loadDelta(const std::string& line);
+	virtual int loadGraph(const std::string& line);
+	virtual int loadValue(const std::string& line);
+	virtual int loadDelta(const std::string& line);
 	virtual void prepareDump();
 	virtual std::pair<bool, std::string> dumpResult();
 
 	virtual void takeINCache(const std::string& line);
-	virtual std::vector<std::string> collectINCache();
+	virtual std::unordered_map<int, std::string> collectINCache();
 
 	virtual void msgUpdate(const std::string& line);
 	virtual std::string msgRequest(const std::string& line);
@@ -93,32 +93,32 @@ void GlobalHolder<V, N>::add_local_node(id_t& id, neighbor_list_t& nl){
 	local_part.add(std::move(n));
 }
 template <class V, class N>
-bool GlobalHolder<V, N>::loadGraph(const std::string& line){
+int GlobalHolder<V, N>::loadGraph(const std::string& line){
 	std::pair<id_t, neighbor_list_t> d = ioh->load_graph(line);
 	int pid = get_part(d.first);
 	if(!is_local_part(pid))
-		return false;
+		return pid;
 	add_local_node(d.first, d.second);
-	return true;
+	return pid;
 }
 
 template <class V, class N>
-bool GlobalHolder<V, N>::loadValue(const std::string& line){
+int GlobalHolder<V, N>::loadValue(const std::string& line){
 	std::pair<id_t, value_t> d = ioh->load_value(line);
 	int pid = get_part(d.first);
 	if(!is_local_part(pid))
-		return false;
+		return pid;
 	node_t& n = get_node(d.first);
 	n.v = d.second;
-	return true;
+	return pid;
 }
 
 template <class V, class N>
-bool GlobalHolder<V, N>::loadDelta(const std::string& line){
+int GlobalHolder<V, N>::loadDelta(const std::string& line){
 	ChangeEdge<N> d = ioh->load_change(line);
 	int pid = get_part(d.src);
 	if(!is_local_part(pid))
-		return false;
+		return pid;
 	if(d.type == ChangeEdgeType::ADD){
 		local_part.modify_onb_add(d.src, d.dst);
 	}else if(d.type == ChangeEdgeType::REMOVE){
@@ -126,7 +126,7 @@ bool GlobalHolder<V, N>::loadDelta(const std::string& line){
 	}else{
 		local_part.modify_onb_val(d.src, d.dst);
 	}
-	return true;
+	return pid;
 }
 
 template <class V, class N>
@@ -150,9 +150,10 @@ void GlobalHolder<V, N>::takeINCache(const std::string& line){
 	}
 }
 template <class V, class N>
-std::vector<std::string> GlobalHolder<V, N>::collectINCache(){
+std::unordered_map<int, std::string> GlobalHolder<V, N>::collectINCache(){
 	// vector<vector<Msg>> : for each worker, for each unit
-	std::vector<typename msg_t::MsgGINCache_t> msgs(nPart);
+	std::unordered_map<int, typename msg_t::MsgGINCache_t> msgs;
+	msgs.reserve(nPart);
 	local_part.enum_rewind();
 	const node_t* p =local_part.enum_next();
 	while(p != nullptr){
@@ -167,11 +168,11 @@ std::vector<std::string> GlobalHolder<V, N>::collectINCache(){
 			}
 		}
 	}
-	std::vector<std::string> res;
+	std::unordered_map<int, std::string> res;
 	res.reserve(nPart);
-	for(auto& m : msgs){
-		if(!m.empty())
-			res.push_back(serialize(m));
+	for(auto& mp : msgs){
+		if(!mp.second.empty())
+			res[mp.first]=serialize(mp.second);
 	}
 	return res;
 }

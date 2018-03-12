@@ -35,7 +35,9 @@ struct WorkerIDMapper {
 	void register_worker(const int nid, const int wid);
 	std::pair<bool, int> nidtrans(const int nid) const;
 	int nid2wid(const int nid) const;
+	int wid2nid(const int wid) const;
 
 private:
-	std::unordered_map<int, int> cont;
+	std::unordered_map<int, int> contN2W;
+	std::unordered_map<int, int> contW2N;
 };

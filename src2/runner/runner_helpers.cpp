@@ -40,13 +40,14 @@ void WorkerMonitor::update_report_time(const int nid, const double time){
 // -------- WorkerIDMapper --------
 
 void WorkerIDMapper::register_worker(const int nid, const int wid){
-	cont[nid] = wid;
+	contN2W[nid] = wid;
+	contW2N[wid] = nid;
 }
 
 // return <whether-a-worker, worker/master-id>
 std::pair<bool, int> WorkerIDMapper::nidtrans(const int nid) const {
-	auto it = cont.find(nid);
-	if(it == cont.end()){
+	auto it = contN2W.find(nid);
+	if(it == contN2W.end()){
 		return make_pair(false, nid);
 	}else{
 		return make_pair(true, it->second);
@@ -54,5 +55,8 @@ std::pair<bool, int> WorkerIDMapper::nidtrans(const int nid) const {
 }
 
 int WorkerIDMapper::nid2wid(const int nid) const {
-	return cont.at(nid);
+	return contN2W.at(nid);
+}
+int WorkerIDMapper::wid2nid(const int wid) const {
+	return contW2N.at(wid);
 }

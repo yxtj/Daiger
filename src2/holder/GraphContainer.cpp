@@ -19,7 +19,7 @@ void GraphContainer::init(int wid, GlobalHolderBase* holder){
 	holder->init(app.opt, app.ioh, app.scd, app.shd, conf.nPart, wid);
 }
 
-void GraphContainer::loadGraph(){
+void GraphContainer::loadGraph(sender_t sender){
 	vector<string> files = FileEnumerator::listFile(conf.path_graph, conf.prefix_graph);
 	if(!conf.balance_load && files.size() != conf.nPart){
 		throw invalid_argument("Graph files do not match workers. Consider turning on <balance_load>.");
@@ -30,12 +30,12 @@ void GraphContainer::loadGraph(){
 		if(regex_match(fn, m, reg)){
 			int id = stoi(m[1].str());
 			if(id == wid || (conf.balance_load && id%conf.nPart == wid))
-				loadGraphFile(conf.path_graph + "/" + fn);
+				loadGraphFile(conf.path_graph + "/" + fn, sender);
 		}
 	}
 }
 
-void GraphContainer::loadValue(){
+void GraphContainer::loadValue(sender_t sender){
 	vector<string> files = FileEnumerator::listFile(conf.path_value, conf.prefix_value);
 	if(!conf.balance_load && files.size() != conf.nPart){
 		throw invalid_argument("Graph files do not match workers. Consider turning on <balance_load>.");
@@ -46,12 +46,12 @@ void GraphContainer::loadValue(){
 		if(regex_match(fn, m, reg)){
 			int id = stoi(m[1].str());
 			if(id == wid || (conf.balance_load && id%conf.nPart == wid))
-				loadValueFile(conf.path_value + "/" + fn);
+				loadValueFile(conf.path_value + "/" + fn, sender);
 		}
 	}
 }
 
-void GraphContainer::loadDelta(){
+void GraphContainer::loadDelta(sender_t sender){
 	vector<string> files = FileEnumerator::listFile(conf.path_delta, conf.prefix_delta);
 	if(!conf.balance_load && files.size() != conf.nPart){
 		throw invalid_argument("Graph files do not match workers. Consider turning on <balance_load>.");
@@ -62,7 +62,7 @@ void GraphContainer::loadDelta(){
 		if(regex_match(fn, m, reg)){
 			int id = stoi(m[1].str());
 			if(id == wid || (conf.balance_load && id%conf.nPart == wid))
-				loadDeltaFile(conf.path_delta + "/" + fn);
+				loadDeltaFile(conf.path_delta + "/" + fn, sender);
 		}
 	}
 }
@@ -81,47 +81,59 @@ void GraphContainer::dumpResult(){
 	}
 }
 
-void GraphContainer::buildInNeighborCache(){
+void GraphContainer::buildInNeighborCache(sender_t sender){
 	// TODO:
+	unordered_map<int, string> ic = collectINCache();
+	for(auto& p : ic){
+		if(!p.second.empty()){
+			sender(p.first, p.second);
+		}
+	}
 }
 
 // --------
 
-void GraphContainer::loadGraphFile(const std::string& fn){
+void GraphContainer::loadGraphFile(const std::string& fn, sender_t sender){
 	ifstream fin(fn);
 	string line;
 	while(getline(fin, line)){
-		loadGraphPiece(line);
+		int pid = holder->loadGraph(line);
+		if(pid != wid)
+			sender(pid, line);
 	}
 }
-void GraphContainer::loadValueFile(const std::string& fn){
+void GraphContainer::loadValueFile(const std::string& fn, sender_t sender){
 	ifstream fin(fn);
 	string line;
 	while(getline(fin, line)){
-		loadValuePiece(line);
+		int pid = holder->loadValue(line);
+		if(pid != wid)
+			sender(pid, line);
 	}
 }
-void GraphContainer::loadDeltaFile(const std::string& fn){
+void GraphContainer::loadDeltaFile(const std::string& fn, sender_t sender){
 	ifstream fin(fn);
 	string line;
 	while(getline(fin, line)){
-		loadDeltaPiece(line);
+		int pid = holder->loadDelta(line);
+		if(pid != wid)
+			sender(pid, line);
 	}
 }
-void GraphContainer::loadGraphPiece(const std::string& line){
-	holder->loadGraph(line);
+bool GraphContainer::loadGraphPiece(const std::string& line){
+	return holder->loadGraph(line) == wid;
 }
-void GraphContainer::loadValuePiece(const std::string& line){
-	holder->loadValue(line);
+bool GraphContainer::loadValuePiece(const std::string& line){
+	return holder->loadValue(line) == wid;
 }
-void GraphContainer::loadDeltaPiece(const std::string& line){
-	holder->loadDelta(line);
+bool GraphContainer::loadDeltaPiece(const std::string& line){
+	return holder->loadDelta(line) == wid;
 }
 
 void GraphContainer::takeINCache(const std::string& line){
 	holder->takeINCache(line);
 }
-std::vector<std::string> GraphContainer::collectINCache(){
+std::unordered_map<int, std::string> GraphContainer::collectINCache(){
 	return holder->collectINCache();
 }
 

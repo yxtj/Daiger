@@ -57,19 +57,35 @@ void Worker::procedureInit(){
 }
 
 void Worker::procedureLoadGraph(){
-	graph.loadGraph();
+	std::function<void(const int, std::string&)> sender = 
+		[&](const int wid, std::string& msg){
+			net->send(wm.wid2nid(wid), MType::GNode, move(msg));
+		};
+	graph.loadGraph(sender);
 }
 
 void Worker::procedureLoadValue(){
-	graph.loadValue();
+	std::function<void(const int, std::string&)> sender = 
+		[&](const int wid, std::string& msg){
+			net->send(wm.wid2nid(wid), MType::GValue, move(msg));
+		};
+	graph.loadValue(sender);
 }
 
 void Worker::procedureLoadDelta(){
-	graph.loadDelta();
+	std::function<void(const int, std::string&)> sender = 
+		[&](const int wid, std::string& msg){
+			net->send(wm.wid2nid(wid), MType::GDelta, move(msg));
+		};
+	graph.loadDelta(sender);
 }
 
 void Worker::procedureBuildINCache(){
-	graph.buildInNeighborCache();
+	std::function<void(const int, std::string&)> sender = 
+		[&](const int wid, std::string& msg){
+			net->send(wm.wid2nid(wid), MType::GINCache, move(msg));
+		};
+	graph.buildInNeighborCache(sender);
 }
 
 void Worker::procedureUpdate(){
