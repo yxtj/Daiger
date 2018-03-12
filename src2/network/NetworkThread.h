@@ -35,6 +35,9 @@ public:
 		std::string s = serialize(msg);
 		return send(new Task(dst, tag, move(s)));
 	}
+	int send(int dst, int tag, std::string&& msg) {
+		return send(new Task(dst, tag, move(msg)));
+	}
 	// Directly send the request bypassing the pending buffer.
 	template <class T>
 	int sendDirect(int dst, int tag, const T& msg) {
