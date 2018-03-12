@@ -33,6 +33,7 @@ protected:
 	virtual void shutdownWorker() = 0;
 	virtual void terminateWorker() = 0;
 
+	virtual void procedureInit() = 0;
 	virtual void procedureLoadGraph() = 0;
 	virtual void procedureLoadValue() = 0;
 	virtual void procedureLoadDelta() = 0;

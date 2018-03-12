@@ -34,12 +34,11 @@ void Master::registerHandlers() {
 	addRPHEachSU(MType::CProcedure, su_procedure);
 	addRPHEachSU(MType::CFinish, su_procedure);
 	addRPHEachSU(MType::CShutdown, su_procedure);
+	addRPHEachSU(MType::CWorkers, su_regw);
 
 	//type 2: called by specific functions (handlers)
-	// by handlerRegisterWorker()
+	// by handlerRegister()
 	addRPHEachSU(MType::CRegister, su_regw);
-	// by handlerRegisterWorker()
-	addRPHEachSU(MType::CWorkers, su_regw);
 	// by handleProgressReport()
 	addRPHEachSU(MType::PReport, su_term);
 }

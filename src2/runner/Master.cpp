@@ -18,6 +18,7 @@ void Master::start() {
 	startMsgLoop();
     registerWorker();
 
+	procedureInit();
     procedureLoadGraph();
     if (opt.do_incremental) {
         procedureLoadValue();
@@ -43,15 +44,7 @@ int Master::assignWid(const int nid){
 void Master::registerWorker(){
 	su_regw.reset();
 	net->broadcast(MType::CRegister, net->id());
-	if(!su_regw.wait_for(timeout)){
-	}
-	vector<pair<int, int>> idmapping; // nid -> wid
-	idmapping.reserve(opt.conf.nPart);
-	for(auto& w : wm.cont){
-		idmapping.emplace_back(w.first, w.second.wid);
-	}
-	su_regw.reset();
-	net->broadcast(MType::CWorkers, idmapping);
+	// next in handleRegister
 	if(!su_regw.wait_for(timeout)){
 		cerr<<"Timeout"<<endl;
 		exit(1);
@@ -83,6 +76,21 @@ void Master::finishProcedure(const int pid){
 	su_procedure.reset();
 	net->broadcast(MType::CFinish, net->id());
 	su_procedure.wait();
+}
+
+void Master::procedureInit(){
+	cpid = ProcedureType::ShareWorkers;
+	startProcedure(cpid);
+	vector<pair<int, int>> winfo; // nid -> wid
+	winfo.reserve(opt.conf.nPart);
+	for(auto& w : wm.cont){
+		winfo.emplace_back(w.first, w.second.wid);
+	}
+	su_regw.reset();
+	net->broadcast(MType::CWorkers, winfo);
+	// notified by handleReply()
+	su_regw.wait();
+	finishProcedure(cpid);
 }
 
 void Master::procedureLoadGraph(){

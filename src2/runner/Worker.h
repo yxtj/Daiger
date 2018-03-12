@@ -21,6 +21,7 @@ protected:
 	virtual void shutdownWorker();
 	virtual void terminateWorker();
 
+	virtual void procedureInit();
 	virtual void procedureLoadGraph();
 	virtual void procedureLoadValue();
 	virtual void procedureLoadDelta();

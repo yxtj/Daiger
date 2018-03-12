@@ -1,4 +1,5 @@
 #include "Worker.h"
+#include "msg/MType.h"
 #include "network/NetworkThread.h"
 #include <functional>
 #include <chrono>
@@ -26,9 +27,8 @@ void Worker::finish() {
 }
 
 void Worker::registerWorker(){
-	// processed in handleRegister() and handleWorkers()
-	//su_worker.wait();
-	graph.init(wm.nid2wid(my_net_id), app.gh);
+	// called by handleRegister()
+	net->send(master_net_id, MType::CRegister, net->id());
 }
 
 void Worker::shutdownWorker(){
@@ -48,6 +48,12 @@ void Worker::clearMessages(){
 		sleep();
 	}
 	net->flush();
+}
+
+void Worker::procedureInit(){
+	// notified by handleWorkers()
+	su_worker.wait();
+	graph.init(wm.nid2wid(my_net_id), app.gh);
 }
 
 void Worker::procedureLoadGraph(){

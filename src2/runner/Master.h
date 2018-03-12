@@ -19,6 +19,7 @@ protected:
 	virtual void shutdownWorker(); // normal exit
 	virtual void terminateWorker(); // force exit (error happened)
 
+	virtual void procedureInit();
 	virtual void procedureLoadGraph();
 	virtual void procedureLoadValue();
 	virtual void procedureLoadDelta();

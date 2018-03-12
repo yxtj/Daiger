@@ -1,4 +1,4 @@
-# Work flow of some actions
+# Work flow of some network actions
 
 ## Default reply handler
 
@@ -11,23 +11,20 @@ The handler puts it into the reply-handler with the type.
 By default, nothing will happen. 
 In order to take some actions, one should be register the actions for this type in the reply-handler.
 
-## Register workers
+## System start
 
-1. Master : when system starts,
-	- send message "CRegister" to workers with its own network-id.
-2. Worker : when receive "CRegister" from master, 
-	- remember the network-id of master.
-	- send message "CRegister" to master, whose content is ignored.
+1. Master : when boot,
+	- end message "CRegister" to all workers.
+2. Worker : when receive "CRegister",
+	- store the sender's net-id as master's net-id.
+	- send message "CRegister" to master AS REPLY, whose content will be ignored.
 3. Master : when receive "CRegister" from a worker,
 	- assign a worker-id for the network-id.
-4. Master : when all workers are registered
-	- send message "CWorkers" to all workers, containing (nid, wid) mapping for all workers.
-5. Worker : when receive "CWorkers",
-	- store them.
-	- send a reply to master.
-6. Master : when all workers replied
-	- finish the registering.
-	- if timeout, terminates the system.
+	- send a reply
+4. Master : when all workers are registered,
+	- finish.
+5. Master : if timeout,
+	- terminate the system.
 
 ## Run a procedure
 
@@ -79,6 +76,16 @@ In order to take some actions, one should be register the actions for this type 
 
 	(This is actually the step 3, 4, 5 of Type 1.)
 
+## Procedure initialization (sharing working info)
+
+1. Master :
+	- send message "CWorkers" to all workers, containing the assigned (net-id, worker-id) mapping for all workers.
+2. Worker : when receive "CWorkers",
+	- store them.
+	- do local initialization
+	- send a reply to master.
+3. Master : when all workers replied,
+	- finish
 
 ## Progress report & Termination check
 

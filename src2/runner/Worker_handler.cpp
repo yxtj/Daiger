@@ -59,16 +59,15 @@ void Worker::handleReply(const std::string& d, const RPCInfo& info) {
 void Worker::handleRegister(const std::string& d, const RPCInfo& info){
 	int nid = deserialize<int>(d);
 	master_net_id = nid;
-	net->send(master_net_id, MType::CRegister, net->id());
+	registerWorker();
 }
 
 void Worker::handleWorkers(const std::string& d, const RPCInfo& info){
-	vector<pair<int, int>> idmapping = deserialize<vector<pair<int, int>>>(d);
-	for(auto& p : idmapping){
+	vector<pair<int, int>> winfo = deserialize<vector<pair<int, int>>>(d);
+	for(auto& p : winfo){
 		wm.register_worker(p.first, p.second);
 	}
-	registerWorker();
-	//rph.input(MType::CWorkers, master_net_id);
+	su_worker.notify();
 	sendReply(info);
 }
 void Worker::handleShutdown(const std::string& d, const RPCInfo& info){
@@ -86,6 +85,8 @@ void Worker::handleProcedure(const std::string& d, const RPCInfo& info){
 	int pid = deserialize<int>(d);
 	function<void()> fun;
 	switch(pid){
+		case ProcedureType::ShareWorkers:
+			fun = bind(&Worker::procedureInit, this); break;
 		case ProcedureType::LoadGraph:
 			fun = bind(&Worker::procedureLoadGraph, this); break;
 		case ProcedureType::LoadValue:

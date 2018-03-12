@@ -6,7 +6,8 @@
 #include <vector>
 
 enum ProcedureType : int {
-	None = 0,
+	None = -1,
+	ShareWorkers = 0,
 	LoadGraph = 1,
 	LoadValue = 2,
 	LoadDelta = 3,
