@@ -9,10 +9,6 @@ class IOHandlerBase {
 public:
 	virtual ~IOHandlerBase() = default;
 	virtual void init(const std::vector<std::string>& args){}
-	// load graph changes
-	virtual change_t load_change(std::string& line){
-		return IOHelper::load_change(line);
-	}
 };
 
 struct IOHelper;
@@ -27,11 +23,13 @@ public:
 	typedef std::vector<N> neighbor_list_t;
 
 	// load graph
-	virtual std::pair<id_t, neighbor_list_t> load_graph(std::string& line) = 0;
+	virtual std::pair<id_t, neighbor_list_t> load_graph(const std::string& line) = 0;
 	// load starting values
-	virtual std::pair<id_t, value_t> load_value(std::string& line) {
+	virtual std::pair<id_t, value_t> load_value(const std::string& line) {
 		return IOHelper::load_value<value_t>(line);
 	}
+	// load graph changes
+	virtual ChangeEdge<N> load_change(const std::string& line) = 0;
 	// dump result
 	virtual std::string dump_value(const id_t& k, const value_t& v) {
 		return IOHelper::dump_value<value_t>(k, v);
@@ -44,8 +42,11 @@ class IOHandlerUnweighted
 {
 public:
 	using typename IOHandler<V, id_t>::neighbor_list_t;
-	virtual std::pair<id_t, neighbor_list_t> load_graph(std::string& line){
+	virtual std::pair<id_t, neighbor_list_t> load_graph(const std::string& line){
 		return IOHelper::load_graph_unweighted(line);
+	}
+	virtual ChangeEdge<id_t> load_change(const std::string& line){
+		return IOHelper::load_change_unweighted(line);
 	}
 };
 
@@ -55,7 +56,11 @@ class IOHandlerWeighted
 {
 public:
 	using typename IOHandler<V, N>::neighbor_list_t;
-	virtual std::pair<id_t, neighbor_list_t> load_graph(std::string& line){
-		return IOHelper::load_graph_weighted<typename N::second_type>(line);
+	using weight_t = typename N::second_type;
+	virtual std::pair<id_t, neighbor_list_t> load_graph(const std::string& line){
+		return IOHelper::load_graph_weighted<weight_t>(line);
+	}
+	virtual ChangeEdge<N> load_change(const std::string& line){
+		return IOHelper::load_change_weighted<weight_t>(line);
 	}
 };

@@ -34,7 +34,7 @@ AppBase makeApplication(const std::string& app_name, const std::vector<std::stri
 	app.ioh->init(aa.iohandler_arg);
 	app.tmt = apk->generateTerminator();
 	app.tmt->init(aa.terminator_arg);
-	app.gh = apk->generateTerminator();
+	app.gh = apk->generateGraph();
 	// gh should be initialized later in Worker::registerWorkers()
 	delete apk;
 

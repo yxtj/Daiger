@@ -36,7 +36,7 @@ void Master::finish() {
     tmsg.join();
 }
 
-int assignWid(const int nid){
+int Master::assignWid(const int nid){
 	return nid - 1;
 }
 

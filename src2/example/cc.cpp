@@ -40,7 +40,9 @@ GlobalHolderBase* ConnectedComponent::generateGraph(){
 
 void ConnectedComponent::MyOperation::init(const std::vector<std::string>& arg_line){
 }
-
+ConnectedComponent::value_t ConnectedComponent::MyOperation::init_value(const id_t& k, const neighbor_list_t& neighbors){
+	return k;
+}
 ConnectedComponent::value_t ConnectedComponent::MyOperation::identity_element() const{
 	return std::numeric_limits<value_t>::min();
 }

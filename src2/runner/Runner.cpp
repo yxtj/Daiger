@@ -11,7 +11,7 @@ using namespace std;
 using namespace std::placeholders;
 
 Runner::Runner(AppBase& app, Option& opt)
-	: app(app), opt(move(opt)), running(false), timeout(opt.timeout)
+	: app(app), opt(move(opt)), timeout(opt.timeout), running(false)
 {
     net = NetworkThread::GetInstance();
     assert(net != nullptr);

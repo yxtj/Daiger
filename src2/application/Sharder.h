@@ -20,6 +20,5 @@ class SharderMod
 	: public SharderBase
 {
 public:
-	virtual void init(const std::vector<std::string>& args);
 	virtual size_t owner(const id_t& id);
 };

@@ -14,17 +14,17 @@ class LocalHolder
 public:
 	using operation_t = Operation<V, N>;
 	using node_t = Node<V, N>;
-	using value_t = node_t::value_t;
-	using neighbor_t = node_t::neighbor_t;
-	using neighbor_list_t = node_t::neighbor_list_t;
+	using value_t = V; //typename node_t::value_t;
+	using neighbor_t = typename node_t::neighbor_t;
+	using neighbor_list_t = typename node_t::neighbor_list_t;
 
 	LocalHolder() = default;
 	LocalHolder(operation_t* opt, size_t n);
 	void init(operation_t* opt, size_t n);
 
 	// -------- basic functions --------
-	bool add(const node_t& n);
-	bool add(node_t&& n);
+	void add(const node_t& n);
+	void add(node_t&& n);
 	bool remove(const id_t& k);
 	bool exist(const id_t& k);
 	node_t& get(const id_t& k);
@@ -34,7 +34,7 @@ public:
 	void clear();
 	// enumerate nodes
 	void enum_rewind();
-	std::pair<bool, const node_t&> enum_next();
+	const node_t* enum_next();
 	
 	// -------- node modification functions --------
 	bool modify(const id_t& k, const value_t& v); // change value
@@ -42,13 +42,15 @@ public:
 	bool modify(const id_t& k, neighbor_list_t&& nl);
 	bool modify_onb_add(const id_t& k, const neighbor_t& n); // add an out-neighbor
 	bool modify_onb_rmv(const id_t& k, const neighbor_t& n);
+	bool modify_onb_val(const id_t& k, const neighbor_t& n);
 	bool modify_cache_add(const id_t& k, const id_t& src, const value_t& v); // add a cache entry
 	bool modify_cache_rmv(const id_t& k, const id_t& src);
+	bool modify_cache_val(const id_t& from, const id_t& to, const value_t& m);
 
 	// -------- key functions (assume every key exists) --------
 	void update_cache(const id_t& from, const id_t& to, const value_t& m); // update cache with received message
 	void cal_general(const id_t& k); // merge all caches, the result is stored in <u>
-	bool need_commit(const id_t& t) const; // whether <u> is different from <v>
+	bool need_commit(const id_t& k) const; // whether <u> is different from <v>
 	bool commit(const id_t& k); // update <v> to <u>
 	std::vector<std::pair<id_t, value_t>> spread(const id_t& k); // generate outgoing messages
 
@@ -64,10 +66,10 @@ public:
 	
 private:
 	operation_t* opt;
-	std::unordered_map<id_t, node_t, NodeHasher<V, N>> cont;
+	std::unordered_map<id_t, node_t> cont;
 	std::function<void(const id_t&, const id_t&, const value_t&)> f_update_incremental;
 
-	std::unordered_map<id_t, node_t, NodeHasher<V, N>>::const_iterator enum_it;
+	typename decltype(cont)::const_iterator enum_it;
 };
 
 template <class V, class N>
@@ -81,13 +83,13 @@ void LocalHolder<V, N>::init(operation_t* opt, size_t n)
 	this->opt = opt;
 	if(opt->is_accumulative()){
 		f_update_incremental = bind(
-			&LocalHolder<V, N>::inc_update_accumulative, this, placeholders::_1, placeholders::_2);
+			&LocalHolder<V, N>::inc_update_accumulative, this, std::placeholders::_1, std::placeholders::_2);
 	}else if(opt->is_selective()){
 		f_update_incremental = bind(
-			&LocalHolder<V, N>::inc_update_selective, this, placeholders::_1, placeholders::_2);
+			&LocalHolder<V, N>::inc_update_selective, this, std::placeholders::_1, std::placeholders::_2);
 	}else{
 		f_update_incremental = bind(
-			&LocalHolder<V, N>::inc_update_general, this, placeholders::_1, placeholders::_2);
+			&LocalHolder<V, N>::inc_update_general, this, std::placeholders::_1, std::placeholders::_2);
 	}
 	if(n != 0)
 		cont.reserve(n);
@@ -97,11 +99,11 @@ void LocalHolder<V, N>::init(operation_t* opt, size_t n)
 // -------- basic functions --------
 
 template <class V, class N>
-bool LocalHolder<V, N>::add(const node_t& n){
+void LocalHolder<V, N>::add(const node_t& n){
 	cont[n.id]=n;
 }
 template <class V, class N>
-bool LocalHolder<V, N>::add(node_t&& n){
+void LocalHolder<V, N>::add(node_t&& n){
 	cont[n.id]=std::move(n);
 }
 template <class V, class N>
@@ -113,11 +115,11 @@ bool LocalHolder<V, N>::exist(const id_t& k){
 	return cont.find(k) != cont.end();
 }
 template <class V, class N>
-node_t& LocalHolder<V, N>::get(const id_t& k){
+typename LocalHolder<V, N>::node_t& LocalHolder<V, N>::get(const id_t& k){
 	return cont.at(k);
 }
 template <class V, class N>
-const node_t& LocalHolder<V, N>::get(const id_t& k) const{
+const typename LocalHolder<V, N>::node_t& LocalHolder<V, N>::get(const id_t& k) const{
 	return cont.at(k);
 }
 template <class V, class N>
@@ -137,10 +139,10 @@ void LocalHolder<V, N>::enum_rewind(){
 	enum_it = cont.cbegin();
 }
 template <class V, class N>
-const node_t* LocalHolder<V, N>::enum_next(){
+const typename LocalHolder<V, N>::node_t* LocalHolder<V, N>::enum_next(){
 	const node_t* p = nullptr;
 	if(enum_it != cont.end()){
-		p = &enum_it.second;
+		p = &(enum_it->second);
 		++enum_it;
 	}
 	return p;
@@ -165,26 +167,52 @@ bool LocalHolder<V, N>::modify(const id_t& k, neighbor_list_t&& nl){
 }
 template <class V, class N>
 bool LocalHolder<V, N>::modify_onb_add(const id_t& k, const neighbor_t& n){
-	MODIFY_TEMPLATE( it->second.onb.append(n); )
+	MODIFY_TEMPLATE( it->second.onb.push_back(n); )
 }
 template <class V, class N>
 bool LocalHolder<V, N>::modify_onb_rmv(const id_t& k, const neighbor_t& n){
-	MODIFY_TEMPLATE( 
-		auto jt = std::find_if(it->second.onb.begin(), it->second.onb.end(), [](const N& nb){
-			return opt->get_key(nb) == opt->get_key(n);
-		});
-		if(jt==it->second.onb.end())
-			return false;
-		it->second.onb.erase(jt);
-	)
+	auto it=cont.find(k);
+	if(it==cont.end())
+		return false;
+	auto jt = std::find_if(it->second.onb.begin(), it->second.onb.end(), [&](const N& nb){
+		return get_key(nb) == get_key(n);
+	});
+	if(jt==it->second.onb.end())
+		return false;
+	it->second.onb.erase(jt);
+	return true;
+}
+template <class V, class N>
+bool LocalHolder<V, N>::modify_onb_val(const id_t& k, const neighbor_t& n){
+	auto it=cont.find(k);
+	if(it==cont.end())
+		return false;
+	auto jt = std::find_if(it->second.onb.begin(), it->second.onb.end(), [&](const N& nb){
+		return get_key(nb) == get_key(n);
+	});
+	if(jt==it->second.onb.end())
+		return false;
+	*jt = n;
+	return true;
 }
 template <class V, class N>
 bool LocalHolder<V, N>::modify_cache_add(const id_t& k, const id_t& src, const value_t& v){
-	MODIFY_TEMPLATE( it->second.c[src]=v; )
+	MODIFY_TEMPLATE( it->second.cs[src]=v; )
 }
 template <class V, class N>
 bool LocalHolder<V, N>::modify_cache_rmv(const id_t& k, const id_t& src){
-	MODIFY_TEMPLATE( return it->second.c.erase(src) != 0; )
+	MODIFY_TEMPLATE( return it->second.cs.erase(src) != 0; )
+}
+template <class V, class N>
+bool LocalHolder<V, N>::modify_cache_val(const id_t& from, const id_t& to, const value_t& m){
+	auto it=cont.find(to);
+	if(it==cont.end())
+		return false;
+	auto jt = it->second.cs.find(from);
+	if(jt==it->second.cs.end())
+		return false;
+	jt->second = m;
+	return true;
 }
 
 // -------- key functions (assume every key exists) --------
@@ -206,7 +234,7 @@ void LocalHolder<V, N>::cal_general(const id_t& k){
 }
 // whether <u> is different from <v>
 template <class V, class N>
-bool LocalHolder<V, N>::need_commit(const id_t& t) const{
+bool LocalHolder<V, N>::need_commit(const id_t& k) const{
 	const node_t& n=cont[k];
 	return n.v == n.u;
 }
@@ -221,7 +249,7 @@ bool LocalHolder<V, N>::commit(const id_t& k){
 }
 // generate outgoing messages
 template <class V, class N>
-std::vector<std::pair<id_t, value_t>> LocalHolder<V, N>::spread(const id_t& k){
+std::vector<std::pair<id_t, V>> LocalHolder<V, N>::spread(const id_t& k){
 	node_t& n=cont[k];
 	return opt->func(n);
 }
@@ -246,7 +274,7 @@ void LocalHolder<V, N>::inc_cal_general(const id_t& from, const id_t& to, const 
 template <class V, class N>
 void LocalHolder<V, N>::inc_cal_accumulative(const id_t& from, const id_t& to, const value_t& m){
 	node_t& n=cont[to];
-	n.u = opt->oplus( opt->ominus(n.u, n.cs[from]), m)
+	n.u = opt->oplus( opt->ominus(n.u, n.cs[from]), m);
 }
 // incremental update for cache-based selective
 template <class V, class N>

@@ -1,8 +1,7 @@
 set(HEADERS
 	LocalHolder.hpp
 	RemoteHolder.hpp
-	GlobalHolder.h
-	GlobalHolderImpl.hpp
+	GlobalHolder.hpp
 	GraphContainer.h
 )
 set(SOURCES

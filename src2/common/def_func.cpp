@@ -2,7 +2,7 @@
 
 using namespace std;
 
-id_t stok(const std::string& str){
+id_t stoid(const std::string& str){
 	return static_cast<id_t>(std::stoul(str));
 }
 

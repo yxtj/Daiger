@@ -1,12 +1,19 @@
 #pragma once
 #include "common/Node.h"
-#include "application/AppBase.h"
+#include "application/Operation.h"
+#include "application/IOHandler.h"
+#include "application/Scheduler.h"
+#include "application/Sharder.h"
 #include <vector>
 #include <string>
 
 class GlobalHolderBase{
 public:
-	virtual void init(AppBase app, const size_t nPart, const int local_id) = 0;
+	virtual ~GlobalHolderBase() = default;
+
+	virtual void init(OperationBase* opt, IOHandlerBase* ioh,
+		SchedulerBase* scd, SharderBase* shd,
+		const size_t nPart, const int local_id) = 0;
 
 	// IO (loadXXXX returns whether this line is accepted locally)
 	virtual bool loadGraph(const std::string& line) = 0;

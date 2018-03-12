@@ -1,10 +1,11 @@
 #include "IOHandler_Helper.h"
+#include "common/def_func.h"
 #include <stdexcept>
 
 using namespace std;
 
 // load graph
-std::pair<id_t, std::vector<id_t> > IOHelper::load_graph_unweighted(std::string& line){
+std::pair<id_t, std::vector<id_t> > IOHelper::load_graph_unweighted(const std::string& line){
 	//line: "k\ta b c "
 	size_t pos = line.find('\t');
 	id_t k = stoid(line.substr(0, pos));
@@ -21,13 +22,10 @@ std::pair<id_t, std::vector<id_t> > IOHelper::load_graph_unweighted(std::string&
 }
 
 // load graph changes
-change_t IOHelper::load_change(std::string& line){
-	// <type> is one of A, R, I, D
-	// for A and R:
+ChangeEdge<id_t> IOHelper::load_change_unweighted(const std::string& line){
+	// <type> is one of A, R
 	// line: "<type>\t<src>,<dst>"
-	// for I and D:
-	// line: "<type>\t<src>,<dst>,<weight>"
-	change_t res;
+	ChangeEdge<id_t> res;
 	switch(line[0]){
 		case 'A': res.type=ChangeEdgeType::ADD;	break;
 		case 'R': res.type=ChangeEdgeType::REMOVE;	break;
@@ -39,7 +37,5 @@ change_t IOHelper::load_change(std::string& line){
 	res.src=stoid(line.substr(2,p1-2));
 	size_t p2=line.find(',', p1+1);
 	res.dst=stoid(line.substr(p1+1, p2-p1-1));
-	if(res.type == ChangeEdgeType::INCREASE || res.type == ChangeEdgeType::DECREASE)
-		res.weight=stof(line.substr(p2+1));
 	return res;
 }

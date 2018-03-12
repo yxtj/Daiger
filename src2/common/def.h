@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <utility>
 //#include <vector>
 
 typedef uint32_t id_t;
@@ -16,8 +17,10 @@ enum class ChangeEdgeType: char{
 	DECREASE='D'
 };
 
-struct change_t {
+// N can only be "id_t" or "std::pair<id_t, W>"
+template <typename N = std::pair<id_t, float> >
+struct ChangeEdge {
 	ChangeEdgeType type;
-	id_t src, dst;
-	float weight;
+	id_t src;
+	N dst;
 };

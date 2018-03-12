@@ -108,7 +108,6 @@ public:
 	virtual ~SchedulerFIFO();
 
 	virtual void init(const std::vector<std::string>& args);
-	virtual void regist(const id_t& k);
 	virtual void ready();
 
 	virtual void update(const id_t& k, const priority_t& p);

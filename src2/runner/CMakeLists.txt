@@ -8,9 +8,11 @@ set(HEADERS
 set(SOURCES
 	Option.cpp
 	runner_helpers.cpp
-	Runner.h
+	Runner.cpp
 	Master.cpp
+	Master_handler.cpp
 	Worker.cpp
+	Worker_handler.cpp
 )
 add_library(runner
 	${HEADERS} ${SOURCES})

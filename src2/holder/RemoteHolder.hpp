@@ -14,9 +14,9 @@ class RemoteHolder
 public:
 	using operation_t = Operation<V, N>;
 	using node_t = Node<V, N>;
-	using value_t = node_t::value_t;
-	using neighbor_t = node_t::neighbor_t;
-	using neighbor_list_t = node_t::neighbor_list_t;
+	using value_t = V; //typename node_t::value_t;
+	using neighbor_t = typename node_t::neighbor_t;
+	using neighbor_list_t = typename node_t::neighbor_list_t;
 
 	RemoteHolder() = default;
 	explicit RemoteHolder(operation_t* opt);
@@ -80,7 +80,7 @@ bool RemoteHolder<V, N>::exist(const id_t& from, const id_t& to) const{
 	auto it=cont.find(to);
 	if(it==cont.end())
 		return false;
-	auto jt=std::find_if(it->second.begin(), it->second.end(), [](const std::pair<id_t, value_t>& p){
+	auto jt=std::find_if(it->second.begin(), it->second.end(), [&](const std::pair<id_t, value_t>& p){
 		return p.first == from;
 	});
 	return jt!=it->second.end();
@@ -94,7 +94,7 @@ bool RemoteHolder<V, N>::remove(const id_t& from, const id_t& to){
 	auto it=cont.find(to);
 	if(it==cont.end())
 		return false;
-	auto jt=std::find_if(it->second.begin(), it->second.end(), [](const std::pair<id_t, value_t>& p){
+	auto jt=std::find_if(it->second.begin(), it->second.end(), [&](const std::pair<id_t, value_t>& p){
 		return p.first == from;
 	});
 	if(jt==it->second.end())
@@ -103,32 +103,32 @@ bool RemoteHolder<V, N>::remove(const id_t& from, const id_t& to){
 	return true;
 }
 template <class V, class N>
-std::pair<bool, std::vector<std::pair<id_t, value_t>>> RemoteHolder<V, N>::get(const id_t& k) const{
+std::pair<bool, std::vector<std::pair<id_t, V>>> RemoteHolder<V, N>::get(const id_t& k) const{
 	auto it = cont.find(k);
 	if(it == cont.end()){
-		return make_pair(false, {});
+		return std::make_pair<bool, std::vector<std::pair<id_t, V>>>(false, {});
 	}else{
-		return make_pair(true, it->second);
+		return std::make_pair(true, it->second);
 	}
 }
 template <class V, class N>
-std::pair<bool, value_t> RemoteHolder<V, N>::get(const id_t& from, const id_t& to) const{
+std::pair<bool, V> RemoteHolder<V, N>::get(const id_t& from, const id_t& to) const{
 	auto it=cont.find(to);
 	if(it==cont.end())
-		return make_pair(false, value_t());
-	auto jt=std::find_if(it->second.begin(), it->second.end(), [](const std::pair<id_t, value_t>& p){
+		return std::make_pair(false, value_t());
+	auto jt=std::find_if(it->second.begin(), it->second.end(), [&](const std::pair<id_t, value_t>& p){
 		return p.first == from;
 	});
 	if(jt==it->second.end())
-		return make_pair(false, value_t());
-	return make_pair(true, jt->second);
+		return std::make_pair(false, value_t());
+	return std::make_pair(true, jt->second);
 }
 
 
 template <class V, class N>
 bool RemoteHolder<V, N>::set(const id_t& from, const id_t& to, const value_t& v){
 	auto& vec=cont[to];
-	auto jt=std::find_if(vec.begin(), vec.end(), [](const std::pair<id_t, value_t>& p){
+	auto jt=std::find_if(vec.begin(), vec.end(), [&](const std::pair<id_t, value_t>& p){
 		return p.first == from;
 	});
 	if(jt==vec.end()){
@@ -142,7 +142,7 @@ bool RemoteHolder<V, N>::set(const id_t& from, const id_t& to, const value_t& v)
 template <class V, class N>
 bool RemoteHolder<V, N>::merge(const id_t& from, const id_t& to, const value_t& v){
 	auto& vec=cont[to];
-	auto jt=std::find_if(vec.begin(), vec.end(), [](const std::pair<id_t, value_t>& p){
+	auto jt=std::find_if(vec.begin(), vec.end(), [&](const std::pair<id_t, value_t>& p){
 		return p.first == from;
 	});
 	if(jt==vec.end()){
@@ -154,15 +154,15 @@ bool RemoteHolder<V, N>::merge(const id_t& from, const id_t& to, const value_t& 
 	}
 }
 template <class V, class N>
-std::vector<std::pair<id_t, std::pair<id_t, valuee_t>>> RemoteHolder<V, N>::collect(){
+std::vector<std::pair<id_t, std::pair<id_t, V>>> RemoteHolder<V, N>::collect(){
 	return collect(size());
 }
 template <class V, class N>
-std::vector<std::pair<id_t, std::pair<id_t, valuee_t>>> RemoteHolder<V, N>::collect(const size_t num){
-	std::vector<std::pair<id_t, std::pair<id_t, valuee_t>>> res;
+std::vector<std::pair<id_t, std::pair<id_t, V>>> RemoteHolder<V, N>::collect(const size_t num){
+	std::vector<std::pair<id_t, std::pair<id_t, V>>> res;
 	auto it=cont.begin();
 	for(size_t i=0; i<num && it!=cont.end(); ++i, ++it){
-		res.emplace(move(it->first), move(it->second));
+		res.emplace(std::move(it->first), std::move(it->second));
 	}
 	cont.erase(cont.begin(), it);
 }

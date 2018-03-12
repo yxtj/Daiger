@@ -20,8 +20,8 @@ Worker::callback_t Worker::localCBBinder(
 }
 
 void Worker::registerHandlers() {
-	int nw=opt.conf.nPart;
-	ReplyHandler::ConditionType EACH_ONE=ReplyHandler::EACH_ONE;
+	//int nw=opt.conf.nPart;
+	//ReplyHandler::ConditionType EACH_ONE=ReplyHandler::EACH_ONE;
 	
 	// part 1: message handler
 	regDSPProcess(MType::CReply, localCBBinder(&Worker::handleReply));

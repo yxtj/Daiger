@@ -12,5 +12,5 @@ struct AppArguments {
 class ArgumentSeparator {
 public:
 	virtual ~ArgumentSeparator() = default;
-	virtual AppArguments separate(const std::vector<std::string>& args, const size_t nParts) = 0;
+	virtual AppArguments separate(const std::vector<std::string>& args) = 0;
 };

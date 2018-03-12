@@ -20,13 +20,13 @@ Master::callback_t Master::localCBBinder(
 }
 
 void Master::registerHandlers() {
-	int nw=opt.conf.nPart;
-	ReplyHandler::ConditionType EACH_ONE=ReplyHandler::EACH_ONE;
+	//int nw=opt.conf.nPart;
+	//ReplyHandler::ConditionType EACH_ONE=ReplyHandler::EACH_ONE;
 	
 	// part 1: message handler
 	regDSPProcess(MType::CReply, localCBBinder(&Master::handleReply));
 	regDSPProcess(MType::CRegister, localCBBinder(&Master::handleRegister));
-	regDSPProcess(MType::TReport, localCBBinder(&Master::handleProgressReport));
+	regDSPProcess(MType::PReport, localCBBinder(&Master::handleProgressReport));
 
 	// part 2: reply handler:
 	//type 1: called by handleReply() directly
@@ -41,7 +41,7 @@ void Master::registerHandlers() {
 	// by handlerRegisterWorker()
 	addRPHEachSU(MType::CWorkers, su_regw);
 	// by handleProgressReport()
-	addRPHEachSU(MType::TReport, su_term);
+	addRPHEachSU(MType::PReport, su_term);
 }
 
 void Master::handleReply(const std::string& d, const RPCInfo& info) {
@@ -62,6 +62,6 @@ void Master::handleProgressReport(const std::string& d, const RPCInfo& info){
 	int wid = wm.nid2wid(info.source);
 	app.tmt->update_report(wid, report);
 	wm.update_report_time(info.source, Timer::Now());
-	rph.input(MType::TReport, wid);
+	rph.input(MType::PReport, wid);
 }
 

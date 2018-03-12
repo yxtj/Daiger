@@ -67,7 +67,7 @@ void Worker::procedureBuildINCache(){
 }
 
 void Worker::procedureUpdate(){
-	graph.update();
+	//graph.update();
 }
 
 void Worker::procedureDumpResult(){

@@ -16,7 +16,7 @@ GraphContainer::~GraphContainer(){
 void GraphContainer::init(int wid, GlobalHolderBase* holder){
 	this->wid = wid;
 	this->holder = holder;
-	holder->init(app, conf.nPart, wid)
+	holder->init(app.opt, app.ioh, app.scd, app.shd, conf.nPart, wid);
 }
 
 void GraphContainer::loadGraph(){
@@ -79,6 +79,10 @@ void GraphContainer::dumpResult(){
 		fout<<p.second<<"\n";
 		p = holder->dumpResult();	
 	}
+}
+
+void GraphContainer::buildInNeighborCache(){
+	// TODO:
 }
 
 // --------
