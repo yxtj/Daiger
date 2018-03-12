@@ -1,4 +1,5 @@
 #pragma once
+#include "common/Node.h"
 #include "GlobalHolderBase.h"
 #include "LocalHolder.hpp"
 #include "RemoteHolder.hpp"
@@ -21,7 +22,7 @@ public:
 	using msg_t = MessageDef<V>;
 
 	virtual void init(OperationBase* opt, IOHandlerBase* ioh, SchedulerBase* scd, SharderBase* shd,
-		const size_t nPart, const int local_id);
+		const size_t nPart, const int localId, const bool localProcess);
 
 	virtual bool loadGraph(const std::string& line);
 	virtual bool loadValue(const std::string& line);
@@ -30,12 +31,12 @@ public:
 	virtual std::pair<bool, std::string> dumpResult();
 
 	virtual void takeINCache(const std::string& line);
-	virtual std::string sendINCache();
+	virtual std::vector<std::string> collectINCache();
 
 	virtual void msgUpdate(const std::string& line);
 	virtual std::string msgRequest(const std::string& line);
 	virtual void msgReply(const std::string& line);
-	virtual std::string msgSend();
+	virtual std::string collectMsg(const int pid);
 
 	virtual void applyChange();
 
@@ -56,6 +57,7 @@ private:
 	SchedulerBase* scd;
 	SharderBase* shd;
 	size_t nPart;
+	bool enable_local_process;
 	
 	std::vector<RemoteHolder<V, N>> remote_parts;
 	LocalHolder<V, N> local_part;
@@ -68,14 +70,15 @@ private:
 template <class V, class N>
 void GlobalHolder<V, N>::init(OperationBase* opt, IOHandlerBase* ioh,
 		SchedulerBase* scd, SharderBase* shd,
-		const size_t nPart, const int local_id)
+		const size_t nPart, const int localId, const bool localProcess)
 {
 	this->opt = dynamic_cast<operation_t*>(opt);
 	this->ioh = dynamic_cast<iohandler_t*>(ioh);
 	this->scd = scd;
 	this->shd = shd;
 	this->nPart = nPart;
-	this->local_id = local_id;
+	this->local_id = localId;
+	this->enable_local_process = localProcess;
 	IE = this->opt->identity_element();
 	pointer_dump = 0;
 }
@@ -147,9 +150,30 @@ void GlobalHolder<V, N>::takeINCache(const std::string& line){
 	}
 }
 template <class V, class N>
-std::string GlobalHolder<V, N>::sendINCache(){
-	// TODO:
-	return "";
+std::vector<std::string> GlobalHolder<V, N>::collectINCache(){
+	// vector<vector<Msg>> : for each worker, for each unit
+	std::vector<typename msg_t::MsgGINCache_t> msgs(nPart);
+	local_part.enum_rewind();
+	const node_t* p =local_part.enum_next();
+	while(p != nullptr){
+		for(auto& nb : p->onb){
+			id_t dst = get_key(nb);
+			int pid = get_part(dst);
+			value_t v = opt->func(*p, nb);
+			if(enable_local_process && is_local_part(pid)){
+				local_part.update_cache(p->id, dst, v);
+			}else{
+				msgs[pid].emplace_back(p->id, dst, v);
+			}
+		}
+	}
+	std::vector<std::string> res;
+	res.reserve(nPart);
+	for(auto& m : msgs){
+		if(!m.empty())
+			res.push_back(serialize(m));
+	}
+	return res;
 }
 
 template <class V, class N>
@@ -171,13 +195,13 @@ void GlobalHolder<V, N>::msgReply(const std::string& line){
 	local_part.cal_incremental(std::get<1>(m), std::get<0>(m), std::get<2>(m));
 }
 template <class V, class N>
-std::string GlobalHolder<V, N>::msgSend(){
+std::string GlobalHolder<V, N>::collectMsg(const int pid){
 	// TODO:
 	return "";
 }
 
 template <class V, class N>
 void GlobalHolder<V, N>::applyChange(){
-
+	// TODO:
 }
 

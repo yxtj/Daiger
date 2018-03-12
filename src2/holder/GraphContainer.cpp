@@ -121,8 +121,8 @@ void GraphContainer::loadDeltaPiece(const std::string& line){
 void GraphContainer::takeINCache(const std::string& line){
 	holder->takeINCache(line);
 }
-std::string GraphContainer::sendINCache(){
-	return holder->sendINCache();
+std::vector<std::string> GraphContainer::collectINCache(){
+	return holder->collectINCache();
 }
 
 void GraphContainer::msgUpdate(const std::string& line){
@@ -136,5 +136,6 @@ void GraphContainer::msgReply(const std::string& line){
 }
 
 std::string GraphContainer::msgSend(){
-	return holder->msgSend();
+	// TODO:
+	return holder->collectMsg(0);
 }

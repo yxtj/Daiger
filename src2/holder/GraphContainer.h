@@ -24,7 +24,7 @@ public:
 	void loadDeltaPiece(const std::string& line);
 
 	void takeINCache(const std::string& line);
-	std::string sendINCache();
+	std::vector<std::string> collectINCache();
 
 	void msgUpdate(const std::string& line);
 	void msgRequest(const std::string& line);
@@ -38,6 +38,7 @@ private:
 	void loadValueFile(const std::string& fn);
 	void loadDeltaFile(const std::string& fn);
 
+	bool needApply();
 
 private:
 	AppBase app;
