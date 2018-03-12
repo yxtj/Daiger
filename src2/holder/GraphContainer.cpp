@@ -73,6 +73,7 @@ void GraphContainer::dumpResult(){
 	if(!fout){
 		throw runtime_error("Cannot create output file \"" + fn + "\"");
 	}
+	holder->prepareDump();
 	std::pair<bool, std::string> p = holder->dumpResult();
 	while(p.first){
 		fout<<p.second<<"\n";
@@ -86,21 +87,21 @@ void GraphContainer::loadGraphFile(const std::string& fn){
 	ifstream fin(fn);
 	string line;
 	while(getline(fin, line)){
-		holder->loadGraph(line);
+		loadGraphPiece(line);
 	}
 }
 void GraphContainer::loadValueFile(const std::string& fn){
 	ifstream fin(fn);
 	string line;
 	while(getline(fin, line)){
-		holder->loadValue(line);
+		loadValuePiece(line);
 	}
 }
 void GraphContainer::loadDeltaFile(const std::string& fn){
 	ifstream fin(fn);
 	string line;
 	while(getline(fin, line)){
-		holder->loadDelta(line);
+		loadDeltaPiece(line);
 	}
 }
 void GraphContainer::loadGraphPiece(const std::string& line){

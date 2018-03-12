@@ -31,6 +31,8 @@ public:
 	void msgReply(const std::string& line);
 	std::string msgSend();
 
+	void apply();
+
 private:
 	void loadGraphFile(const std::string& fn);
 	void loadValueFile(const std::string& fn);

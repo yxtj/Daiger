@@ -36,8 +36,9 @@ protected:
 	virtual void procedureLoadGraph() = 0;
 	virtual void procedureLoadValue() = 0;
 	virtual void procedureLoadDelta() = 0;
+	virtual void procedureBuildINCache() = 0;
 	virtual void procedureUpdate() = 0;
-	virtual void procedureOutput() = 0;
+	virtual void procedureDumpResult() = 0;
 
 // handler helpers
 protected:

@@ -22,10 +22,11 @@ void Master::start() {
     if (opt.do_incremental) {
         procedureLoadValue();
         procedureLoadDelta();
+		procedureBuildINCache();
     }
     procedureUpdate();
     if (opt.do_output) {
-        procedureOutput();
+        procedureDumpResult();
     }
 }
 
@@ -102,6 +103,12 @@ void Master::procedureLoadDelta(){
 	finishProcedure(cpid);
 }
 
+void Master::procedureBuildINCache(){
+	cpid = ProcedureType::BuildINCache;
+	startProcedure(cpid);
+	finishProcedure(cpid);
+}
+
 void Master::procedureUpdate(){
 	cpid = ProcedureType::Update;
 	startProcedure(cpid);
@@ -109,8 +116,8 @@ void Master::procedureUpdate(){
 	finishProcedure(cpid);
 }
 
-void Master::procedureOutput(){
-	cpid = ProcedureType::Output;
+void Master::procedureDumpResult(){
+	cpid = ProcedureType::DumpResult;
 	startProcedure(cpid);
 	finishProcedure(cpid);
 }

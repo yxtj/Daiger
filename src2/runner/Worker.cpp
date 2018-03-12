@@ -62,11 +62,15 @@ void Worker::procedureLoadDelta(){
 	graph.loadDelta();
 }
 
+void Worker::procedureBuildINCache(){
+	graph.buildInNeighborCache();
+}
+
 void Worker::procedureUpdate(){
 	graph.update();
 }
 
-void Worker::procedureOutput(){
-	graph.output();
+void Worker::procedureDumpResult(){
+	graph.dumpResult();
 }
 

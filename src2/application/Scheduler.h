@@ -13,7 +13,7 @@ public:
 	virtual void init(const std::vector<std::string>& arg);
 	// let the scheduler know each node
 	virtual void regist(const id_t& k){ ++nNode; }
-	// make the scheduler ready to run (call after all nodes are registed)
+	// make the scheduler ready to run (call after all nodes are registered)
 	virtual void ready() {}
 
 	// update/set the priority of a node

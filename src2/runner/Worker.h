@@ -24,8 +24,9 @@ protected:
 	virtual void procedureLoadGraph();
 	virtual void procedureLoadValue();
 	virtual void procedureLoadDelta();
+	virtual void procedureBuildINCache();
 	virtual void procedureUpdate();
-	virtual void procedureOutput();
+	virtual void procedureDumpResult();
 
 // local logic functions
 private:

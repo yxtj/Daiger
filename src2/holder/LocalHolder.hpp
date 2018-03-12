@@ -11,7 +11,7 @@ template <class V, class N>
 class LocalHolder
 	: public LocalHolderBase
 {
-	public:
+public:
 	using operation_t = Operation<V, N>;
 	using node_t = Node<V, N>;
 	using value_t = node_t::value_t;
@@ -32,6 +32,9 @@ class LocalHolder
 	bool empty() const;
 	size_t size() const;
 	void clear();
+	// enumerate nodes
+	void enum_rewind();
+	std::pair<bool, const node_t&> enum_next();
 	
 	// -------- node modification functions --------
 	bool modify(const id_t& k, const value_t& v); // change value
@@ -59,11 +62,12 @@ class LocalHolder
 	// -------- others --------
 	void update_priority(const id_t& k);
 	
-	private:
+private:
 	operation_t* opt;
 	std::unordered_map<id_t, node_t, NodeHasher<V, N>> cont;
 	std::function<void(const id_t&, const id_t&, const value_t&)> f_update_incremental;
 
+	std::unordered_map<id_t, node_t, NodeHasher<V, N>>::const_iterator enum_it;
 };
 
 template <class V, class N>
@@ -128,6 +132,19 @@ template <class V, class N>
 void LocalHolder<V, N>::clear(){
 	cont.clear();
 }
+template <class V, class N>
+void LocalHolder<V, N>::enum_rewind(){
+	enum_it = cont.cbegin();
+}
+template <class V, class N>
+const node_t* LocalHolder<V, N>::enum_next(){
+	const node_t* p = nullptr;
+	if(enum_it != cont.end()){
+		p = &enum_it.second;
+		++enum_it;
+	}
+	return p;
+}
 
 // -------- node modification functions --------
 
@@ -135,7 +152,7 @@ void LocalHolder<V, N>::clear(){
  if(it==cont.end()) return false; operation; return true; }
 
 template <class V, class N>
-bool LocalHolder<V, N>::modify(const id_t& k, const valut_t& v){
+bool LocalHolder<V, N>::modify(const id_t& k, const value_t& v){
 	MODIFY_TEMPLATE( it->second.v=v; )
 }
 template <class V, class N>
@@ -206,11 +223,11 @@ bool LocalHolder<V, N>::commit(const id_t& k){
 template <class V, class N>
 std::vector<std::pair<id_t, value_t>> LocalHolder<V, N>::spread(const id_t& k){
 	node_t& n=cont[k];
-	return opt->func(k);
+	return opt->func(n);
 }
 
 
-// -------- incremetnal update functions --------
+// -------- incremental update functions --------
 
 // incremental update using recalculation
 template <class V, class N>

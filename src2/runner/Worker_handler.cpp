@@ -33,14 +33,14 @@ void Worker::registerHandlers() {
 	regDSPProcess(MType::CProcedure, localCBBinder(&Worker::handleProcedure));
 	regDSPProcess(MType::CFinish, localCBBinder(&Worker::handleFinish));	
 
-	regDSPProcess(MType::GNode, localCBBinder(&Worker::handlerGNode));
-	regDSPProcess(MType::GValue, localCBBinder(&Worker::handlerGValue));
-	regDSPProcess(MType::GDelta, localCBBinder(&Worker::handlerGDelta));
-	regDSPProcess(MType::GINCache, localCBBinder(&Worker::handlerINCache));
+	regDSPProcess(MType::GNode, localCBBinder(&Worker::handleGNode));
+	regDSPProcess(MType::GValue, localCBBinder(&Worker::handleGValue));
+	regDSPProcess(MType::GDelta, localCBBinder(&Worker::handleGDelta));
+	regDSPProcess(MType::GINCache, localCBBinder(&Worker::handleINCache));
 
-	regDSPProcess(MType::VUpdate, localCBBinder(&Worker::handlerVUpdate));
-	regDSPProcess(MType::VRequest, localCBBinder(&Worker::handlerVRequest));
-	regDSPProcess(MType::VReply, localCBBinder(&Worker::handlerVReply));
+	regDSPProcess(MType::VUpdate, localCBBinder(&Worker::handleVUpdate));
+	regDSPProcess(MType::VRequest, localCBBinder(&Worker::handleVRequest));
+	regDSPProcess(MType::VReply, localCBBinder(&Worker::handleVReply));
 
 	// part 2: reply handler:
 	//type 1: called by handleReply() directly
@@ -92,10 +92,12 @@ void Worker::handleProcedure(const std::string& d, const RPCInfo& info){
 			fun = bind(&Worker::procedureLoadValue, this); break;
 		case ProcedureType::LoadDelta:
 			fun = bind(&Worker::procedureLoadDelta, this); break;
+		case ProcedureType::BuildINCache:
+			fun = bind(&Worker::procedureBuildINCache, this); break;
 		case ProcedureType::Update:
 			fun = bind(&Worker::procedureUpdate, this); break;
-		case ProcedureType::Output:
-			fun = bind(&Worker::procedureOutput, this); break;
+		case ProcedureType::DumpResult:
+			fun = bind(&Worker::procedureDumpResult, this); break;
 		default:
 			cerr<<"Wrong Procedure ID."<<endl;
 	}
@@ -111,27 +113,27 @@ void Worker::handleFinish(const std::string& d, const RPCInfo& info){
 }
 
 void Worker::handleGNode(const std::string& d, const RPCInfo& info){
-	graph->loadGraphPiece(d);
+	graph.loadGraphPiece(d);
 }
 void Worker::handleGValue(const std::string& d, const RPCInfo& info){
-	graph->loadValuePiece(d);
+	graph.loadValuePiece(d);
 }
 void Worker::handleGDelta(const std::string& d, const RPCInfo& info){
-	graph->loadDeltaPiece(d);
+	graph.loadDeltaPiece(d);
 }
 
 void Worker::handleINCache(const std::string& d, const RPCInfo& info){
-	graph->takeINCache(d);
+	graph.takeINCache(d);
 }
 
 void Worker::handleVUpdate(const std::string& d, const RPCInfo& info){
-	graph->msgUpdate(d);
+	graph.msgUpdate(d);
 }
 void Worker::handleVRequest(const std::string& d, const RPCInfo& info){
-	graph->msgRequest(d);
+	graph.msgRequest(d);
 }
 void Worker::handleVReply(const std::string& d, const RPCInfo& info){
-	graph->msgReply(d);
+	graph.msgReply(d);
 }
 
 
