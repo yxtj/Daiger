@@ -14,7 +14,7 @@ public:
 		return elapseMS();
 	}
 	long long elapseMS() const;
-	long long elapseS() const;
+	int elapseS() const;
 	double elapseMin() const;
 
 	static double Now();

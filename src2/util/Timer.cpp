@@ -20,9 +20,9 @@ long long Timer::elapseMS() const
 		chrono::system_clock::now() - _time).count();
 }
 
-long long Timer::elapseS() const
+int Timer::elapseS() const
 {
-	return chrono::duration_cast<chrono::seconds>(
+	return chrono::duration_cast<chrono::duration<int>>(
 		chrono::system_clock::now() - _time).count();
 }
 
