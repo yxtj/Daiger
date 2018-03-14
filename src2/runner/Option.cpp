@@ -1,7 +1,8 @@
 #include "Option.h"
-#include <boost/program_options.hpp>
 #include "util/Util.h"
 #include <iostream>
+#include <algorithm>
+#include <boost/program_options.hpp>
 
 using namespace std;
 
@@ -40,8 +41,10 @@ Option::Option()
 		("timeout", value<float>(&timeout)->default_value(1.0f), "[float] time threshold (second) for determining error.")
 		//("schedule_portion", value<float>(&schedule_portion)->default_value(1.0f), "[float] the portion of nodes used in each run.")
 		//("priority_degree", value<bool>(&priority_degree)->default_value(0), "Whether to use degree information in priority function.")
-		("apply_interval", value<float>(&conf.apply_interval)->default_value(0.5f), "[float] the maximum interval (second) of performing apply.")
-		("send_interval", value<float>(&conf.apply_interval)->default_value(0.5f), "[float] the maximum interval (second) of performing send.")
+		("apply_interval", value<float>(&apply_interval)->default_value(0.5f), "[float] the maximum interval (second) of performing apply.")
+		("send_interval", value<float>(&send_interval)->default_value(0.5f), "[float] the maximum interval (second) of performing send.")
+		("term_interval", value<float>(&term_interval)->default_value(0.5f),
+			"[float] the minimum interval (second) of reporting progress and do termination check.")
 		("send_batch_size", value<int>(&conf.send_batch_size)->default_value(1024),
 			"[integer] the maximum size (# of target nodes) of each sending message.")
 		;
@@ -63,15 +66,15 @@ bool Option::parseInput(int argc, char* argv[]) {
 		if(var_map.count("help")) {
 			flag_help = true;
 		}
-	} catch(std::exception& excep) {
-		cerr << "error: " << excep.what() << "\n";
+	} catch(std::exception& e) {
+		cerr << "error: " << e.what() << "\n";
 		flag_help = true;
 	} catch(...) {
 		cerr << "Exception of unknown type!\n";
 		flag_help = true;
 	}
 
-	while(!flag_help) { // technique for condition checking
+	do {
 		if(conf.path_graph.empty()) {
 			cerr << "Graph path is not given" << endl;
 			flag_help = true;
@@ -88,8 +91,12 @@ bool Option::parseInput(int argc, char* argv[]) {
 		if(conf.path_result.empty())
 			do_output=false;
 
+		sortUpInterval(apply_interval, 0.001, 10.0);
+		sortUpInterval(send_interval, 0.001, 10.0);
+		sortUpInterval(term_interval, 2*apply_interval, 600.0);
+
 		break;
-	}
+	} while(false); // technique for condition checking
 
 	if(true == flag_help) {
 		cerr << pimpl->desc << endl;
@@ -103,4 +110,10 @@ std::string& Option::sortUpPath(std::string & path)
 	if(!path.empty() && path.back() != '/')
 		path.push_back('/');
 	return path;
+}
+
+float Option::sortUpInterval(float& interval, const float min, const float max){
+	interval = std::min(min, interval);
+	interval = std::max(max, interval);
+	return interval;
 }

@@ -30,7 +30,11 @@ public:
 	bool do_output; // when path_result is given
 
 	float timeout; // time threshold for determining error
-	// float sleep_interval;
+
+	//float sleep_interval;
+	float apply_interval;
+	float send_interval;
+	float term_interval;
 
 public:
 	Option();
@@ -39,7 +43,6 @@ public:
 	bool parseInput(int argc, char *argv[]);
 private:
 	std::string& sortUpPath(std::string& path);
-	
-	bool checkIncremental();
+	float sortUpInterval(float& interval, const float min, const float max);
 };
 

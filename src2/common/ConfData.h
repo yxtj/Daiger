@@ -15,8 +15,6 @@ struct ConfData {
 	std::string prefix_value;
 	std::string prefix_result;
 
-	float apply_interval;
-	float send_interval;
 	int send_batch_size;
 
 };
