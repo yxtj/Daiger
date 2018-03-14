@@ -137,4 +137,9 @@ void Worker::handleVReply(const std::string& d, const RPCInfo& info){
 	graph.msgReply(d);
 }
 
-
+void Worker::handlePApply(const std::string& d, const RPCInfo& info){
+	graph.apply();
+}
+void Worker::handlePReport(const std::string& d, const RPCInfo& info){
+	reportProgress();
+}

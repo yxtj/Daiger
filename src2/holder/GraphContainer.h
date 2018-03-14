@@ -13,12 +13,14 @@ public:
 	void init(int wid, GlobalHolderBase* holder);
 
 	using sender_t = std::function<void(const int, std::string&)>;
+	using sender_master_t = std::function<void(std::string&)>;
 
 	// the std::function<void(const int, std::string&)> sender is used to send the messages to other WORKERS
 	void loadGraph(sender_t sender = {});
-	void loadValue(sender_t sender);
-	void loadDelta(sender_t sender);
-	void buildInNeighborCache(sender_t sender);
+	void loadValue(sender_t sender = {});
+	void loadDelta(sender_t sender = {});
+	void buildINCache(sender_t sender);
+	void update(sender_t sender_u, sender_t sender_r);
 	void dumpResult();
 
 // handlers:
@@ -36,6 +38,7 @@ public:
 	std::string msgSend();
 
 	void apply();
+	void reportProgress(sender_master_t sender);
 
 private:
 	void loadGraphFile(const std::string& fn, sender_t sender);

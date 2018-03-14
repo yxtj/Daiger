@@ -32,6 +32,7 @@ protected:
 // local logic functions
 private:
 	void clearMessages();
+	void reportProgress();
 
 // handler helpers
 private:
@@ -64,6 +65,9 @@ public:
 	void handleVRequest(const std::string& d, const RPCInfo& info);
 	void handleVReply(const std::string& d, const RPCInfo& info);
 
+	void handlePApply(const std::string& d, const RPCInfo& info);
+	void handlePReport(const std::string& d, const RPCInfo& info);
+
 private:
 	int master_net_id;
 	int my_net_id;
@@ -74,4 +78,6 @@ private:
 	std::thread tprcd; // thread for procedures
 
 	SyncUnit su_worker;
+	bool update_finish;
+	SyncUnit su_update;
 };

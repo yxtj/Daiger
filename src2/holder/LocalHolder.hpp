@@ -1,6 +1,7 @@
 #pragma once
 #include "common/Node.h"
 #include "application/Operation.h"
+#include "application/Terminator.h"
 #include <vector>
 #include <unordered_map>
 #include <functional>
@@ -13,14 +14,15 @@ class LocalHolder
 {
 public:
 	using operation_t = Operation<V, N>;
+	using terminator_t = Terminator<V, N>;
 	using node_t = Node<V, N>;
 	using value_t = V; //typename node_t::value_t;
 	using neighbor_t = typename node_t::neighbor_t;
 	using neighbor_list_t = typename node_t::neighbor_list_t;
 
 	LocalHolder() = default;
-	LocalHolder(operation_t* opt, size_t n);
-	void init(operation_t* opt, size_t n);
+	LocalHolder(operation_t* opt, terminator_t* tmt, size_t n);
+	void init(operation_t* opt, terminator_t* tmt, size_t n);
 
 	// -------- basic functions --------
 	void add(const node_t& n);
@@ -51,7 +53,7 @@ public:
 	void update_cache(const id_t& from, const id_t& to, const value_t& m); // update cache with received message
 	void cal_general(const id_t& k); // merge all caches, the result is stored in <u>
 	bool need_commit(const id_t& k) const; // whether <u> is different from <v>
-	bool commit(const id_t& k); // update <v> to <u>
+	bool commit(const id_t& k); // update <v> to <u>, update progress
 	std::vector<std::pair<id_t, value_t>> spread(const id_t& k); // generate outgoing messages
 
 	// -------- incremental update functions (assume every key exists, assume the cache is not updated by m) --------
@@ -63,9 +65,12 @@ public:
 	
 	// -------- others --------
 	void update_priority(const id_t& k);
+	double get_progress() { return progress; }
 	
 private:
 	operation_t* opt;
+	terminator_t* tmt;
+	double progress;
 	std::unordered_map<id_t, node_t> cont;
 	std::function<void(const id_t&, const id_t&, const value_t&)> f_update_incremental;
 
@@ -73,14 +78,16 @@ private:
 };
 
 template <class V, class N>
-LocalHolder<V, N>::LocalHolder(operation_t* opt, size_t n)
+LocalHolder<V, N>::LocalHolder(operation_t* opt, terminator_t* tmt, size_t n)
 {
-	init(opt, n);
+	init(opt, tmt, n);
 }
 template <class V, class N>
-void LocalHolder<V, N>::init(operation_t* opt, size_t n)
+void LocalHolder<V, N>::init(operation_t* opt, terminator_t* tmt, size_t n)
 {
 	this->opt = opt;
+	this->tmt = tmt;
+	progress = 0.0;
 	if(opt->is_accumulative()){
 		f_update_incremental = bind(
 			&LocalHolder<V, N>::inc_update_accumulative, this, std::placeholders::_1, std::placeholders::_2);
@@ -100,15 +107,22 @@ void LocalHolder<V, N>::init(operation_t* opt, size_t n)
 
 template <class V, class N>
 void LocalHolder<V, N>::add(const node_t& n){
+	progress += tmt->progress(n);
 	cont[n.id]=n;
 }
 template <class V, class N>
 void LocalHolder<V, N>::add(node_t&& n){
+	progress += tmt->progress(n);
 	cont[n.id]=std::move(n);
 }
 template <class V, class N>
 bool LocalHolder<V, N>::remove(const id_t& k){
-	return cont.erase(k) != 0;
+	auto it = cont.find(k);
+	if(it != cont.end()){
+		progress -= tmt->progress(it->second);
+		return true;
+	}
+	return false;
 }
 template <class V, class N>
 bool LocalHolder<V, N>::exist(const id_t& k){
@@ -244,7 +258,9 @@ bool LocalHolder<V, N>::commit(const id_t& k){
 	node_t& n=cont[k];
 	if(n.v == n.u)
 		return false;
+	double oldp = tmt->progress(n);
 	n.v = n.u;
+	progress += tmt->progress(n) - oldp;
 	return true;
 }
 // generate outgoing messages

@@ -1,6 +1,6 @@
 #pragma once
-#include "common/Node.h"
 #include "GlobalHolderBase.h"
+#include "common/Node.h"
 #include "LocalHolder.hpp"
 #include "RemoteHolder.hpp"
 #include "msg/messages.h"
@@ -15,13 +15,15 @@ class GlobalHolder
 public:
 	using operation_t = Operation<V, N>;
 	using iohandler_t= IOHandler<V, N>;
+	using terminator_t = Terminator<V, N>;
 	using node_t = Node<V, N>;
 	using value_t = typename node_t::value_t;
 	using neighbor_t = typename node_t::neighbor_t;
 	using neighbor_list_t = typename node_t::neighbor_list_t;
 	using msg_t = MessageDef<V>;
 
-	virtual void init(OperationBase* opt, IOHandlerBase* ioh, SchedulerBase* scd, SharderBase* shd,
+	virtual void init(OperationBase* opt, IOHandlerBase* ioh,
+		SchedulerBase* scd, SharderBase* shd, TerminatorBase* tmt,
 		const size_t nPart, const int localId, const bool localProcess);
 
 	virtual int loadGraph(const std::string& line);
@@ -36,9 +38,12 @@ public:
 	virtual void msgUpdate(const std::string& line);
 	virtual std::string msgRequest(const std::string& line);
 	virtual void msgReply(const std::string& line);
+
+	virtual bool needApply();
+	virtual void doApply();
 	virtual std::string collectMsg(const int pid);
 
-	virtual void applyChange();
+	virtual std::string collectLocalProgress();
 
 private:
 	int get_part(const id_t id){
@@ -56,6 +61,7 @@ private:
 	iohandler_t* ioh;
 	SchedulerBase* scd;
 	SharderBase* shd;
+	terminator_t* tmt;
 	size_t nPart;
 	bool enable_local_process;
 	
@@ -69,13 +75,14 @@ private:
 
 template <class V, class N>
 void GlobalHolder<V, N>::init(OperationBase* opt, IOHandlerBase* ioh,
-		SchedulerBase* scd, SharderBase* shd,
+		SchedulerBase* scd, SharderBase* shd, TerminatorBase* tmt,
 		const size_t nPart, const int localId, const bool localProcess)
 {
 	this->opt = dynamic_cast<operation_t*>(opt);
 	this->ioh = dynamic_cast<iohandler_t*>(ioh);
 	this->scd = scd;
 	this->shd = shd;
+	this->tmt = dynamic_cast<terminator_t*>(tmt);
 	this->nPart = nPart;
 	this->local_id = localId;
 	this->enable_local_process = localProcess;
@@ -195,6 +202,20 @@ void GlobalHolder<V, N>::msgReply(const std::string& line){
 	auto m = deserialize<typename msg_t::VReply_t>(line);
 	local_part.cal_incremental(std::get<1>(m), std::get<0>(m), std::get<2>(m));
 }
+
+template <class V, class N>
+bool GlobalHolder<V, N>::needApply(){
+	// TODO:
+	return true;
+}
+template <class V, class N>
+void GlobalHolder<V, N>::doApply(){
+	// TODO:
+	std::vector<id_t> nodes = scd->pick();
+	for(id_t id : nodes){
+		local_part.commit(id);
+	}
+}
 template <class V, class N>
 std::string GlobalHolder<V, N>::collectMsg(const int pid){
 	// TODO:
@@ -202,7 +223,9 @@ std::string GlobalHolder<V, N>::collectMsg(const int pid){
 }
 
 template <class V, class N>
-void GlobalHolder<V, N>::applyChange(){
-	// TODO:
+std::string GlobalHolder<V, N>::collectLocalProgress(){
+	double progress = local_part.get_progress();
+	return serialize(progress);
 }
+
 

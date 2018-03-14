@@ -3,6 +3,7 @@
 #include "application/IOHandler.h"
 #include "application/Scheduler.h"
 #include "application/Sharder.h"
+#include "application/Terminator.h"
 #include <vector>
 #include <string>
 
@@ -11,7 +12,7 @@ public:
 	virtual ~GlobalHolderBase() = default;
 
 	virtual void init(OperationBase* opt, IOHandlerBase* ioh,
-		SchedulerBase* scd, SharderBase* shd,
+		SchedulerBase* scd, SharderBase* shd, TerminatorBase* tmt,
 		const size_t nPart, const int localId, const bool localProcess = true) = 0;
 
 	// IO (loadXXXX returns the part-id (worker-id) should have the input line)
@@ -27,11 +28,15 @@ public:
 	virtual void takeINCache(const std::string& line) = 0;
 	virtual std::unordered_map<int, std::string> collectINCache() = 0;
 
-	// update mesages
+	// update mesages handler
 	virtual void msgUpdate(const std::string& line) = 0;
 	virtual std::string msgRequest(const std::string& line) = 0;
 	virtual void msgReply(const std::string& line) = 0;
+	// update procedure
+	virtual bool needApply() = 0;
+	virtual void doApply() = 0;
+	// update sending
 	virtual std::string collectMsg(const int pid) = 0;
 
-	// update procedure
+	virtual std::string collectLocalProgress() = 0;
 };

@@ -16,7 +16,7 @@ GraphContainer::~GraphContainer(){
 void GraphContainer::init(int wid, GlobalHolderBase* holder){
 	this->wid = wid;
 	this->holder = holder;
-	holder->init(app.opt, app.ioh, app.scd, app.shd, conf.nPart, wid);
+	holder->init(app.opt, app.ioh, app.scd, app.shd, app.tmt, conf.nPart, wid);
 }
 
 void GraphContainer::loadGraph(sender_t sender){
@@ -81,8 +81,7 @@ void GraphContainer::dumpResult(){
 	}
 }
 
-void GraphContainer::buildInNeighborCache(sender_t sender){
-	// TODO:
+void GraphContainer::buildINCache(sender_t sender){
 	unordered_map<int, string> ic = collectINCache();
 	for(auto& p : ic){
 		if(!p.second.empty()){
@@ -91,6 +90,18 @@ void GraphContainer::buildInNeighborCache(sender_t sender){
 	}
 }
 
+void GraphContainer::update(sender_t sender_u, sender_t sender_r){
+
+}
+
+void GraphContainer::apply(){
+
+}
+
+void GraphContainer::reportProgress(sender_master_t sender){
+	string progress = holder->collectLocalProgress();
+	sender(progress);
+}
 // --------
 
 void GraphContainer::loadGraphFile(const std::string& fn, sender_t sender){

@@ -1,6 +1,7 @@
 #include "Worker.h"
 #include "msg/MType.h"
 #include "network/NetworkThread.h"
+#include "util/Timer.h"
 #include <functional>
 #include <chrono>
 #include <iostream>
@@ -85,11 +86,56 @@ void Worker::procedureBuildINCache(){
 		[&](const int wid, std::string& msg){
 			net->send(wm.wid2nid(wid), MType::GINCache, move(msg));
 		};
-	graph.buildInNeighborCache(sender);
+	graph.buildINCache(sender);
 }
 
+void Worker::reportProgress(){
+	std::function<void(std::string&)> sender = 
+		[&](std::string& msg){
+			net->send(master_net_id, MType::PReport, move(msg));
+		};
+	graph.reportProgress(sender);
+}
+
+static int _helper_gcd(int a, int b){
+	return b == 0 ? a : _helper_gcd(b, a % b);
+}
 void Worker::procedureUpdate(){
-	//graph.update();
+	// TODO: start periodic apply-and-send and periodic progress-report
+	update_finish=false;
+	int ams = static_cast<int>(opt.apply_interval*1000); // millisecond
+	int tms = static_cast<int>(opt.term_interval*1000);
+	double interval = _helper_gcd(ams, tms) / 1000.0;
+	Timer last_apply, last_term;
+	RPCInfo info;
+	info.source = net->id();
+	info.dest = net->id();
+	while(!update_finish){
+		if(!su_update.wait_for(interval)){ // wake up by timeout
+			if(last_apply.elapseMS() > ams){
+				info.tag = MType::PApply;
+				driver.pushData("", info);
+			}
+			if(last_term.elapseMS() > tms){
+				info.tag = MType::PReport;
+				driver.pushData("", info);
+			}
+		}else{ // wake up by termination singal
+			break;
+		}
+	}
+
+	return;
+	// XXX
+	std::function<void(const int, std::string&)> sender_u = 
+		[&](const int wid, std::string& msg){
+			net->send(wm.wid2nid(wid), MType::VUpdate, move(msg));
+		};
+	std::function<void(const int, std::string&)> sender_r = 
+		[&](const int wid, std::string& msg){
+			net->send(wm.wid2nid(wid), MType::VRequest, move(msg));
+		};
+	graph.update(sender_u, sender_r);
 }
 
 void Worker::procedureDumpResult(){

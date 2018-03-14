@@ -19,9 +19,9 @@ public:
 	// on master:
 	// initialize the curr variable, only needed on master
 	virtual void prepare_global_checker(const size_t n_worker);
-	// report format: (local progress, # ndoes whose v changed after last report)
+	// report format: (local progress, # nodes whose v changed after last report)
 	virtual void update_report(const size_t wid, const std::pair<double, size_t>& report);
-	// check whetherto terminate via progress reports, default: no-one changed;
+	// check whether to terminate via progress reports, default: no-one changed;
 	virtual bool check_term() = 0;
 	// get the current global progress value
 	virtual double global_progress() { return helper_global_progress_sum(); }
@@ -32,12 +32,12 @@ protected:
 	static bool helper_no_change(const std::vector<std::pair<double, size_t>>& reports);
 
 	std::vector<std::pair<double, size_t>> curr;
-	double sum_gp; // sum global rogress
+	double sum_gp; // sum global progress
 	size_t sum_gc; // sum global number of changes
 };
 
 template <typename V, typename N>
-class TerminatorBaseT
+class Terminator
 	: public TerminatorBase
 {
 public:
@@ -58,7 +58,7 @@ protected:
 
 template <typename V, typename N>
 class TerminatorDiff
-	: public TerminatorBaseT<V, N>
+	: public Terminator<V, N>
 {
 public:
 	virtual void init(const std::vector<std::string>& args);
@@ -101,7 +101,7 @@ bool TerminatorDiff<V, N>::check_term(){
 
 template <typename V, typename N>
 class TerminatorStop
-	: public TerminatorBaseT<V, N>
+	: public Terminator<V, N>
 {
 public:
 	virtual void prepare_global_checker(const size_t n_worker);
