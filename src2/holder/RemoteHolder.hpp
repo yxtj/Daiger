@@ -38,12 +38,14 @@ public:
 	// merge the old value and v using oplus, return whether a new entry is inserted
 	bool merge(const id_t& from, const id_t& to, const value_t& v);
 
+	// to, from, v
 	std::vector<std::pair<id_t, std::pair<id_t, value_t>>> collect(); // collect and remove from the table
 	std::vector<std::pair<id_t, std::pair<id_t, value_t>>> collect(const size_t num);
 
 private:
 	operation_t* opt;
-	std::unordered_map<id_t, std::vector<std::pair<id_t, value_t>>> cont;
+	// TODO: consider merge the <from>s
+	std::unordered_map<id_t, std::vector<std::pair<id_t, value_t>>> cont; // to -> [ <from, v> ]*n
 
 };
 
@@ -162,8 +164,11 @@ std::vector<std::pair<id_t, std::pair<id_t, V>>> RemoteHolder<V, N>::collect(con
 	std::vector<std::pair<id_t, std::pair<id_t, V>>> res;
 	auto it=cont.begin();
 	for(size_t i=0; i<num && it!=cont.end(); ++i, ++it){
-		res.emplace(std::move(it->first), std::move(it->second));
+		auto jt_end = it->second.end();
+		for(auto jt = it->second.begin(); jt != jt_end; ++jt)
+			res.emplace_back(it->first, std::move(*jt));
 	}
 	cont.erase(cont.begin(), it);
+	return res;
 }
 

@@ -24,8 +24,6 @@ public:
 	size_t nPart; // optional, used to check whether a correct number of instance is started
 	size_t nNode; // optional, used to preactively allocate space
 
-	bool async;
-	bool cache_free;
 	bool do_incremental; // when path_delta and path_value are given
 	bool do_output; // when path_result is given
 

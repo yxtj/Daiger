@@ -82,7 +82,7 @@ void GraphContainer::dumpResult(){
 }
 
 void GraphContainer::buildINCache(sender_t sender){
-	unordered_map<int, string> ic = collectINCache();
+	unordered_map<int, string> ic = holder->collectINCache();
 	for(auto& p : ic){
 		if(!p.second.empty()){
 			sender(p.first, p.second);
@@ -90,11 +90,16 @@ void GraphContainer::buildINCache(sender_t sender){
 	}
 }
 
-void GraphContainer::update(sender_t sender_u, sender_t sender_r){
-
+void GraphContainer::prepareUpdate(sender_t sender_u, sender_t sender_r){
+	this->sender_u = sender_u;
+	this->sender_r = sender_r;
 }
 
 void GraphContainer::apply(){
+	if(holder->needApply())
+		holder->doApply();
+}
+void GraphContainer::sendMsg(sender_t sender){
 
 }
 
@@ -144,9 +149,6 @@ bool GraphContainer::loadDeltaPiece(const std::string& line){
 void GraphContainer::takeINCache(const std::string& line){
 	holder->takeINCache(line);
 }
-std::unordered_map<int, std::string> GraphContainer::collectINCache(){
-	return holder->collectINCache();
-}
 
 void GraphContainer::msgUpdate(const std::string& line){
 	holder->msgUpdate(line);
@@ -156,9 +158,4 @@ void GraphContainer::msgRequest(const std::string& line){
 }
 void GraphContainer::msgReply(const std::string& line){
 	holder->msgReply(line);
-}
-
-std::string GraphContainer::msgSend(){
-	// TODO:
-	return holder->collectMsg(0);
 }

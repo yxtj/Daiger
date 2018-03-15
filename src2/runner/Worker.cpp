@@ -101,7 +101,17 @@ static int _helper_gcd(int a, int b){
 	return b == 0 ? a : _helper_gcd(b, a % b);
 }
 void Worker::procedureUpdate(){
-	// TODO: start periodic apply-and-send and periodic progress-report
+	// register useful callbacks for sending messages
+	std::function<void(const int, std::string&)> sender_u = 
+		[&](const int wid, std::string& msg){
+			net->send(wm.wid2nid(wid), MType::VUpdate, move(msg));
+		};
+	std::function<void(const int, std::string&)> sender_r = 
+		[&](const int wid, std::string& msg){
+			net->send(wm.wid2nid(wid), MType::VRequest, move(msg));
+		};
+	graph.prepareUpdate(sender_u, sender_r);
+	// start periodic apply-and-send and periodic progress-report
 	update_finish=false;
 	int ams = static_cast<int>(opt.apply_interval*1000); // millisecond
 	int tms = static_cast<int>(opt.term_interval*1000);
@@ -124,18 +134,6 @@ void Worker::procedureUpdate(){
 			break;
 		}
 	}
-
-	return;
-	// XXX
-	std::function<void(const int, std::string&)> sender_u = 
-		[&](const int wid, std::string& msg){
-			net->send(wm.wid2nid(wid), MType::VUpdate, move(msg));
-		};
-	std::function<void(const int, std::string&)> sender_r = 
-		[&](const int wid, std::string& msg){
-			net->send(wm.wid2nid(wid), MType::VRequest, move(msg));
-		};
-	graph.update(sender_u, sender_r);
 }
 
 void Worker::procedureDumpResult(){

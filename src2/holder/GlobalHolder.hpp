@@ -29,6 +29,7 @@ public:
 	virtual int loadGraph(const std::string& line);
 	virtual int loadValue(const std::string& line);
 	virtual int loadDelta(const std::string& line);
+	virtual void prepareUpdate();
 	virtual void prepareDump();
 	virtual std::pair<bool, std::string> dumpResult();
 
@@ -137,6 +138,10 @@ int GlobalHolder<V, N>::loadDelta(const std::string& line){
 }
 
 template <class V, class N>
+void GlobalHolder<V, N>::prepareUpdate(){
+	scd->ready();
+}
+template <class V, class N>
 void GlobalHolder<V, N>::prepareDump(){
 	local_part.enum_rewind();
 }
@@ -210,7 +215,6 @@ bool GlobalHolder<V, N>::needApply(){
 }
 template <class V, class N>
 void GlobalHolder<V, N>::doApply(){
-	// TODO:
 	std::vector<id_t> nodes = scd->pick();
 	for(id_t id : nodes){
 		local_part.commit(id);
@@ -218,8 +222,8 @@ void GlobalHolder<V, N>::doApply(){
 }
 template <class V, class N>
 std::string GlobalHolder<V, N>::collectMsg(const int pid){
-	// TODO:
-	return "";
+	std::vector<std::pair<id_t, std::pair<id_t, value_t>>> data = remote_parts[pid].collect();
+	return serialize(data);
 }
 
 template <class V, class N>

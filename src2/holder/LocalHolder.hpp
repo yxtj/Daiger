@@ -1,6 +1,7 @@
 #pragma once
 #include "common/Node.h"
 #include "application/Operation.h"
+#include "application/Scheduler.h"
 #include "application/Terminator.h"
 #include <vector>
 #include <unordered_map>
@@ -14,6 +15,7 @@ class LocalHolder
 {
 public:
 	using operation_t = Operation<V, N>;
+	using scheduler_t = SchedulerBase;
 	using terminator_t = Terminator<V, N>;
 	using node_t = Node<V, N>;
 	using value_t = V; //typename node_t::value_t;
@@ -21,8 +23,8 @@ public:
 	using neighbor_list_t = typename node_t::neighbor_list_t;
 
 	LocalHolder() = default;
-	LocalHolder(operation_t* opt, terminator_t* tmt, size_t n);
-	void init(operation_t* opt, terminator_t* tmt, size_t n);
+	LocalHolder(operation_t* opt, scheduler_t* scd, terminator_t* tmt, size_t n);
+	void init(operation_t* opt, scheduler_t* scd, terminator_t* tmt, size_t n);
 
 	// -------- basic functions --------
 	void add(const node_t& n);
@@ -53,7 +55,7 @@ public:
 	void update_cache(const id_t& from, const id_t& to, const value_t& m); // update cache with received message
 	void cal_general(const id_t& k); // merge all caches, the result is stored in <u>
 	bool need_commit(const id_t& k) const; // whether <u> is different from <v>
-	bool commit(const id_t& k); // update <v> to <u>, update progress
+	bool commit(const id_t& k); // update <v> to <u>, update progress, REQUIRE: the priority of corresponding node is reset before calling commit()
 	std::vector<std::pair<id_t, value_t>> spread(const id_t& k); // generate outgoing messages
 
 	// -------- incremental update functions (assume every key exists, assume the cache is not updated by m) --------
@@ -64,11 +66,12 @@ public:
 	void inc_cal_selective(const id_t& from, const id_t& to, const value_t& m); // incremental update
 	
 	// -------- others --------
-	void update_priority(const id_t& k);
+	void update_priority(const node_t& n);
 	double get_progress() { return progress; }
 	
 private:
 	operation_t* opt;
+	scheduler_t* scd;
 	terminator_t* tmt;
 	double progress;
 	std::unordered_map<id_t, node_t> cont;
@@ -78,14 +81,15 @@ private:
 };
 
 template <class V, class N>
-LocalHolder<V, N>::LocalHolder(operation_t* opt, terminator_t* tmt, size_t n)
+LocalHolder<V, N>::LocalHolder(operation_t* opt, scheduler_t* scd, terminator_t* tmt, size_t n)
 {
-	init(opt, tmt, n);
+	init(opt, scd, tmt, n);
 }
 template <class V, class N>
-void LocalHolder<V, N>::init(operation_t* opt, terminator_t* tmt, size_t n)
+void LocalHolder<V, N>::init(operation_t* opt, scheduler_t* scd, terminator_t* tmt, size_t n)
 {
 	this->opt = opt;
+	this->scd = scd;
 	this->tmt = tmt;
 	progress = 0.0;
 	if(opt->is_accumulative()){
@@ -245,6 +249,7 @@ void LocalHolder<V, N>::cal_general(const id_t& k){
 		tmp = opt->oplus(tmp, p.second);
 	}
 	n.u = tmp;
+	update_priority(n);
 }
 // whether <u> is different from <v>
 template <class V, class N>
@@ -253,6 +258,7 @@ bool LocalHolder<V, N>::need_commit(const id_t& k) const{
 	return n.v == n.u;
 }
 // update <v> to <u>
+// GUARANTE: the priority of n is reset before calling commit()
 template <class V, class N>
 bool LocalHolder<V, N>::commit(const id_t& k){
 	node_t& n=cont[k];
@@ -285,12 +291,14 @@ void LocalHolder<V, N>::inc_cal_general(const id_t& from, const id_t& to, const 
 			tmp = opt->oplus(tmp, m);
 	}
 	n.u = tmp;
+	update_priority(n);
 }
 // incremental update for cache-based accumulative
 template <class V, class N>
 void LocalHolder<V, N>::inc_cal_accumulative(const id_t& from, const id_t& to, const value_t& m){
 	node_t& n=cont[to];
 	n.u = opt->oplus( opt->ominus(n.u, n.cs[from]), m);
+	update_priority(n);
 }
 // incremental update for cache-based selective
 template <class V, class N>
@@ -300,6 +308,7 @@ void LocalHolder<V, N>::inc_cal_selective(const id_t& from, const id_t& to, cons
 	if(opt->better(m, old)){
 		n.u = m;
 		n.b = from;
+		update_priority(n);
 	}else if(from == n.b){
 		value_t tmp=opt->identity_element();
 		id_t bp;
@@ -312,14 +321,14 @@ void LocalHolder<V, N>::inc_cal_selective(const id_t& from, const id_t& to, cons
 		}
 		n.u = tmp;
 		n.b = bp;
+		update_priority(n);
 	}
 }
  
 // -------- others --------
 
 template <class V, class N>
-void LocalHolder<V, N>::update_priority(const id_t& k){
-	node_t& n=cont[k];
-	n.pri = opt->priority(n);
+void LocalHolder<V, N>::update_priority(const node_t& n){
+	scd->update(n.id, opt->priority(n));
 }
 

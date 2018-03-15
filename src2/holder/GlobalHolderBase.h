@@ -19,7 +19,7 @@ public:
 	virtual int loadGraph(const std::string& line) = 0;
 	virtual int loadValue(const std::string& line) = 0;
 	virtual int loadDelta(const std::string& line) = 0;
-
+	virtual void prepareUpdate() = 0;
 	virtual void prepareDump() = 0;
 	// return whether this call is success and the line to write
 	virtual std::pair<bool, std::string> dumpResult() = 0;

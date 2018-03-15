@@ -17,4 +17,6 @@ struct ConfData {
 
 	int send_batch_size;
 
+	bool async;
+	bool cache_free;
 };

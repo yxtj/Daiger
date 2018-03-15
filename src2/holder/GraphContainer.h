@@ -20,7 +20,7 @@ public:
 	void loadValue(sender_t sender = {});
 	void loadDelta(sender_t sender = {});
 	void buildINCache(sender_t sender);
-	void update(sender_t sender_u, sender_t sender_r);
+	void prepareUpdate(sender_t sender_u, sender_t sender_r);
 	void dumpResult();
 
 // handlers:
@@ -30,14 +30,13 @@ public:
 	bool loadDeltaPiece(const std::string& line);
 
 	void takeINCache(const std::string& line);
-	std::unordered_map<int, std::string> collectINCache();
 
 	void msgUpdate(const std::string& line);
 	void msgRequest(const std::string& line);
 	void msgReply(const std::string& line);
-	std::string msgSend();
 
 	void apply();
+	void sendMsg(sender_t sender);
 	void reportProgress(sender_master_t sender);
 
 private:
@@ -53,5 +52,7 @@ private:
 
 	int wid;
 	GlobalHolderBase* holder;
+	sender_t sender_u;
+	sender_t sender_r;
 };
 
