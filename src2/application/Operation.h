@@ -3,6 +3,7 @@
 #include <utility>
 #include <string>
 #include <vector>
+#include <limits>
 
 struct OperationBase {
 	virtual ~OperationBase() = default;
@@ -14,10 +15,10 @@ template <typename V, typename N>
 struct Operation 
 	: public OperationBase
 {
-	typedef V value_t;
-	typedef N neighbor_t;
-	typedef std::vector<neighbor_t> neighbor_list_t;
-	typedef Node<V, N> node_t;
+	using value_t = V;
+	using neighbor_t = N;
+	using node_t = Node<V, N>;
+	using neighbor_list_t = typename node_t::neighbor_list_t;
 
 	// initialize the starting value
 	virtual value_t init_value(const id_t& k, const neighbor_list_t& neighbors) = 0;
@@ -37,20 +38,10 @@ struct Operation
 	virtual bool better(const value_t& a, const value_t& b); // when is_selective() is true, default: false
 	
 	// priority for scheduling
-	virtual priority_t priority(const node_t& n){ return 0; };
+	virtual priority_t priority(const node_t& n){ return n.u; }; // default: current uncommitted value
 
 	virtual ~Operation()=default;
 };
-
-template <class V, typename W>
-struct WeightedOperation :
-	public Operation<V, std::pair<id_t, W>>
-{};
-
-template <class V>
-struct UnWeightedOperation : 
-	public Operation<V, id_t>
-{};
 
 template <class V, class N>
 std::vector<std::pair<id_t, V>> Operation<V, N>::func(const node_t& n)
@@ -79,3 +70,89 @@ template <class V, class N>
 bool Operation<V, N>::better(const value_t& a, const value_t& b){
 	return false;
 }
+
+// -------- Examples --------
+template <typename V, typename N>
+struct OperationAccumulative
+	: public Operation<V, N>
+{
+	virtual bool is_accumulative(){ return true; }
+};
+template <typename V, typename N>
+struct OperationSelective
+	: public Operation<V, N>
+{
+	virtual bool is_selective(){ return true; }
+};
+
+template <typename V, typename N>
+struct OperationAddition
+	: public OperationAccumulative<V, N>
+{
+	using value_t = V;
+
+	virtual value_t identity_element() const{ return 0; }
+	virtual value_t oplus(const value_t& a, const value_t& b){ return a + b; }
+	virtual value_t ominus(const value_t& a, const value_t& b){ return a - b; }
+};
+template <typename V, typename N>
+struct OperationSubtraction
+	: public OperationAccumulative<V, N>
+{
+	using value_t = V;
+
+	virtual value_t identity_element() const{ return 0; }
+	virtual value_t oplus(const value_t& a, const value_t& b){ return a - b; }
+	virtual value_t ominus(const value_t& a, const value_t& b){ return a + b; }
+};
+template <typename V, typename N>
+struct OperationMultiplication
+	: public OperationAccumulative<V, N>
+{
+	using value_t = V;
+
+	virtual value_t identity_element() const{ return 0; }
+	virtual value_t oplus(const value_t& a, const value_t& b){ return a - b; }
+	virtual value_t ominus(const value_t& a, const value_t& b){ return a + b; }
+};
+
+template <typename V, typename N>
+struct OperationMin
+	: public OperationSelective<V, N>
+{
+	using value_t = V;
+
+	virtual value_t identity_element() const{ return std::numeric_limits<value_t>::max(); }
+	virtual value_t oplus(const value_t& a, const value_t& b){ return a < b ? a : b; }
+	virtual bool better(const value_t& a, const value_t& b){ return a < b; }
+};
+template <typename V, typename N>
+struct OperationMinEqual
+	: public OperationSelective<V, N>
+{
+	using value_t = V;
+
+	virtual value_t identity_element() const{ return std::numeric_limits<value_t>::max(); }
+	virtual value_t oplus(const value_t& a, const value_t& b){ return a <= b ? a : b; }
+	virtual bool better(const value_t& a, const value_t& b){ return a <= b; }
+};
+template <typename V, typename N>
+struct OperationMax
+	: public OperationSelective<V, N>
+{
+	using value_t = V;
+
+	virtual value_t identity_element() const{ return std::numeric_limits<value_t>::lowest(); }
+	virtual value_t oplus(const value_t& a, const value_t& b){ return a > b ? a : b; }
+	virtual bool better(const value_t& a, const value_t& b){ return a > b; }
+};
+template <typename V, typename N>
+struct OperationMaxEqual
+	: public OperationSelective<V, N>
+{
+	using value_t = V;
+
+	virtual value_t identity_element() const{ return std::numeric_limits<value_t>::lowest(); }
+	virtual value_t oplus(const value_t& a, const value_t& b){ return a >= b ? a : b; }
+	virtual bool better(const value_t& a, const value_t& b){ return a >= b; }
+};
