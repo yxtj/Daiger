@@ -111,9 +111,9 @@ struct OperationMultiplication
 {
 	using value_t = V;
 
-	virtual value_t identity_element() const{ return 0; }
-	virtual value_t oplus(const value_t& a, const value_t& b){ return a - b; }
-	virtual value_t ominus(const value_t& a, const value_t& b){ return a + b; }
+	virtual value_t identity_element() const{ return 1; }
+	virtual value_t oplus(const value_t& a, const value_t& b){ return a * b; }
+	virtual value_t ominus(const value_t& a, const value_t& b){ return a / b; }
 };
 
 template <typename V, typename N>
