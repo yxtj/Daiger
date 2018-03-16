@@ -4,6 +4,7 @@
 #include <vector>
 #include <unordered_map>
 #include <utility>
+#include <functional>
 
 class RemoteHolderBase {};
 
@@ -19,7 +20,6 @@ public:
 	using neighbor_list_t = typename node_t::neighbor_list_t;
 
 	RemoteHolder() = default;
-	explicit RemoteHolder(operation_t* opt);
 	void init(operation_t* opt);
 
 	bool empty() const;
@@ -40,24 +40,34 @@ public:
 
 	// to, from, v
 	std::vector<std::pair<id_t, std::pair<id_t, value_t>>> collect(); // collect and remove from the table
-	std::vector<std::pair<id_t, std::pair<id_t, value_t>>> collect(const size_t num);
+	std::vector<std::pair<id_t, std::pair<id_t, value_t>>> collect(const size_t num){
+		return f_collect(num);
+	}
+
+private:
+	std::vector<std::pair<id_t, std::pair<id_t, value_t>>> f_collect_general(const size_t num);
+	std::vector<std::pair<id_t, std::pair<id_t, value_t>>> f_collect_accumulative(const size_t num);
+	std::vector<std::pair<id_t, std::pair<id_t, value_t>>> f_collect_selective(const size_t num);
 
 private:
 	operation_t* opt;
 	// TODO: consider merge the <from>s
 	std::unordered_map<id_t, std::vector<std::pair<id_t, value_t>>> cont; // to -> [ <from, v> ]*n
 
+	std::function<std::vector<std::pair<id_t, std::pair<id_t, value_t>>>(const size_t)> f_collect;
 };
 
-template <class V, class N>
-RemoteHolder<V, N>::RemoteHolder(operation_t* opt)
-	: opt(opt)
-{
-}
 template <class V, class N>
 void RemoteHolder<V, N>::init(operation_t* opt)
 {
 	this->opt = opt;
+	if(opt->is_accumulative()){
+		f_collect = std::bind(&RemoteHolder<V, N>::f_collect_accumulative, this, std::placeholders::_1);
+	}else if(opt->is_selective()){
+		f_collect = std::bind(&RemoteHolder<V, N>::f_collect_selective, this, std::placeholders::_1);
+	}else{
+		f_collect = std::bind(&RemoteHolder<V, N>::f_collect_general, this, std::placeholders::_1);
+	}
 }
 
 template <class V, class N>
@@ -160,15 +170,49 @@ std::vector<std::pair<id_t, std::pair<id_t, V>>> RemoteHolder<V, N>::collect(){
 	return collect(size());
 }
 template <class V, class N>
-std::vector<std::pair<id_t, std::pair<id_t, V>>> RemoteHolder<V, N>::collect(const size_t num){
+std::vector<std::pair<id_t, std::pair<id_t, V>>> RemoteHolder<V, N>::f_collect_general(const size_t num){
 	std::vector<std::pair<id_t, std::pair<id_t, V>>> res;
 	auto it=cont.begin();
 	for(size_t i=0; i<num && it!=cont.end(); ++i, ++it){
 		auto jt_end = it->second.end();
-		for(auto jt = it->second.begin(); jt != jt_end; ++jt)
+		for(auto jt = it->second.begin(); jt != jt_end; ++jt){
 			res.emplace_back(it->first, std::move(*jt));
+		}
 	}
 	cont.erase(cont.begin(), it);
 	return res;
 }
-
+template <class V, class N>
+std::vector<std::pair<id_t, std::pair<id_t, V>>> RemoteHolder<V, N>::f_collect_accumulative(const size_t num){
+	std::vector<std::pair<id_t, std::pair<id_t, V>>> res;
+	auto it=cont.begin();
+	for(size_t i=0; i<num && it!=cont.end(); ++i, ++it){
+		value_t v = opt->identity_element();
+		auto jt_end = it->second.end();
+		for(auto jt = it->second.begin(); jt != jt_end; ++jt){
+			v = opt->oplus(v, jt->second);
+		}
+		res.emplace_back(it->first, std::make_pair(it->second.begin()->first, v));
+	}
+	cont.erase(cont.begin(), it);
+	return res;
+}
+template <class V, class N>
+std::vector<std::pair<id_t, std::pair<id_t, V>>> RemoteHolder<V, N>::f_collect_selective(const size_t num){
+	std::vector<std::pair<id_t, std::pair<id_t, V>>> res;
+	auto it=cont.begin();
+	for(size_t i=0; i<num && it!=cont.end(); ++i, ++it){
+		value_t b = opt->identity_element();
+		id_t p;
+		auto jt_end = it->second.end();
+		for(auto jt = it->second.begin(); jt != jt_end; ++jt){
+			if(opt->better(jt->second, b)){
+				b = jt->second;
+				p = jt->first;
+			}
+		}
+		res.emplace_back(it->first, std::make_pair(p, b));
+	}
+	cont.erase(cont.begin(), it);
+	return res;
+}

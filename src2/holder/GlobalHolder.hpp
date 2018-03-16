@@ -89,6 +89,12 @@ void GlobalHolder<V, N>::init(OperationBase* opt, IOHandlerBase* ioh,
 	this->enable_local_process = localProcess;
 	IE = this->opt->identity_element();
 	pointer_dump = 0;
+
+	local_part.init(this->opt, this->scd, this->tmt, nPart);
+	remote_parts.resize(nPart);
+	for(size_t i = 1; i<nPart; ++i){
+		remote_parts[i].init(this->opt);
+	}
 }
 
 template <class V, class N>

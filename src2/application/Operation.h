@@ -32,7 +32,7 @@ struct Operation
 	virtual bool is_accumulative(); // default: false
 	virtual bool is_selective(); // default: false
 	// subtype for accumulative
-	virtual void ominus(value_t& a, const value_t& b); // when is_accumulative() is true, default: a-=b
+	virtual value_t ominus(const value_t& a, const value_t& b); // when is_accumulative() is true, default: a-b
 	// subtype for selective
 	virtual bool better(const value_t& a, const value_t& b); // when is_selective() is true, default: false
 	
@@ -72,8 +72,8 @@ bool Operation<V, N>::is_selective(){
 	return false;
 }
 template <class V, class N>
-void Operation<V, N>::ominus(value_t& a, const value_t& b){
-	a-=b;
+V Operation<V, N>::ominus(const value_t& a, const value_t& b){
+	return a - b;
 }
 template <class V, class N>
 bool Operation<V, N>::better(const value_t& a, const value_t& b){

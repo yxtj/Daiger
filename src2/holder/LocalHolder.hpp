@@ -23,7 +23,6 @@ public:
 	using neighbor_list_t = typename node_t::neighbor_list_t;
 
 	LocalHolder() = default;
-	LocalHolder(operation_t* opt, scheduler_t* scd, terminator_t* tmt, size_t n);
 	void init(operation_t* opt, scheduler_t* scd, terminator_t* tmt, size_t n);
 
 	// -------- basic functions --------
@@ -81,11 +80,6 @@ private:
 };
 
 template <class V, class N>
-LocalHolder<V, N>::LocalHolder(operation_t* opt, scheduler_t* scd, terminator_t* tmt, size_t n)
-{
-	init(opt, scd, tmt, n);
-}
-template <class V, class N>
 void LocalHolder<V, N>::init(operation_t* opt, scheduler_t* scd, terminator_t* tmt, size_t n)
 {
 	this->opt = opt;
@@ -93,14 +87,14 @@ void LocalHolder<V, N>::init(operation_t* opt, scheduler_t* scd, terminator_t* t
 	this->tmt = tmt;
 	progress = 0.0;
 	if(opt->is_accumulative()){
-		f_update_incremental = bind(
-			&LocalHolder<V, N>::inc_update_accumulative, this, std::placeholders::_1, std::placeholders::_2);
+		f_update_incremental = std::bind(&LocalHolder<V, N>::inc_cal_accumulative,
+			this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
 	}else if(opt->is_selective()){
-		f_update_incremental = bind(
-			&LocalHolder<V, N>::inc_update_selective, this, std::placeholders::_1, std::placeholders::_2);
+		f_update_incremental = std::bind(&LocalHolder<V, N>::inc_cal_selective,
+			this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
 	}else{
-		f_update_incremental = bind(
-			&LocalHolder<V, N>::inc_update_general, this, std::placeholders::_1, std::placeholders::_2);
+		f_update_incremental = std::bind(&LocalHolder<V, N>::inc_cal_general,
+			this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
 	}
 	if(n != 0)
 		cont.reserve(n);
