@@ -43,18 +43,8 @@ void ConnectedComponent::MyOperation::init(const std::vector<std::string>& arg_l
 ConnectedComponent::value_t ConnectedComponent::MyOperation::init_value(const id_t& k, const neighbor_list_t& neighbors){
 	return k;
 }
-ConnectedComponent::value_t ConnectedComponent::MyOperation::identity_element() const{
-	return std::numeric_limits<value_t>::min();
-}
-ConnectedComponent::value_t ConnectedComponent::MyOperation::oplus(const value_t& a, const value_t& b){
-	//return max(a, b);
-	return (a<b)?b:a;
-}
 ConnectedComponent::value_t ConnectedComponent::MyOperation::func(const node_t& n, const neighbor_t& neighbor){
 	return n.v;
-}
-bool ConnectedComponent::MyOperation::better(const value_t& a, const value_t& b){
-	return a > b;
 }
 // scheduling - priority
 priority_t ConnectedComponent::MyOperation::priority(const node_t& n){
