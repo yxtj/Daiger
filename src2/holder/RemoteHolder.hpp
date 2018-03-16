@@ -33,21 +33,25 @@ public:
 	std::pair<bool, std::vector<std::pair<id_t, value_t>>> get(const id_t& k) const;
 	std::pair<bool, value_t> get(const id_t& from, const id_t& to) const;
 
-	// replace the old value with v, return whether a new entry is inserted
-	bool set(const id_t& from, const id_t& to, const value_t& v);
-	// merge the old value and v using oplus, return whether a new entry is inserted
-	bool merge(const id_t& from, const id_t& to, const value_t& v);
+	// corresponding to update_cache of LocalTable, return whether a new entry is inserted
+	bool update(const id_t& from, const id_t& to, const value_t& v){
+		return f_update(from, to, v);
+	}
 
-	// to, from, v
-	std::vector<std::pair<id_t, std::pair<id_t, value_t>>> collect(); // collect and remove from the table
+	// collect and remove from the table, format: to, from, v
+	std::vector<std::pair<id_t, std::pair<id_t, value_t>>> collect(); 
 	std::vector<std::pair<id_t, std::pair<id_t, value_t>>> collect(const size_t num){
 		return f_collect(num);
 	}
 
 private:
-	std::vector<std::pair<id_t, std::pair<id_t, value_t>>> f_collect_general(const size_t num);
-	std::vector<std::pair<id_t, std::pair<id_t, value_t>>> f_collect_accumulative(const size_t num);
-	std::vector<std::pair<id_t, std::pair<id_t, value_t>>> f_collect_selective(const size_t num);
+	std::vector<std::pair<id_t, std::pair<id_t, value_t>>> collect_general(const size_t num);
+	std::vector<std::pair<id_t, std::pair<id_t, value_t>>> collect_accumulative(const size_t num);
+	std::vector<std::pair<id_t, std::pair<id_t, value_t>>> collect_selective(const size_t num);
+
+	bool update_general(const id_t& from, const id_t& to, const value_t& v);
+	bool update_accumulative(const id_t& from, const id_t& to, const value_t& v);
+	bool update_selective(const id_t& from, const id_t& to, const value_t& v);
 
 private:
 	operation_t* opt;
@@ -55,6 +59,7 @@ private:
 	std::unordered_map<id_t, std::vector<std::pair<id_t, value_t>>> cont; // to -> [ <from, v> ]*n
 
 	std::function<std::vector<std::pair<id_t, std::pair<id_t, value_t>>>(const size_t)> f_collect;
+	std::function<bool(const id_t&, const id_t&, const value_t&)> f_update;
 };
 
 template <class V, class N>
@@ -62,11 +67,17 @@ void RemoteHolder<V, N>::init(operation_t* opt)
 {
 	this->opt = opt;
 	if(opt->is_accumulative()){
-		f_collect = std::bind(&RemoteHolder<V, N>::f_collect_accumulative, this, std::placeholders::_1);
+		f_collect = std::bind(&RemoteHolder<V, N>::collect_accumulative, this, std::placeholders::_1);
+		f_update = std::bind(&RemoteHolder<V, N>::update_accumulative,
+			this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
 	}else if(opt->is_selective()){
-		f_collect = std::bind(&RemoteHolder<V, N>::f_collect_selective, this, std::placeholders::_1);
+		f_collect = std::bind(&RemoteHolder<V, N>::collect_selective, this, std::placeholders::_1);
+		f_update = std::bind(&RemoteHolder<V, N>::update_selective,
+			this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
 	}else{
-		f_collect = std::bind(&RemoteHolder<V, N>::f_collect_general, this, std::placeholders::_1);
+		f_collect = std::bind(&RemoteHolder<V, N>::collect_general, this, std::placeholders::_1);
+		f_update = std::bind(&RemoteHolder<V, N>::update_general,
+			this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
 	}
 }
 
@@ -138,7 +149,13 @@ std::pair<bool, V> RemoteHolder<V, N>::get(const id_t& from, const id_t& to) con
 
 
 template <class V, class N>
-bool RemoteHolder<V, N>::set(const id_t& from, const id_t& to, const value_t& v){
+bool RemoteHolder<V, N>::update_general(const id_t& from, const id_t& to, const value_t& v){
+	auto& vec=cont[to];
+	vec.emplace_back(from, v);
+	return true;
+}
+template <class V, class N>
+bool RemoteHolder<V, N>::update_accumulative(const id_t& from, const id_t& to, const value_t& v){
 	auto& vec=cont[to];
 	auto jt=std::find_if(vec.begin(), vec.end(), [&](const std::pair<id_t, value_t>& p){
 		return p.first == from;
@@ -147,12 +164,12 @@ bool RemoteHolder<V, N>::set(const id_t& from, const id_t& to, const value_t& v)
 		vec.emplace_back(from, v);
 		return true;
 	}else{
-		jt->second=v;
+		jt->second = opt->oplus(jt->second, v);
 		return false;
 	}
 }
 template <class V, class N>
-bool RemoteHolder<V, N>::merge(const id_t& from, const id_t& to, const value_t& v){
+bool RemoteHolder<V, N>::update_selective(const id_t& from, const id_t& to, const value_t& v){
 	auto& vec=cont[to];
 	auto jt=std::find_if(vec.begin(), vec.end(), [&](const std::pair<id_t, value_t>& p){
 		return p.first == from;
@@ -161,16 +178,18 @@ bool RemoteHolder<V, N>::merge(const id_t& from, const id_t& to, const value_t& 
 		vec.emplace_back(from, v);
 		return true;
 	}else{
-		jt->second=opt->oplus(jt->second, v);
+		jt->second = v;
 		return false;
 	}
 }
+
+
 template <class V, class N>
 std::vector<std::pair<id_t, std::pair<id_t, V>>> RemoteHolder<V, N>::collect(){
 	return collect(size());
 }
 template <class V, class N>
-std::vector<std::pair<id_t, std::pair<id_t, V>>> RemoteHolder<V, N>::f_collect_general(const size_t num){
+std::vector<std::pair<id_t, std::pair<id_t, V>>> RemoteHolder<V, N>::collect_general(const size_t num){
 	std::vector<std::pair<id_t, std::pair<id_t, V>>> res;
 	auto it=cont.begin();
 	for(size_t i=0; i<num && it!=cont.end(); ++i, ++it){
@@ -183,7 +202,7 @@ std::vector<std::pair<id_t, std::pair<id_t, V>>> RemoteHolder<V, N>::f_collect_g
 	return res;
 }
 template <class V, class N>
-std::vector<std::pair<id_t, std::pair<id_t, V>>> RemoteHolder<V, N>::f_collect_accumulative(const size_t num){
+std::vector<std::pair<id_t, std::pair<id_t, V>>> RemoteHolder<V, N>::collect_accumulative(const size_t num){
 	std::vector<std::pair<id_t, std::pair<id_t, V>>> res;
 	auto it=cont.begin();
 	for(size_t i=0; i<num && it!=cont.end(); ++i, ++it){
@@ -198,7 +217,7 @@ std::vector<std::pair<id_t, std::pair<id_t, V>>> RemoteHolder<V, N>::f_collect_a
 	return res;
 }
 template <class V, class N>
-std::vector<std::pair<id_t, std::pair<id_t, V>>> RemoteHolder<V, N>::f_collect_selective(const size_t num){
+std::vector<std::pair<id_t, std::pair<id_t, V>>> RemoteHolder<V, N>::collect_selective(const size_t num){
 	std::vector<std::pair<id_t, std::pair<id_t, V>>> res;
 	auto it=cont.begin();
 	for(size_t i=0; i<num && it!=cont.end(); ++i, ++it){

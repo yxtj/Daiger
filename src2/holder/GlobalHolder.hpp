@@ -230,7 +230,7 @@ void GlobalHolder<V, N>::doApply(){
 			if(is_local_part(pid)){
 				local_part.update_cache(id, p.first, p.second);
 			}else{
-				remote_parts[pid].set(id, p.first, p.second);
+				remote_parts[pid].update(id, p.first, p.second);
 			}
 		}
 	}
