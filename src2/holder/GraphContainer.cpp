@@ -100,7 +100,12 @@ void GraphContainer::apply(){
 		holder->doApply();
 }
 void GraphContainer::sendMsg(sender_t sender){
-
+	for(int i=0; i<conf.nPart; ++i){
+		if(i == wid)
+			continue;
+		string msg = holder->collectMsg(i);
+		sender(i, msg);
+	}
 }
 
 void GraphContainer::reportProgress(sender_master_t sender){

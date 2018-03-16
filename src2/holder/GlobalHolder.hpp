@@ -218,6 +218,15 @@ void GlobalHolder<V, N>::doApply(){
 	std::vector<id_t> nodes = scd->pick();
 	for(id_t id : nodes){
 		local_part.commit(id);
+		std::vector<std::pair<id_t, value_t>> data = local_part.spread(id);
+		for(auto& p : data){
+			int pid = get_part(p.first);
+			if(is_local_part(pid)){
+				local_part.update_cache(id, p.first, p.second);
+			}else{
+				remote_parts[pid].set(id, p.first, p.second);
+			}
+		}
 	}
 }
 template <class V, class N>
