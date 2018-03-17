@@ -51,7 +51,7 @@ priority_t ConnectedComponent::MyOperation::priority(const node_t& n){
 	return static_cast<priority_t>(n.v);
 }
 
-AppArguments ConnectedComponent::Separator::separate(const std::vector<std::string>& args){
+AppArguments ConnectedComponent::MySeparator::separate(const std::vector<std::string>& args){
 	AppArguments res;
 	res.name = ConnectedComponent::name;
 	res.operation_arg = {};

@@ -26,12 +26,12 @@ struct ConnectedComponent
 		virtual priority_t priority(const node_t& n);
 	};
 
-	class Separator : public ArgumentSeparator {
+	class MySeparator : public ArgumentSeparator {
 	public:
 		virtual AppArguments separate(const std::vector<std::string>& args);
 	};
 
-	typedef Separator separator_t;
+	typedef MySeparator separator_t;
 	typedef MyOperation operation_t;
 	typedef IOHandlerUnweighted<value_t> iohandler_t;
 	typedef TerminatorStop<value_t, neighbor_t> terminator_t;
