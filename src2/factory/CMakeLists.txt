@@ -6,6 +6,7 @@ set(HEADERS
 	SchedulerFactory.h
 	SharderFactory.h
 	TerminatorFactory.h
+	factory_reg.h
 )
 set(SOURCES
 	AppKernelFactory.cpp
@@ -14,6 +15,7 @@ set(SOURCES
 	SchedulerFacrory.cpp
 	SharderFactory.cpp
 	TerminatorFactory.cpp
+	factory_reg.cpp
 )
 add_library(factory
 	${HEADERS} ${SOURCES})

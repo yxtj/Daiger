@@ -3,6 +3,7 @@
 #include "application/AppBase.h"
 #include "network/NetworkThread.h"
 #include "example/example_reg.h"
+#include "factory/factory_reg.h"
 #include "runner/Option.h"
 #include "runner/Master.h"
 #include "runner/Worker.h"
@@ -19,9 +20,10 @@ int main(int argc, char* argv[]){
 
 	}
 	registerExamples();
+	registerFactories();
 	// init App
 	AppBase app = makeApplication(opt.app_name, opt.app_args,
-		opt.sharder_args, opt.sharder_args);
+		opt.sharder_args, opt.scheduler_args);
 	if(!app.check()){
 		cerr<<"The application is not correctly setup."<<endl;
 		return 2;

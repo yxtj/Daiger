@@ -35,9 +35,9 @@ Option::Option()
 		("prefix_result", value<string>(&conf.prefix_result)->default_value(string("res-")), "Prefix of the output value files.")
 		("app", value<string>(&app_name), "The name of the application to run.")
 		("app_args", value<vector<string>>(&app_args)->multitoken()->default_value({}, ""), "Application parameters.")
-		("sharder", value<vector<string>>(&sharder_args)->multitoken()->default_value({"mod"}, ""),
+		("sharder", value<vector<string>>(&sharder_args)->multitoken()->default_value({"mod"}, "mod"),
 			"Sharder strategy name and parameters. Supports: mod.")
-		("scheduler", value<vector<string>>(&scheduler_args)->multitoken()->default_value({"priority", ""}, ""),
+		("scheduler", value<vector<string>>(&scheduler_args)->multitoken()->default_value({"priority", "0.1"}, "priority"),
 			"Scheduler name and parameters. Supports: rr, priority, fifo.")
 		("async", value<bool>(&conf.async)->default_value(true), "Whether to perform asynchronous computation.")
 		("cache-free", value<bool>(&conf.cache_free)->default_value(false), "Whether to perform cache-free computation.")
@@ -78,11 +78,6 @@ bool Option::parseInput(int argc, char* argv[]) {
 	}
 
 	do {
-		if(conf.path_graph.empty()) {
-			cerr << "Graph path is not given" << endl;
-			flag_help = true;
-			break;
-		}
 		sortUpPath(path_root);
 		if(!path_root.empty()){
 			setWithRootPath(conf.path_graph, "graph");
@@ -94,6 +89,11 @@ bool Option::parseInput(int argc, char* argv[]) {
 		sortUpPath(conf.path_delta);
 		sortUpPath(conf.path_value);
 		sortUpPath(conf.path_result);
+		if(conf.path_graph.empty()) {
+			cerr << "Graph path is not given" << endl;
+			flag_help = true;
+			break;
+		}
 
 		if(conf.path_delta.empty() || conf.path_value.empty())
 			do_incremental=false;
