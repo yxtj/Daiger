@@ -304,7 +304,7 @@ int main(int argc, char* argv[]){
 				"They are automatically normalized.\n"
 				"  [dir]: (=1) whether it is a directional graph\n"
 				"  [random-seed]: (=1535345) seed for random numbers\n"
-				"i.e.: ./delta-gen.exe 1 graphDir delta-rd 0.05 0 0.3 0 0.7 123456\n"
+				"i.e.: ./delta-gen.exe 1 graphDir delta-rd 0.05 0 0.3 0 0.7 1 123456\n"
 				"i.e.: ./delta-gen.exe 2 input ../delta/d2 0.01 0.2 0.2 0.3 0.3\n"
 				<< endl;
 		return 1;

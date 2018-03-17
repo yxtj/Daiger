@@ -320,7 +320,7 @@ int main(int argc, char* argv[]){
 				"  <ew-rate>: the ratio of edges among all changed edges (edge add/remove vs. weight increase/decrease)\n"
 				"  [dir]: (=1) whether it is a directional graph\n"
 				"  [random-seed]: (=1535345) seed for random numbers\n"
-				"i.e.: ./deltaGen.exe 2 graph/ cedge/ delta/rd 0.05 0 0.3 0 0.7 123456 // do not touch critical edges, all bad change, 70% are A/D edges\n"
+				"i.e.: ./deltaGen.exe 2 graph/ cedge/ delta/rd 0.05 0 0.3 0 0.7 1 123456 // do not touch critical edges, all bad change, 70% are A/D edges\n"
 				"i.e.: ./deltaGen.exe 1 ../input/g1 ../ref/g1 ../input/g1/d2 0.01 0.2 0.3 0.3 // change 20% critical edges, 30% good change, 30% are A/D edges\n"
 				<< endl;
 		return 1;
