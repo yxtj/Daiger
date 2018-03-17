@@ -20,6 +20,7 @@ public:
 	//float schedule_portion;
 	//bool priority_degree; // use degree of out-neighbors
 	//bool priority_diff; // use <u>-<v> instead of <u>
+	std::string path_root;
 
 	size_t nPart; // optional, used to check whether a correct number of instance is started
 	size_t nNode; // optional, used to preactively allocate space
@@ -42,5 +43,6 @@ public:
 private:
 	std::string& sortUpPath(std::string& path);
 	float sortUpInterval(float& interval, const float min, const float max);
+	std::string& setWithRootPath(std::string& path, const std::string& name);
 };
 

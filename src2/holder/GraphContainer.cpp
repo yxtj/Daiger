@@ -90,21 +90,22 @@ void GraphContainer::buildINCache(sender_t sender){
 	}
 }
 
-void GraphContainer::prepareUpdate(sender_t sender_u, sender_t sender_r){
-	this->sender_u = sender_u;
-	this->sender_r = sender_r;
+void GraphContainer::prepareUpdate(sender_t sender_val, sender_t sender_req){
+	this->sender_val = sender_val;
+	this->sender_req = sender_req;
+	holder->prepareUpdate(sender_req);
 }
 
 void GraphContainer::apply(){
 	if(holder->needApply())
 		holder->doApply();
 }
-void GraphContainer::sendMsg(sender_t sender){
+void GraphContainer::send(){
 	for(int i=0; i<conf.nPart; ++i){
 		if(i == wid)
 			continue;
 		string msg = holder->collectMsg(i);
-		sender(i, msg);
+		sender_val(i, msg);
 	}
 }
 

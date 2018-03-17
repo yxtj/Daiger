@@ -20,7 +20,7 @@ public:
 	void loadValue(sender_t sender = {});
 	void loadDelta(sender_t sender = {});
 	void buildINCache(sender_t sender);
-	void prepareUpdate(sender_t sender_u, sender_t sender_r);
+	void prepareUpdate(sender_t sender_val, sender_t sender_req);
 	void dumpResult();
 
 // handlers:
@@ -36,7 +36,7 @@ public:
 	void msgReply(const std::string& line);
 
 	void apply();
-	void sendMsg(sender_t sender);
+	void send();
 	void reportProgress(sender_master_t sender);
 
 private:
@@ -52,7 +52,7 @@ private:
 
 	int wid;
 	GlobalHolderBase* holder;
-	sender_t sender_u;
-	sender_t sender_r;
+	sender_t sender_val;
+	sender_t sender_req;
 };
 

@@ -21,6 +21,7 @@ public:
 	using value_t = V; //typename node_t::value_t;
 	using neighbor_t = typename node_t::neighbor_t;
 	using neighbor_list_t = typename node_t::neighbor_list_t;
+	using sender_t = std::function<void(const int, std::string&)>;
 
 	LocalHolder() = default;
 	void init(operation_t* opt, scheduler_t* scd, terminator_t* tmt, size_t n);
@@ -35,6 +36,8 @@ public:
 	bool empty() const;
 	size_t size() const;
 	void clear();
+	void registerRequestCallback(sender_t f);
+
 	// enumerate nodes
 	void enum_rewind();
 	const node_t* enum_next();
@@ -75,6 +78,7 @@ private:
 	double progress;
 	std::unordered_map<id_t, node_t> cont;
 	std::function<void(const id_t&, const id_t&, const value_t&)> f_update_incremental;
+	sender_t f_send_req;
 
 	typename decltype(cont)::const_iterator enum_it;
 };
@@ -146,6 +150,11 @@ template <class V, class N>
 void LocalHolder<V, N>::clear(){
 	cont.clear();
 }
+template <class V, class N>
+void LocalHolder<V, N>::registerRequestCallback(sender_t f){
+	f_send_req = f;
+}
+
 template <class V, class N>
 void LocalHolder<V, N>::enum_rewind(){
 	enum_it = cont.cbegin();

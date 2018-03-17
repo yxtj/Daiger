@@ -7,6 +7,7 @@
 #include "serial/serialization.h"
 #include <vector>
 #include <string>
+#include <functional>
 
 template <class V, class N>
 class GlobalHolder
@@ -20,6 +21,7 @@ public:
 	using value_t = typename node_t::value_t;
 	using neighbor_t = typename node_t::neighbor_t;
 	using neighbor_list_t = typename node_t::neighbor_list_t;
+	using sender_t = std::function<void(const int, std::string&)>;
 	using msg_t = MessageDef<V>;
 
 	virtual void init(OperationBase* opt, IOHandlerBase* ioh,
@@ -29,7 +31,7 @@ public:
 	virtual int loadGraph(const std::string& line);
 	virtual int loadValue(const std::string& line);
 	virtual int loadDelta(const std::string& line);
-	virtual void prepareUpdate();
+	virtual void prepareUpdate(sender_t f_req);
 	virtual void prepareDump();
 	virtual std::pair<bool, std::string> dumpResult();
 
@@ -52,7 +54,6 @@ private:
 	};
 	bool is_local_part(const int pid){ return pid == local_id; }
 	bool is_local_id(const id_t id){ return get_part(id) == local_id; }
-	value_t get_ie() const { return IE; }
 	node_t& get_node(const id_t id){ return local_part.get(id); }
 
 	void add_local_node(id_t& id, neighbor_list_t& nl);
@@ -69,7 +70,6 @@ private:
 	std::vector<RemoteHolder<V, N>> remote_parts;
 	LocalHolder<V, N> local_part;
 	int local_id;
-	value_t IE;
 
 	int pointer_dump;
 };
@@ -87,7 +87,6 @@ void GlobalHolder<V, N>::init(OperationBase* opt, IOHandlerBase* ioh,
 	this->nPart = nPart;
 	this->local_id = localId;
 	this->enable_local_process = localProcess;
-	IE = this->opt->identity_element();
 	pointer_dump = 0;
 
 	local_part.init(this->opt, this->scd, this->tmt, nPart);
@@ -101,7 +100,7 @@ template <class V, class N>
 void GlobalHolder<V, N>::add_local_node(id_t& id, neighbor_list_t& nl){
 	node_t n;
 	n.id = std::move(id);
-	n.v = n.u = get_ie();
+	n.v = n.u = opt->identity_element();
 	n.onb = std::move(nl);
 	scd->regist(n.id);
 	local_part.add(std::move(n));
@@ -144,8 +143,9 @@ int GlobalHolder<V, N>::loadDelta(const std::string& line){
 }
 
 template <class V, class N>
-void GlobalHolder<V, N>::prepareUpdate(){
+void GlobalHolder<V, N>::prepareUpdate(sender_t f_req){
 	scd->ready();
+	local_part.registerRequestCallback(f_req);
 }
 template <class V, class N>
 void GlobalHolder<V, N>::prepareDump(){
@@ -227,7 +227,7 @@ void GlobalHolder<V, N>::doApply(){
 		std::vector<std::pair<id_t, value_t>> data = local_part.spread(id);
 		for(auto& p : data){
 			int pid = get_part(p.first);
-			if(is_local_part(pid)){
+			if(enable_local_process && is_local_part(pid)){
 				local_part.update_cache(id, p.first, p.second);
 			}else{
 				remote_parts[pid].update(id, p.first, p.second);

@@ -140,6 +140,9 @@ void Worker::handleVReply(const std::string& d, const RPCInfo& info){
 void Worker::handlePApply(const std::string& d, const RPCInfo& info){
 	graph.apply();
 }
+void Worker::handlePSend(const std::string& d, const RPCInfo& info){
+	graph.send();
+}
 void Worker::handlePReport(const std::string& d, const RPCInfo& info){
 	reportProgress();
 }

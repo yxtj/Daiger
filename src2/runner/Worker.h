@@ -66,6 +66,7 @@ public:
 	void handleVReply(const std::string& d, const RPCInfo& info);
 
 	void handlePApply(const std::string& d, const RPCInfo& info);
+	void handlePSend(const std::string& d, const RPCInfo& info);
 	void handlePReport(const std::string& d, const RPCInfo& info);
 
 private:

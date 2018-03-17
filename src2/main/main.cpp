@@ -13,7 +13,6 @@ int main(int argc, char* argv[]){
 	// init option
 	Option opt;
 	if(!opt.parseInput(argc, argv)){
-		cerr<<"Failed in parsing arguments."<<endl;
 		return 1;
 	}
 	if(opt.show){

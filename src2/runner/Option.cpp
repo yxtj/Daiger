@@ -21,8 +21,10 @@ Option::Option()
 		("load_balance", value<bool>(&conf.balance_load)->default_value(1), "Support loading from arbitrary number of files.")
 		("part", value<size_t>(&nPart)->default_value(0), 
 			"[integer] # of workers, used check whether a correct number of instance is started.")
-		("node", value<size_t>(&nNode)->default_value(-1), 
-			"[integer] # of nodes, used for preactively allocate space.")
+		("node", value<size_t>(&nNode)->default_value(0), 
+			"[integer] # of nodes, used for preactively allocate space, 0 for skipping that.")
+		("path", value<string>(&path_root), "Root path of graph, delta, value and result."
+			" They are in subdirectories of their names. They can be override by given path_xxx.")
 		("path_graph", value<string>(&conf.path_graph), "Path of the input graph files.")
 		("prefix_graph", value<string>(&conf.prefix_graph)->default_value(string("part-")), "Prefix of the input graph files.")
 		("path_delta", value<string>(&conf.path_delta), "Path of the delta graph files. If not given, do non-incremental computation.")
@@ -81,6 +83,13 @@ bool Option::parseInput(int argc, char* argv[]) {
 			flag_help = true;
 			break;
 		}
+		sortUpPath(path_root);
+		if(!path_root.empty()){
+			setWithRootPath(conf.path_graph, "graph");
+			setWithRootPath(conf.path_delta, "delta");
+			setWithRootPath(conf.path_value, "value");
+			setWithRootPath(conf.path_result, "result");
+		}
 		sortUpPath(conf.path_graph);
 		sortUpPath(conf.path_delta);
 		sortUpPath(conf.path_value);
@@ -117,4 +126,10 @@ float Option::sortUpInterval(float& interval, const float min, const float max){
 	interval = std::min(min, interval);
 	interval = std::max(max, interval);
 	return interval;
+}
+
+std::string& Option::setWithRootPath(std::string& path, const std::string& name){
+	if(path.empty())
+		path = path_root + name + "/";
+	return path;
 }

@@ -102,15 +102,15 @@ static int _helper_gcd(int a, int b){
 }
 void Worker::procedureUpdate(){
 	// register useful callbacks for sending messages
-	std::function<void(const int, std::string&)> sender_u = 
+	std::function<void(const int, std::string&)> sender_val = 
 		[&](const int wid, std::string& msg){
 			net->send(wm.wid2nid(wid), MType::VUpdate, move(msg));
 		};
-	std::function<void(const int, std::string&)> sender_r = 
+	std::function<void(const int, std::string&)> sender_req = 
 		[&](const int wid, std::string& msg){
 			net->send(wm.wid2nid(wid), MType::VRequest, move(msg));
 		};
-	graph.prepareUpdate(sender_u, sender_r);
+	graph.prepareUpdate(sender_val, sender_req);
 	// start periodic apply-and-send and periodic progress-report
 	update_finish=false;
 	int ams = static_cast<int>(opt.apply_interval*1000); // millisecond

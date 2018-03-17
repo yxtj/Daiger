@@ -6,9 +6,12 @@
 #include "application/Terminator.h"
 #include <vector>
 #include <string>
+#include <functional>
 
 class GlobalHolderBase{
 public:
+	using sender_t = std::function<void(const int, std::string&)>;
+
 	virtual ~GlobalHolderBase() = default;
 
 	virtual void init(OperationBase* opt, IOHandlerBase* ioh,
@@ -19,7 +22,7 @@ public:
 	virtual int loadGraph(const std::string& line) = 0;
 	virtual int loadValue(const std::string& line) = 0;
 	virtual int loadDelta(const std::string& line) = 0;
-	virtual void prepareUpdate() = 0;
+	virtual void prepareUpdate(sender_t f_req) = 0;
 	virtual void prepareDump() = 0;
 	// return whether this call is success and the line to write
 	virtual std::pair<bool, std::string> dumpResult() = 0;
