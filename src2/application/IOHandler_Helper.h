@@ -15,7 +15,7 @@ struct IOHelper {
 	static std::pair<id_t, std::vector<id_t> > load_graph_unweighted(const std::string& line);
 	// format: "k\tai,aw bi,bw ci,cw "
 	template <typename W>
-	static std::pair<id_t, std::vector<id_t, W> > load_graph_weighted(const std::string& line);
+	static std::pair<id_t, std::vector<std::pair<id_t, W>> > load_graph_weighted(const std::string& line);
 
 	// load graph changes
 	// format: <type> is one of A, R, I, D
@@ -39,13 +39,13 @@ struct IOHelper {
 };
 
 template <typename W>
-std::pair<id_t, std::vector<id_t, W> > IOHelper::load_graph_weighted(const std::string& line){
+std::pair<id_t, std::vector<std::pair<id_t, W>> > IOHelper::load_graph_weighted(const std::string& line){
 	//line: "k\tai,aw bi,bw ci,cw "
 	size_t pos = line.find('\t');
 	id_t k = stoid(line.substr(0, pos));
 	++pos;
 
-	std::vector<id_t, W> data;
+	std::vector<std::pair<id_t, W>> data;
 	size_t spacepos;
 	while((spacepos = line.find(' ', pos)) != line.npos){
 		size_t cut = line.find(',', pos + 1);
