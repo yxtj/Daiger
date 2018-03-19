@@ -33,7 +33,7 @@ void Worker::registerWorker(){
 }
 
 void Worker::shutdownWorker(){
-
+	NetworkThread::Terminate();
 }
 
 void Worker::terminateWorker(){

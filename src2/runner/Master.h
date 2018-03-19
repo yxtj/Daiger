@@ -30,7 +30,8 @@ protected:
 // local logic functions
 private:
 	int assignWid(const int nid); // bind to specific implementation
-	bool checkProgress();
+	void threadProgress();
+	void updateProgress(const int wid, const std::pair<double, size_t>& report);
 
 	void startProcedure(const int pid);
 	void finishProcedure(const int pid);

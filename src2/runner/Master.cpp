@@ -41,6 +41,16 @@ int Master::assignWid(const int nid){
 	return nid - 1;
 }
 
+void Master::threadProgress(){
+	while(!app.tmt->check_term()){
+		su_term.wait();
+	}
+}
+void Master::updateProgress(const int wid, const std::pair<double, size_t>& report){
+	app.tmt->update_report(wid, report);
+	rph.input(MType::PReport, wid);
+}
+
 void Master::registerWorker(){
 	su_regw.reset();
 	net->broadcast(MType::CRegister, net->id());
@@ -120,7 +130,8 @@ void Master::procedureBuildINCache(){
 void Master::procedureUpdate(){
 	cpid = ProcedureType::Update;
 	startProcedure(cpid);
-	// TODO: control progress report and termination check
+	thread tp(bind(&Master::threadProgress, this));
+	tp.join();
 	finishProcedure(cpid);
 }
 
