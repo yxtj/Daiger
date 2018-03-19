@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 2.6)
+cmake_minimum_required (VERSION 3.0)
 
 project(Daiger)
 
@@ -27,10 +27,26 @@ include_directories(${Boost_INCLUDE_DIRS})
 #endif()
 
 # -------- MPI --------
-find_program(HAVE_MPICC "mpic++")
-if (NOT HAVE_MPICC) 
-  message(FATAL_ERROR "Required OpenMPI development libraries and compiler not found")
+
+find_package(MPI REQUIRED)
+
+#find_program(HAVE_MPICC "mpic++")
+#if (NOT HAVE_MPICC) 
+if (NOT MPI_CXX_FOUND)
+  #message(FATAL_ERROR "Required OpenMPI development libraries and compiler not found")
+  message(FATAL_ERROR "Required MPI development libraries and compiler not found")
 endif()
+
+#exec_program("mpic++ -showme:compile" OUTPUT_VARIABLE MPI_CXX_COMPILE_FLAGS)
+#exec_program("mpic++ -showme:incdirs" OUTPUT_VARIABLE MPI_CXX_INCLUDE_PATH)
+#exec_program("mpic++ -showme:link" OUTPUT_VARIABLE MPI_CXX_LINK_FLAGS)
+#exec_program("mpic++ -showme:libdirs" OUTPUT_VARIABLE MPI_LIBDIRS)
+#exec_program("mpic++ -showme:libs" OUTPUT_VARIABLE MPI_CXX_LIBRARIES)
+
+#string(REPLACE " " ";" MPI_INCDIRS "${MPI_INCDIRS}")
+#string(REPLACE " " ";" MPI_LINK_FLAGS "${MPI_LINK_FLAGS}")
+#string(REPLACE " " ";" MPI_LIBDIRS "${MPI_LIBDIRS}")
+#string(REPLACE " " ";" MPI_LIBS "${MPI_LIBS}")
 
 # -------- compress (LZO) --------
 #check_include_file("/usr/include/lzo/lzo1x.h" HAVE_LZO1X_H)
@@ -55,29 +71,16 @@ endif()
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-exec_program("mpic++ -showme:compile" OUTPUT_VARIABLE MPI_COMPILE_FLAGS)
-exec_program("mpic++ -showme:incdirs" OUTPUT_VARIABLE MPI_INCDIRS)
-exec_program("mpic++ -showme:link" OUTPUT_VARIABLE MPI_LINK_FLAGS)
-exec_program("mpic++ -showme:libdirs" OUTPUT_VARIABLE MPI_LIBDIRS)
-exec_program("mpic++ -showme:libs" OUTPUT_VARIABLE MPI_LIBS)
-
-string(REPLACE " " ";" MPI_INCDIRS "${MPI_INCDIRS}")
-string(REPLACE " " ";" MPI_LINK_FLAGS "${MPI_LINK_FLAGS}")
-string(REPLACE " " ";" MPI_LIBDIRS "${MPI_LIBDIRS}")
-string(REPLACE " " ";" MPI_LIBS "${MPI_LIBS}")
-
 set(CMAKE_CXX_FLAGS "${CXX_DEFAULT} -fPIC -fno-omit-frame-pointer ${CXX_DEFINE}")
 
 include_directories( ${CMAKE_CURRENT_SOURCE_DIR}
 #                     ${MAITER_BINARY_DIR}
 #                     ${PROTOBUF_INCLUDE_DIRS}
-                     ${MPI_INCDIRS}
+                     ${MPI_CXX_INCLUDE_PATH}
                    )
 include_directories(SYSTEM)
 
-link_directories(${MPI_LIBDIRS})
-
-set(CMAKE_CXX_FLAGS "${CXX_DEFAULT} -fPIC -fno-omit-frame-pointer -std=c++11 ${CXX_WARN} ${CXX_DEFINE} ${MPI_COMPILE_FLAGS}")
+set(CMAKE_CXX_FLAGS "${CXX_DEFAULT} -fPIC -fno-omit-frame-pointer -std=c++11 ${CXX_WARN} ${CXX_DEFINE} ${MPI_CXX_COMPILE_FLAGS}")
 add_subdirectory (dbg)
 add_subdirectory (util)
 add_subdirectory (common)
