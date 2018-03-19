@@ -6,6 +6,7 @@
 #include <cassert>
 #include <chrono>
 #include <functional>
+#include <iostream>
 
 using namespace std;
 using namespace std::placeholders;
@@ -50,12 +51,12 @@ void Runner::msgLoop() {
 	while(running){
 		int n = 16; // prevent spending too much time in pushing but never popping 
 		while(msg_do_push && n-->=0 && net->tryReadAny(data, &info.source, &info.tag)){
-			// DVLOG(1)<<"Got a pkg from "<<info.source<<" to "<<info.dest<<", type "<<info.tag<<
-			//		", queue length="<<driver.queSize();
+			cout<<"Got a pkg from "<<info.source<<" to "<<info.dest<<", type "<<info.tag<<
+				", queue length="<<driver.queSize();
 			driver.pushData(data, info);
 		}
 		while(msg_do_pop && !driver.empty()){
-			// DVLOG(1)<<"pop a message. driver left "<<driver.queSize()<<" , net left "<<net->unpicked_pkgs();
+			cout<<"pop a message. driver left "<<driver.queSize()<<" , net left "<<net->unpicked_pkgs();
 			driver.popData();
 		}
 		sleep();

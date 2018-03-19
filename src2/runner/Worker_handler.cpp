@@ -48,6 +48,7 @@ void Worker::registerHandlers() {
 	//type 2: called by specific functions (handlers)
 	// by handlerRegisterWorker()
 	addRPHAnySU(MType::CWorkers, su_worker);
+	addRPHAnySU(MType::CShutdown, su_stop);
 }
 
 void Worker::handleReply(const std::string& d, const RPCInfo& info) {

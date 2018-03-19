@@ -81,4 +81,6 @@ private:
 	SyncUnit su_worker;
 	bool update_finish;
 	SyncUnit su_update;
+
+	SyncUnit su_stop;
 };

@@ -18,22 +18,24 @@ void Worker::start() {
 	registerHandlers();
 	startMsgLoop();
     registerWorker();
-
+	su_stop.wait();
 }
 
 void Worker::finish() {
-    terminateWorker();
 	stopMsgLoop();
     tmsg.join();
+    shutdownWorker();
 }
 
 void Worker::registerWorker(){
 	// called by handleRegister()
+	cout<<"registing worker with net id: "<<my_net_id<<endl;
 	net->send(master_net_id, MType::CRegister, net->id());
 }
 
 void Worker::shutdownWorker(){
-	NetworkThread::Terminate();
+	cout<<"Worker "<<wm.nid2wid(my_net_id)<<" stops."<<endl;
+	su_stop.notify();
 }
 
 void Worker::terminateWorker(){
