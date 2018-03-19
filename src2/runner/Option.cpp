@@ -19,12 +19,12 @@ Option::Option()
 		("help", "Print help messages")
 		("show_info", value<bool>(&show)->default_value(1), "Print the initializing information.")
 		("load_balance", value<bool>(&conf.balance_load)->default_value(1), "Support loading from arbitrary number of files.")
-		("part", value<size_t>(&nPart)->default_value(0), 
+		("part", value<int>(&conf.nPart)->default_value(0), 
 			"[integer] # of workers, used check whether a correct number of instance is started.")
-		("node", value<size_t>(&nNode)->default_value(0), 
+		("node", value<size_t>(&conf.nNode)->default_value(0), 
 			"[integer] # of nodes, used for preactively allocate space, 0 for skipping that.")
 		("path", value<string>(&path_root), "Root path of graph, delta, value and result."
-			" They are in subdirectories of their names. They can be override by given path_xxx.")
+			" They are in subdirectories of their names. They can be overriden by given path_xxx.")
 		("path_graph", value<string>(&conf.path_graph), "Path of the input graph files.")
 		("prefix_graph", value<string>(&conf.prefix_graph)->default_value(string("part-")), "Prefix of the input graph files.")
 		("path_delta", value<string>(&conf.path_delta), "Path of the delta graph files. If not given, do non-incremental computation.")
@@ -60,13 +60,13 @@ Option::~Option() {
 bool Option::parseInput(int argc, char* argv[]) {
 	//parse
 	bool flag_help = false;
-	boost::program_options::variables_map var_map;
+	boost::program_options::variables_map vm;
 	try {
 		boost::program_options::store(
-			boost::program_options::parse_command_line(argc, argv, pimpl->desc), var_map);
-		boost::program_options::notify(var_map);
+			boost::program_options::parse_command_line(argc, argv, pimpl->desc), vm);
+		boost::program_options::notify(vm);
 
-		if(var_map.count("help")) {
+		if(vm.count("help")) {
 			flag_help = true;
 		}
 	} catch(std::exception& e) {
@@ -77,23 +77,30 @@ bool Option::parseInput(int argc, char* argv[]) {
 		flag_help = true;
 	}
 
-	do {
+	while(!flag_help) {
+		do_incremental = true;
+		do_output = true;
+
 		sortUpPath(path_root);
 		if(!path_root.empty()){
-			setWithRootPath(conf.path_graph, "graph");
-			setWithRootPath(conf.path_delta, "delta");
-			setWithRootPath(conf.path_value, "value");
-			setWithRootPath(conf.path_result, "result");
+			if(vm.count("path_graph") == 0)
+				setWithRootPath(conf.path_graph, "graph");
+			if(vm.count("path_delta") == 0)
+				setWithRootPath(conf.path_delta, "delta");
+			if(vm.count("path_value") == 0)
+				setWithRootPath(conf.path_value, "value");
+			if(vm.count("path_result") == 0)
+				setWithRootPath(conf.path_result, "result");
 		}
-		sortUpPath(conf.path_graph);
-		sortUpPath(conf.path_delta);
-		sortUpPath(conf.path_value);
-		sortUpPath(conf.path_result);
 		if(conf.path_graph.empty()) {
 			cerr << "Graph path is not given" << endl;
 			flag_help = true;
 			break;
 		}
+		sortUpPath(conf.path_graph);
+		sortUpPath(conf.path_value);
+		sortUpPath(conf.path_delta);
+		sortUpPath(conf.path_result);
 
 		if(conf.path_delta.empty() || conf.path_value.empty())
 			do_incremental=false;
@@ -106,7 +113,7 @@ bool Option::parseInput(int argc, char* argv[]) {
 		sortUpInterval(term_interval, 2*apply_interval, 600.0);
 
 		break;
-	} while(false); // technique for condition checking
+	}; // technique for condition checking
 
 	if(true == flag_help) {
 		cerr << pimpl->desc << endl;
@@ -117,14 +124,22 @@ bool Option::parseInput(int argc, char* argv[]) {
 
 std::string& Option::sortUpPath(std::string & path)
 {
+	size_t p=0;
+	while(p < path.size() && path[p] == ' ') ++p;
+	if(p != 0)
+		path=path.substr(p);
+	p = path.size();
+	while(path[p-1] == ' ') --p;
+	if(p != path.size())
+		path=path.substr(0, p);
 	if(!path.empty() && path.back() != '/')
 		path.push_back('/');
 	return path;
 }
 
 float Option::sortUpInterval(float& interval, const float min, const float max){
-	interval = std::min(min, interval);
-	interval = std::max(max, interval);
+	interval = std::max(min, interval);
+	interval = std::min(max, interval);
 	return interval;
 }
 

@@ -84,7 +84,7 @@ void Runner::addRPHEach(
 	rph.activateType(type);
 }
 void Runner::addRPHEachSU(const int type, SyncUnit& su){
-	addRPHEach(type, bind(&SyncUnit::notify, &su), opt.nPart, false);
+	addRPHEach(type, bind(&SyncUnit::notify, &su), opt.conf.nPart, false);
 }
 void Runner::addRPHAny(
     const int type, std::function<void()> fun, const bool newThread)

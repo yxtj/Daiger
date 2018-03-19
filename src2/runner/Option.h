@@ -22,9 +22,6 @@ public:
 	//bool priority_diff; // use <u>-<v> instead of <u>
 	std::string path_root;
 
-	size_t nPart; // optional, used to check whether a correct number of instance is started
-	size_t nNode; // optional, used to preactively allocate space
-
 	bool do_incremental; // when path_delta and path_value are given
 	bool do_output; // when path_result is given
 
