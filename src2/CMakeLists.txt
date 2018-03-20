@@ -68,8 +68,8 @@ endif()
 
  
 set(CXX_DEFAULT "${CMAKE_CXX_FLAGS}")
-#set(CXX_DEFINE "-DHAVE_LIB_GFLAGS ")
-set(CXX_WARN "-Wall -Wno-sign-compare -Wno-unused-function -Wno-unused-result")
+set(CXX_DEFINE "-DELPP_THREAD_SAFE")
+set(CXX_WARN "-Wall -Wno-sign-compare -Wno-unused-function -Wno-unused-variable -Wno-unused-result")
 
 if ("$ENV{OPROFILE}")
   message(STATUS "Enabling OProfile")
@@ -93,6 +93,7 @@ include_directories(SYSTEM)
 set(CMAKE_CXX_FLAGS "${CXX_DEFAULT} -fPIC -fno-omit-frame-pointer ${CXX_WARN} ${CXX_DEFINE}")
 
 add_subdirectory (dbg)
+add_subdirectory (log)
 add_subdirectory (util)
 add_subdirectory (common)
 add_subdirectory (network)

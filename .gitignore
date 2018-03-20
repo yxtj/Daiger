@@ -283,7 +283,8 @@ __pycache__
 # other helper folders
 tmp/
 temp/
-log*/
+log/
+log-*/
 
 # eclipse project files:
 .cproject
