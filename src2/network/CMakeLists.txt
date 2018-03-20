@@ -10,7 +10,6 @@ set(SOURCES
 	NetworkImplMPI.cpp
 )
 set(_TEMPORTARY_CXX_FLAGS, ${CMAKE_CXX_FLAGS})
-message(${CMAKE_CXX_FLAGS})
 set(CMAKE_CXX_FLAGS "${_TEMPORTARY_CXX_FLAGS} ${MPI_CXX_COMPILE_FLAGS}")
 add_library(network
 	${HEADERS} ${SOURCES})
