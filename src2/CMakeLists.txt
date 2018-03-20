@@ -1,13 +1,25 @@
 cmake_minimum_required (VERSION 3.0)
 
-project(Daiger)
+macro(use_cxx11)
+  if (CMAKE_VERSION VERSION_LESS "3.1")
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+      set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+    endif ()
+  else ()
+    set (CMAKE_CXX_STANDARD 11)
+  endif ()
+endmacro(use_cxx11)
+
+project(Daiger CXX)
 
 #include(../cmake/FindProtobuf.cmake)
 
-include(CheckIncludeFile)
-include(CheckIncludeFileCXX)
-include(CheckLibraryExists)
-include(CheckFunctionExists)
+#include(CheckIncludeFile)
+#include(CheckIncludeFileCXX)
+#include(CheckLibraryExists)
+#include(CheckFunctionExists)
+
+use_cxx11()
 
 # -------- Boost --------
 find_package(Boost REQUIRED COMPONENTS filesystem system program_options)
@@ -56,9 +68,9 @@ endif()
 
  
 set(CXX_DEFAULT "${CMAKE_CXX_FLAGS}")
-set(CXX_DEFINE "-DHAVE_LIB_GFLAGS ")
+#set(CXX_DEFINE "-DHAVE_LIB_GFLAGS ")
 set(CXX_WARN "-Wall -Wno-sign-compare -Wno-unused-function -Wno-unused-result")
- 
+
 if ("$ENV{OPROFILE}")
   message(STATUS "Enabling OProfile")
 endif()
@@ -71,8 +83,6 @@ endif()
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-set(CMAKE_CXX_FLAGS "${CXX_DEFAULT} -fPIC -fno-omit-frame-pointer ${CXX_DEFINE}")
-
 include_directories( ${CMAKE_CURRENT_SOURCE_DIR}
 #                     ${MAITER_BINARY_DIR}
 #                     ${PROTOBUF_INCLUDE_DIRS}
@@ -80,7 +90,8 @@ include_directories( ${CMAKE_CURRENT_SOURCE_DIR}
                    )
 include_directories(SYSTEM)
 
-set(CMAKE_CXX_FLAGS "${CXX_DEFAULT} -fPIC -fno-omit-frame-pointer -std=c++11 ${CXX_WARN} ${CXX_DEFINE} ${MPI_CXX_COMPILE_FLAGS}")
+set(CMAKE_CXX_FLAGS "${CXX_DEFAULT} -fPIC -fno-omit-frame-pointer ${CXX_WARN} ${CXX_DEFINE}")
+
 add_subdirectory (dbg)
 add_subdirectory (util)
 add_subdirectory (common)
