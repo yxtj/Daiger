@@ -13,7 +13,7 @@ Master::Master(AppBase& app, Option& opt)
 {
 }
 
-void Master::start() {
+void Master::run() {
 	registerHandlers();
 	startMsgLoop();
     registerWorker();
@@ -29,9 +29,8 @@ void Master::start() {
     if (opt.do_output) {
         procedureDumpResult();
     }
-}
 
-void Master::finish() {
+	// finish
     terminateWorker();
 	stopMsgLoop();
     tmsg.join();
@@ -56,7 +55,7 @@ void Master::registerWorker(){
 	net->broadcast(MType::CRegister, net->id());
 	// next in handleRegister
 	if(!su_regw.wait_for(timeout)){
-		cerr<<"Timeout"<<endl;
+		cerr<<"Timeout in registering workers"<<endl;
 		exit(1);
 	}
 	cout<<"All workers are registered"<<endl;
@@ -100,44 +99,57 @@ void Master::procedureInit(){
 	net->broadcast(MType::CWorkers, winfo);
 	// notified by handleReply()
 	su_regw.wait();
+	cout<<"Worker information is shared."<<endl;
 	finishProcedure(cpid);
 }
 
 void Master::procedureLoadGraph(){
 	cpid = ProcedureType::LoadGraph;
 	startProcedure(cpid);
+	cout<<"Starting loading graph."<<endl;
 	finishProcedure(cpid);
+	cout<<"Finish loading graph."<<endl;
 }
 
 void Master::procedureLoadValue(){
 	cpid = ProcedureType::LoadValue;
 	startProcedure(cpid);
+	cout<<"Starting loading value."<<endl;
 	finishProcedure(cpid);
+	cout<<"Finish loading value."<<endl;
 }
 
 void Master::procedureLoadDelta(){
 	cpid = ProcedureType::LoadDelta;
 	startProcedure(cpid);
+	cout<<"Starting loading delta."<<endl;
 	finishProcedure(cpid);
+	cout<<"Finish loading delta."<<endl;
 }
 
 void Master::procedureBuildINCache(){
 	cpid = ProcedureType::BuildINCache;
 	startProcedure(cpid);
+	cout<<"Starting building in-neighbor cache."<<endl;
 	finishProcedure(cpid);
+	cout<<"Finish building in-neighbor cache."<<endl;
 }
 
 void Master::procedureUpdate(){
 	cpid = ProcedureType::Update;
 	startProcedure(cpid);
+	cout<<"Starting updating."<<endl;
 	thread tp(bind(&Master::threadProgress, this));
 	tp.join();
 	finishProcedure(cpid);
+	cout<<"Finish updating."<<endl;
 }
 
 void Master::procedureDumpResult(){
 	cpid = ProcedureType::DumpResult;
 	startProcedure(cpid);
+	cout<<"Starting damping."<<endl;
 	finishProcedure(cpid);
+	cout<<"Finish damping."<<endl;
 }
 

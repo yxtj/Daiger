@@ -1,5 +1,3 @@
-#include <iostream>
-#include <string>
 #include "application/AppBase.h"
 #include "network/NetworkThread.h"
 #include "example/example_reg.h"
@@ -7,6 +5,8 @@
 #include "runner/Option.h"
 #include "runner/Master.h"
 #include "runner/Worker.h"
+#include <iostream>
+#include <string>
 
 using namespace std;
 
@@ -64,20 +64,20 @@ int main(int argc, char* argv[]){
 	
 	#ifndef NDEBUG
 		if(net->id()==0){
-			cerr<<"pause";
-			cerr.flush();
+			cerr<<"pause."<<endl;
 			cout<<cin.get()<<endl;
 		}
 	#endif
 	// Run
+	//return 0;
 	if(net->id() == 0){ // master
+		cout<<"starting master"<<endl;
 		Master m(app, opt);
-		m.start();
-		m.finish();
+		m.run();
 	}else{ // worker
+		cout<<"starting worker"<<endl;
 		Worker w(app, opt);
-		w.start();
-		w.finish();
+		w.run();
 	}
 
 	NetworkThread::Terminate();

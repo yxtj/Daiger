@@ -16,8 +16,7 @@ public:
 	Runner() = default;
 	Runner(AppBase& app, Option& opt);
 
-	virtual void start() = 0;
-	virtual void finish() = 0;
+	virtual void run() = 0;
 
 protected:
 	void msgLoop();

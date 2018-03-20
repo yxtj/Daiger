@@ -52,11 +52,11 @@ void Runner::msgLoop() {
 		int n = 16; // prevent spending too much time in pushing but never popping 
 		while(msg_do_push && n-->=0 && net->tryReadAny(data, &info.source, &info.tag)){
 			cout<<"Got a pkg from "<<info.source<<" to "<<info.dest<<", type "<<info.tag<<
-				", queue length="<<driver.queSize();
+				", queue length="<<driver.queSize()<<endl;
 			driver.pushData(data, info);
 		}
 		while(msg_do_pop && !driver.empty()){
-			cout<<"pop a message. driver left "<<driver.queSize()<<" , net left "<<net->unpicked_pkgs();
+			cout<<"Pop a message. driver left "<<driver.queSize()<<" , net left "<<net->unpicked_pkgs()<<endl;
 			driver.popData();
 		}
 		sleep();

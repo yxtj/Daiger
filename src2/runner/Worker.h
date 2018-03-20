@@ -13,8 +13,7 @@ public:
     Worker() = default;
     Worker(AppBase& app, Option& opt);
 	
-	virtual void start();
-	virtual void finish();
+	virtual void run();
 
 protected:
 	virtual void registerWorker();
@@ -78,6 +77,8 @@ private:
 
 	std::thread tprcd; // thread for procedures
 
+	SyncUnit su_master;
+	SyncUnit su_regw;
 	SyncUnit su_worker;
 	bool update_finish;
 	SyncUnit su_update;

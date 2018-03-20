@@ -11,8 +11,7 @@ public:
 	Master() = default;
 	Master(AppBase& app, Option& opt);
 	
-	virtual void start();
-	virtual void finish();
+	virtual void run();
 
 protected:
 	virtual void registerWorker();

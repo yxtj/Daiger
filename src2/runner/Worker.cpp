@@ -14,23 +14,25 @@ Worker::Worker(AppBase& app, Option& opt)
 	my_net_id = net->id();
 }
 
-void Worker::start() {
+void Worker::run() {
 	registerHandlers();
 	startMsgLoop();
     registerWorker();
-	su_stop.wait();
-}
+	su_stop.wait(); // wait for handleShutdown which calls shutdownWorker
 
-void Worker::finish() {
+	// finish
 	stopMsgLoop();
     tmsg.join();
     shutdownWorker();
 }
 
 void Worker::registerWorker(){
+	// wait for the master sending CRegister
+	su_master.wait();
 	// called by handleRegister()
-	cout<<"registing worker with net id: "<<my_net_id<<endl;
-	net->send(master_net_id, MType::CRegister, net->id());
+	cout<<"registering worker with net id: "<<my_net_id<<endl;
+	net->send(master_net_id, MType::CRegister, my_net_id);
+	su_regw.wait();
 }
 
 void Worker::shutdownWorker(){

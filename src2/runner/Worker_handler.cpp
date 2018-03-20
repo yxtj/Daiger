@@ -47,6 +47,7 @@ void Worker::registerHandlers() {
 
 	//type 2: called by specific functions (handlers)
 	// by handlerRegisterWorker()
+	addRPHAnySU(MType::CRegister, su_regw);
 	addRPHAnySU(MType::CWorkers, su_worker);
 	addRPHAnySU(MType::CShutdown, su_stop);
 }
@@ -60,7 +61,7 @@ void Worker::handleReply(const std::string& d, const RPCInfo& info) {
 void Worker::handleRegister(const std::string& d, const RPCInfo& info){
 	int nid = deserialize<int>(d);
 	master_net_id = nid;
-	registerWorker();
+	su_master.notify();
 }
 
 void Worker::handleWorkers(const std::string& d, const RPCInfo& info){
