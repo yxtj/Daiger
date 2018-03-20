@@ -2,7 +2,7 @@
 #include <string>
 
 struct ConfData {
-	int nPart;
+	size_t nPart;
 	size_t nNode; // optional, used to preactively allocate space
 
 	bool balance_load; // used to support data loading from arbitrary number of input files

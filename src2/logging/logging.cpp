@@ -1,11 +1,11 @@
-#include "logger.h"
+#include "logging.h"
 
 using namespace std;
 
 INITIALIZE_EASYLOGGINGPP
 
 void initLogger(int argc, char* argv[]){
-	START_EASYLOGGINGPP(argc, argv)
+	START_EASYLOGGINGPP(argc, argv);
 	
 	el::Configurations defaultConf;
 	defaultConf.setToDefault();

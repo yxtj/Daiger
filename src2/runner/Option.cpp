@@ -19,7 +19,7 @@ Option::Option()
 		("help", "Print help messages")
 		("show_info", value<bool>(&show)->default_value(1), "Print the initializing information.")
 		("load_balance", value<bool>(&conf.balance_load)->default_value(1), "Support loading from arbitrary number of files.")
-		("part", value<int>(&conf.nPart)->default_value(0), 
+		("part", value<size_t>(&conf.nPart)->default_value(0), 
 			"[integer] # of workers, used check whether a correct number of instance is started.")
 		("node", value<size_t>(&conf.nNode)->default_value(0), 
 			"[integer] # of nodes, used for preactively allocate space, 0 for skipping that.")
@@ -50,6 +50,7 @@ Option::Option()
 			"[float] the minimum interval (second) of reporting progress and do termination check.")
 		("send_batch_size", value<int>(&conf.send_batch_size)->default_value(1024),
 			"[integer] the maximum size (# of target nodes) of each sending message.")
+		//("v", "logging verbose level (0-9)")
 		;
 }
 
@@ -62,8 +63,9 @@ bool Option::parseInput(int argc, char* argv[]) {
 	bool flag_help = false;
 	boost::program_options::variables_map vm;
 	try {
-		boost::program_options::store(
-			boost::program_options::parse_command_line(argc, argv, pimpl->desc), vm);
+		auto p = boost::program_options::command_line_parser(argc, argv)
+			.options(pimpl->desc).allow_unregistered().run();
+		boost::program_options::store(p, vm);
 		boost::program_options::notify(vm);
 
 		if(vm.count("help")) {

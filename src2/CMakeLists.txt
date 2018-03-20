@@ -93,7 +93,7 @@ include_directories(SYSTEM)
 set(CMAKE_CXX_FLAGS "${CXX_DEFAULT} -fPIC -fno-omit-frame-pointer ${CXX_WARN} ${CXX_DEFINE}")
 
 add_subdirectory (dbg)
-add_subdirectory (log)
+add_subdirectory (logging)
 add_subdirectory (util)
 add_subdirectory (common)
 add_subdirectory (network)
