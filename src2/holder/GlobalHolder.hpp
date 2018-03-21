@@ -87,6 +87,8 @@ void GlobalHolder<V, N>::init(OperationBase* opt, IOHandlerBase* ioh,
 	this->nPart = nPart;
 	this->local_id = localId;
 	this->enable_local_process = localProcess;
+
+	this->shd->setParts(nPart);
 	pointer_dump = 0;
 
 	local_part.init(this->opt, this->scd, this->tmt, nPart);
