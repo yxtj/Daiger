@@ -23,9 +23,9 @@ void Runner::sleep() {
 	this_thread::sleep_for(d);
 }
 
-void Runner::startMsgLoop(){
+void Runner::startMsgLoop(const std::string& name){
 	running = true;
-    tmsg = thread(bind(&Runner::msgLoop, this));
+    tmsg = thread(bind(&Runner::msgLoop, this, name));
 }
 void Runner::stopMsgLoop(){
 	running = false;
@@ -43,8 +43,11 @@ void Runner::msgResumePush(){
 void Runner::msgResumePop(){
 	msg_do_push = true;
 }
-void Runner::msgLoop() {
-	// DLOG(INFO)<<"Message loop of master started";
+void Runner::msgLoop(const std::string& name) {
+	DLOG(INFO)<<"Message loop started on "<<name;
+	if(!name.empty()){
+		setLogThreadName(name);
+	}
 	string data;
 	RPCInfo info;
 	info.dest = net->id();

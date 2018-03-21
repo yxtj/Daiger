@@ -2,6 +2,7 @@
 #include "network/NetworkThread.h"
 #include "msg/MType.h"
 #include "msg/messages.h"
+#include "logging/logging.h"
 #include <functional>
 #include <vector>
 #include <iostream>
@@ -11,11 +12,13 @@ using namespace std;
 Master::Master(AppBase& app, Option& opt)
 	: Runner(app, opt)
 {
+	my_net_id = net->id();
+	setLogThreadName("M"+to_string(my_net_id));
 }
 
 void Master::run() {
 	registerHandlers();
-	startMsgLoop();
+	startMsgLoop("M"+to_string(my_net_id)+"-MSG");
     registerWorker();
 
 	procedureInit();
@@ -52,28 +55,29 @@ void Master::updateProgress(const int wid, const std::pair<double, size_t>& repo
 
 void Master::registerWorker(){
 	su_regw.reset();
-	net->broadcast(MType::CRegister, net->id());
+	net->broadcast(MType::CRegister, my_net_id);
 	// next in handleRegister
+//	if(!su_regw.wait_for(chrono::seconds(5))){
 	if(!su_regw.wait_for(timeout)){
-		cerr<<"Timeout in registering workers"<<endl;
+		LOG(ERROR)<<"Timeout in registering workers";
 		exit(1);
 	}
-	cout<<"All workers are registered"<<endl;
+	LOG(INFO)<<"All workers are registered";
 }
 
 void Master::shutdownWorker(){
 	su_procedure.reset();
-	net->broadcast(MType::CShutdown, net->id());
+	net->broadcast(MType::CShutdown, my_net_id);
 	su_procedure.wait();
 }
 
 void Master::terminateWorker(){
-	net->broadcast(MType::CTerminate, net->id());
+	net->broadcast(MType::CTerminate, my_net_id);
 }
 
 void Master::startProcedure(const int pid){
 	su_procedure.reset();
-	net->broadcast(MType::CClear, net->id());
+	net->broadcast(MType::CClear, my_net_id);
 	su_procedure.wait();
 
 	su_procedure.reset();
@@ -83,7 +87,7 @@ void Master::startProcedure(const int pid){
 
 void Master::finishProcedure(const int pid){
 	su_procedure.reset();
-	net->broadcast(MType::CFinish, net->id());
+	net->broadcast(MType::CFinish, my_net_id);
 	su_procedure.wait();
 }
 
@@ -99,57 +103,57 @@ void Master::procedureInit(){
 	net->broadcast(MType::CWorkers, winfo);
 	// notified by handleReply()
 	su_regw.wait();
-	cout<<"Worker information is shared."<<endl;
+	LOG(INFO)<<"Worker information is shared.";
 	finishProcedure(cpid);
 }
 
 void Master::procedureLoadGraph(){
 	cpid = ProcedureType::LoadGraph;
 	startProcedure(cpid);
-	cout<<"Starting loading graph."<<endl;
+	LOG(INFO)<<"Starting loading graph.";
 	finishProcedure(cpid);
-	cout<<"Finish loading graph."<<endl;
+	LOG(INFO)<<"Finish loading graph.";
 }
 
 void Master::procedureLoadValue(){
 	cpid = ProcedureType::LoadValue;
 	startProcedure(cpid);
-	cout<<"Starting loading value."<<endl;
+	LOG(INFO)<<"Starting loading value.";
 	finishProcedure(cpid);
-	cout<<"Finish loading value."<<endl;
+	LOG(INFO)<<"Finish loading value.";
 }
 
 void Master::procedureLoadDelta(){
 	cpid = ProcedureType::LoadDelta;
 	startProcedure(cpid);
-	cout<<"Starting loading delta."<<endl;
+	LOG(INFO)<<"Starting loading delta.";
 	finishProcedure(cpid);
-	cout<<"Finish loading delta."<<endl;
+	LOG(INFO)<<"Finish loading delta.";
 }
 
 void Master::procedureBuildINCache(){
 	cpid = ProcedureType::BuildINCache;
 	startProcedure(cpid);
-	cout<<"Starting building in-neighbor cache."<<endl;
+	LOG(INFO)<<"Starting building in-neighbor cache.";
 	finishProcedure(cpid);
-	cout<<"Finish building in-neighbor cache."<<endl;
+	LOG(INFO)<<"Finish building in-neighbor cache.";
 }
 
 void Master::procedureUpdate(){
 	cpid = ProcedureType::Update;
 	startProcedure(cpid);
-	cout<<"Starting updating."<<endl;
+	LOG(INFO)<<"Starting updating.";
 	thread tp(bind(&Master::threadProgress, this));
 	tp.join();
 	finishProcedure(cpid);
-	cout<<"Finish updating."<<endl;
+	LOG(INFO)<<"Finish updating.";
 }
 
 void Master::procedureDumpResult(){
 	cpid = ProcedureType::DumpResult;
 	startProcedure(cpid);
-	cout<<"Starting damping."<<endl;
+	LOG(INFO)<<"Starting damping.";
 	finishProcedure(cpid);
-	cout<<"Finish damping."<<endl;
+	LOG(INFO)<<"Finish damping.";
 }
 

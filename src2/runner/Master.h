@@ -50,6 +50,7 @@ public:
 	void handleProgressReport(const std::string& d, const RPCInfo& info);
 
 private:
+	int my_net_id;
 	WorkerMonitor wm;
 	int cpid; // current procedure id
 

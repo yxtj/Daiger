@@ -19,9 +19,9 @@ public:
 	virtual void run() = 0;
 
 protected:
-	void msgLoop();
+	void msgLoop(const std::string& name = "");
 	void sleep();
-	void startMsgLoop();
+	void startMsgLoop(const std::string& name = "");
 	void stopMsgLoop();
 	void msgPausePush();
 	void msgPausePop();

@@ -4,6 +4,7 @@
 #include "network/NetworkThread.h"
 #include "serial/serialization.h"
 #include "runner_helpers.h"
+#include "logging/logging.h"
 #include <chrono>
 #include <functional>
 #include <string>
@@ -31,7 +32,8 @@ void Worker::registerHandlers() {
 	regDSPImmediate(MType::CTerminate, localCBBinder(&Worker::handleTerminate));
 
 	regDSPProcess(MType::CProcedure, localCBBinder(&Worker::handleProcedure));
-	regDSPProcess(MType::CFinish, localCBBinder(&Worker::handleFinish));	
+	regDSPProcess(MType::CFinish, localCBBinder(&Worker::handleFinish));
+	regDSPProcess(MType::CClear, localCBBinder(&Worker::handleClear));
 
 	regDSPProcess(MType::GNode, localCBBinder(&Worker::handleGNode));
 	regDSPProcess(MType::GValue, localCBBinder(&Worker::handleGValue));
@@ -42,14 +44,16 @@ void Worker::registerHandlers() {
 	regDSPProcess(MType::VRequest, localCBBinder(&Worker::handleVRequest));
 	regDSPProcess(MType::VReply, localCBBinder(&Worker::handleVReply));
 
+	regDSPProcess(MType::PApply, localCBBinder(&Worker::handlePApply));
+	regDSPProcess(MType::PSend, localCBBinder(&Worker::handlePSend));
+	regDSPProcess(MType::PReport, localCBBinder(&Worker::handlePReport));
+
 	// part 2: reply handler:
 	//type 1: called by handleReply() directly
+	addRPHAnySU(MType::CRegister, su_regw);
 
 	//type 2: called by specific functions (handlers)
 	// by handlerRegisterWorker()
-	addRPHAnySU(MType::CRegister, su_regw);
-	addRPHAnySU(MType::CWorkers, su_worker);
-	addRPHAnySU(MType::CShutdown, su_stop);
 }
 
 void Worker::handleReply(const std::string& d, const RPCInfo& info) {
@@ -61,15 +65,13 @@ void Worker::handleReply(const std::string& d, const RPCInfo& info) {
 void Worker::handleRegister(const std::string& d, const RPCInfo& info){
 	int nid = deserialize<int>(d);
 	master_net_id = nid;
-	su_master.notify();
+	LOG(DEBUG)<<"got master id";
+	su_master.notify(); // notify registerWorker()
 }
 
 void Worker::handleWorkers(const std::string& d, const RPCInfo& info){
 	vector<pair<int, int>> winfo = deserialize<vector<pair<int, int>>>(d);
-	for(auto& p : winfo){
-		wm.register_worker(p.first, p.second);
-	}
-	su_worker.notify();
+	storeWorkerInfo(winfo);
 	sendReply(info);
 }
 void Worker::handleShutdown(const std::string& d, const RPCInfo& info){
@@ -80,7 +82,8 @@ void Worker::handleTerminate(const std::string& d, const RPCInfo& info){
 }
 
 void Worker::handleClear(const std::string& d, const RPCInfo& info){
-	clearMessages();
+	thread thd(bind(&Worker::clearMessages, this));
+	thd.join();
 	sendReply(info);
 }
 void Worker::handleProcedure(const std::string& d, const RPCInfo& info){

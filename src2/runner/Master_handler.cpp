@@ -54,6 +54,7 @@ void Master::handleRegister(const std::string& d, const RPCInfo& info){
 	int wid = assignWid(info.source);
 	wm.register_worker(info.source, wid);
 	rph.input(MType::CRegister, wid);
+	sendReply(info);
 }
 
 void Master::handleProgressReport(const std::string& d, const RPCInfo& info){

@@ -2,9 +2,9 @@
 #include "msg/MType.h"
 #include "network/NetworkThread.h"
 #include "util/Timer.h"
+#include "logging/logging.h"
 #include <functional>
 #include <chrono>
-#include <iostream>
 
 using namespace std;
 
@@ -12,12 +12,14 @@ Worker::Worker(AppBase& app, Option& opt)
 	: Runner(app, opt), graph(app, opt.conf)
 {
 	my_net_id = net->id();
+	setLogThreadName("W"+to_string(my_net_id));
 }
 
 void Worker::run() {
 	registerHandlers();
-	startMsgLoop();
+	startMsgLoop("W"+to_string(my_net_id)+"-MSG");
     registerWorker();
+
 	su_stop.wait(); // wait for handleShutdown which calls shutdownWorker
 
 	// finish
@@ -30,18 +32,19 @@ void Worker::registerWorker(){
 	// wait for the master sending CRegister
 	su_master.wait();
 	// called by handleRegister()
-	cout<<"registering worker with net id: "<<my_net_id<<endl;
+	LOG(INFO)<<"registering worker with net id: "<<my_net_id;
 	net->send(master_net_id, MType::CRegister, my_net_id);
-	su_regw.wait();
+	su_regw.wait(); // notified by the reply of CRegister
+	LOG(INFO)<<"worker registered.";
 }
 
 void Worker::shutdownWorker(){
-	cout<<"Worker "<<wm.nid2wid(my_net_id)<<" stops."<<endl;
+	LOG(INFO)<<"Worker "<<wm.nid2wid(my_net_id)<<" stops.";
 	su_stop.notify();
 }
 
 void Worker::terminateWorker(){
-	cerr<<"Terminated by Master."<<endl;
+	LOG(ERROR)<<"Terminated by Master.";
 	NetworkThread::Terminate();
 	exit(0);
 }
@@ -53,11 +56,20 @@ void Worker::clearMessages(){
 		sleep();
 	}
 	net->flush();
+	DLOG(DEBUG)<<"messages get cleared";
+}
+
+void Worker::storeWorkerInfo(const std::vector<std::pair<int, int>>& winfo){
+	for(auto& p : winfo){
+		wm.register_worker(p.first, p.second);
+	}
+	LOG(INFO)<<"worker information received";
+	su_winfo.notify();
 }
 
 void Worker::procedureInit(){
 	// notified by handleWorkers()
-	su_worker.wait();
+	su_winfo.wait();
 	graph.init(wm.nid2wid(my_net_id), app.gh);
 }
 
@@ -66,6 +78,7 @@ void Worker::procedureLoadGraph(){
 		[&](const int wid, std::string& msg){
 			net->send(wm.wid2nid(wid), MType::GNode, move(msg));
 		};
+	VLOG(1)<<"worker start loading graph";
 	graph.loadGraph(sender);
 }
 
@@ -74,6 +87,7 @@ void Worker::procedureLoadValue(){
 		[&](const int wid, std::string& msg){
 			net->send(wm.wid2nid(wid), MType::GValue, move(msg));
 		};
+	VLOG(1)<<"worker start loading value";
 	graph.loadValue(sender);
 }
 
@@ -82,6 +96,7 @@ void Worker::procedureLoadDelta(){
 		[&](const int wid, std::string& msg){
 			net->send(wm.wid2nid(wid), MType::GDelta, move(msg));
 		};
+	VLOG(1)<<"worker start loading delta";
 	graph.loadDelta(sender);
 }
 
@@ -90,6 +105,7 @@ void Worker::procedureBuildINCache(){
 		[&](const int wid, std::string& msg){
 			net->send(wm.wid2nid(wid), MType::GINCache, move(msg));
 		};
+	VLOG(1)<<"worker start building in-neighbor cache";
 	graph.buildINCache(sender);
 }
 
@@ -114,6 +130,7 @@ void Worker::procedureUpdate(){
 		[&](const int wid, std::string& msg){
 			net->send(wm.wid2nid(wid), MType::VRequest, move(msg));
 		};
+	VLOG(1)<<"worker start updating";
 	graph.prepareUpdate(sender_val, sender_req);
 	// start periodic apply-and-send and periodic progress-report
 	update_finish=false;
@@ -127,10 +144,13 @@ void Worker::procedureUpdate(){
 	while(!update_finish){
 		if(!su_update.wait_for(interval)){ // wake up by timeout
 			if(last_apply.elapseMS() > ams){
+				last_apply.restart();
 				info.tag = MType::PApply;
 				driver.pushData("", info);
 			}
+			//TODO: separate apply and send
 			if(last_term.elapseMS() > tms){
+				last_term.restart();
 				info.tag = MType::PReport;
 				driver.pushData("", info);
 			}
@@ -141,6 +161,7 @@ void Worker::procedureUpdate(){
 }
 
 void Worker::procedureDumpResult(){
+	VLOG(1)<<"worker start dumping result";
 	graph.dumpResult();
 }
 

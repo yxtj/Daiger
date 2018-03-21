@@ -4,6 +4,7 @@
 #include "runner_helpers.h"
 #include "holder/GraphContainer.h"
 #include <string>
+#include <vector>
 #include <thread>
 
 class NetworkThread;
@@ -31,6 +32,7 @@ protected:
 // local logic functions
 private:
 	void clearMessages();
+	void storeWorkerInfo(const std::vector<std::pair<int, int>>& winfo);
 	void reportProgress();
 
 // handler helpers
@@ -79,7 +81,7 @@ private:
 
 	SyncUnit su_master;
 	SyncUnit su_regw;
-	SyncUnit su_worker;
+	SyncUnit su_winfo;
 	bool update_finish;
 	SyncUnit su_update;
 

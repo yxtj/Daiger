@@ -29,8 +29,9 @@ struct MType {
 
 	// Process and Progress (Termination)
 	static constexpr int PApply = 40;
-	static constexpr int PReport = 41;
-	static constexpr int PRequest = 42;
+	static constexpr int PSend = 41;
+	static constexpr int PReport = 42;
+	static constexpr int PRequest = 43;
 
 	// Staticstics
 	static constexpr int SGather = 60;
