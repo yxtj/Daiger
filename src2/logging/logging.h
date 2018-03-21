@@ -8,4 +8,4 @@
 #include <string>
 
 void initLogger(int argc, char* argv[]);
-void setLocalThreadName(const std::string& name);
+void setLogThreadName(const std::string& name);

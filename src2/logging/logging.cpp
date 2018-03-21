@@ -11,15 +11,20 @@ void initLogger(int argc, char* argv[]){
 	defaultConf.setToDefault();
 	// Values are always std::string
 	defaultConf.setGlobally(el::ConfigurationType::ToFile, "false");
+	#ifndef NDEBUG
 	defaultConf.setGlobally(el::ConfigurationType::Format,
-		"%datetime{%H:%m:%s.%g} %level (%thread_name) %msg");
+		"%datetime{%H:%m:%s.%g} (%thread) %level %fbase:%line] %msg");
+	#else
+	defaultConf.setGlobally(el::ConfigurationType::Format,
+		"%datetime{%H:%m:%s.%g} (%thread) %level] %msg");
+	#endif
 	defaultConf.set(el::Level::Debug, 
-		el::ConfigurationType::Format, "%datetime{%H:%m:%s.%g} %level (%thread_name) %loc] %msg");
-			
+		el::ConfigurationType::Format, "%datetime{%H:%m:%s.%g} (%thread) %level %fbase:%line] %msg");
+
 	// default logger uses default configurations
 	el::Loggers::reconfigureLogger("default", defaultConf);
 }
 
-void setLocalThreadName(const std::string& name){
+void setLogThreadName(const std::string& name){
 	el::Helpers::setThreadName(name);
 }
