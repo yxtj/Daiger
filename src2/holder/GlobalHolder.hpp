@@ -102,7 +102,8 @@ template <class V, class N>
 void GlobalHolder<V, N>::add_local_node(id_t& id, neighbor_list_t& nl){
 	node_t n;
 	n.id = std::move(id);
-	n.v = n.u = opt->identity_element();
+	n.v = opt->init_value(id, nl);
+	n.u = opt->identity_element();
 	n.onb = std::move(nl);
 	scd->regist(n.id);
 	local_part.add(std::move(n));
