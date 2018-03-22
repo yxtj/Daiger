@@ -4,6 +4,7 @@
 #include "serial/serialization.h"
 #include "runner_helpers.h"
 #include "util/Timer.h"
+#include "logging/logging.h"
 #include <chrono>
 #include <functional>
 #include <string>
@@ -20,8 +21,8 @@ Master::callback_t Master::localCBBinder(
 }
 
 void Master::registerHandlers() {
-	//int nw=opt.conf.nPart;
-	//ReplyHandler::ConditionType EACH_ONE=ReplyHandler::EACH_ONE;
+	int nw=opt.conf.nPart;
+	ReplyHandler::ConditionType EACH_ONE=ReplyHandler::EACH_ONE;
 	
 	// part 1: message handler
 	regDSPProcess(MType::CReply, localCBBinder(&Master::handleReply));
@@ -50,11 +51,11 @@ void Master::handleReply(const std::string& d, const RPCInfo& info) {
 }
 
 void Master::handleRegister(const std::string& d, const RPCInfo& info){
-	// VLOG(1)<<"Registered worker from: " << info.source;
+	DLOG(INFO)<<"registering worker from: " << info.source;
 	int wid = assignWid(info.source);
 	wm.register_worker(info.source, wid);
-	rph.input(MType::CRegister, wid);
 	sendReply(info);
+	rph.input(MType::CRegister, wid);
 }
 
 void Master::handleProgressReport(const std::string& d, const RPCInfo& info){

@@ -5,10 +5,11 @@ typedef int msg_t;
 struct MType {
 	// Basic Control
 	static constexpr int CReply = 0;
-	static constexpr int CRegister = 1;
-	static constexpr int CWorkers = 2;
-	static constexpr int CClear = 3;
-	static constexpr int CShutdown = 4;
+	static constexpr int COnline = 1;
+	static constexpr int CRegister = 2;
+	static constexpr int CWorkers = 3;
+	static constexpr int CClear = 4;
+	static constexpr int CShutdown = 7;
 	static constexpr int CTerminate = 8;
 	static constexpr int CAlive = 9;
 

@@ -68,7 +68,7 @@ protected:
 	ReplyHandler rph;
 	NetworkThread* net;
 
-	std::chrono::duration<float> timeout;
+	std::chrono::duration<double> timeout; // cannot be float due to a g++ bug
 	std::thread tmsg;
 	MsgDriver driver;
 	bool msg_do_push;

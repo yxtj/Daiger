@@ -55,9 +55,8 @@ void Master::updateProgress(const int wid, const std::pair<double, size_t>& repo
 
 void Master::registerWorker(){
 	su_regw.reset();
-	net->broadcast(MType::CRegister, my_net_id);
-	// next in handleRegister
-//	if(!su_regw.wait_for(chrono::seconds(5))){
+	net->broadcast(MType::COnline, my_net_id);
+	// notified by handleRegister
 	if(!su_regw.wait_for(timeout)){
 		LOG(ERROR)<<"Timeout in registering workers";
 		exit(1);
@@ -76,19 +75,24 @@ void Master::terminateWorker(){
 }
 
 void Master::startProcedure(const int pid){
-	su_procedure.reset();
-	net->broadcast(MType::CClear, my_net_id);
-	su_procedure.wait();
+	// DLOG(INFO)<<"clearing for new procedure: "<<pid;
+	// su_procedure.reset();
+	// net->broadcast(MType::CClear, my_net_id);
+	// su_procedure.wait();
 
+	DLOG(INFO)<<"starting new procedure: "<<pid;
 	su_procedure.reset();
 	net->broadcast(MType::CProcedure, pid);
 	su_procedure.wait();
+	DLOG(INFO)<<"started new procedure: "<<pid;
 }
 
 void Master::finishProcedure(const int pid){
+	DLOG(INFO)<<"finishing procedure: "<<pid;
 	su_procedure.reset();
 	net->broadcast(MType::CFinish, my_net_id);
 	su_procedure.wait();
+	DLOG(INFO)<<"finished procedure: "<<pid;
 }
 
 void Master::procedureInit(){

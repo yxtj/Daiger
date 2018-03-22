@@ -1,7 +1,7 @@
 #include "Worker.h"
 #include "msg/MType.h"
 #include "msg/messages.h"
-#include "network/NetworkThread.h"
+//#include "network/NetworkThread.h"
 #include "serial/serialization.h"
 #include "runner_helpers.h"
 #include "logging/logging.h"
@@ -26,6 +26,7 @@ void Worker::registerHandlers() {
 	
 	// part 1: message handler
 	regDSPProcess(MType::CReply, localCBBinder(&Worker::handleReply));
+	regDSPProcess(MType::COnline, localCBBinder(&Worker::handleOnline));
 	regDSPProcess(MType::CRegister, localCBBinder(&Worker::handleRegister));
 	regDSPProcess(MType::CWorkers, localCBBinder(&Worker::handleWorkers));
 	regDSPProcess(MType::CShutdown, localCBBinder(&Worker::handleShutdown));
@@ -58,8 +59,16 @@ void Worker::registerHandlers() {
 
 void Worker::handleReply(const std::string& d, const RPCInfo& info) {
     int type = deserialize<int>(d);
-	int source = wm.nid2wid(info.source);
-    rph.input(type, source);
+	pair<bool, int> source = wm.nidtrans(info.source);
+    rph.input(type, source.second);
+}
+
+void Worker::handleOnline(const std::string& d, const RPCInfo& info){
+	int nid = deserialize<int>(d);
+	master_net_id = nid;
+	// sendReply(info);
+	DLOG(DEBUG)<<"got master id";
+	su_master.notify(); // notify registerWorker()
 }
 
 void Worker::handleRegister(const std::string& d, const RPCInfo& info){
@@ -82,9 +91,14 @@ void Worker::handleTerminate(const std::string& d, const RPCInfo& info){
 }
 
 void Worker::handleClear(const std::string& d, const RPCInfo& info){
-	thread thd(bind(&Worker::clearMessages, this));
-	thd.join();
-	sendReply(info);
+	if(tprcd.joinable())
+		tprcd.join();
+	tprcd = thread([&](){
+		// TODO: clear the resources for this procedure (if something left).
+		// TODO: abandon unprocessed procedure-related messages.
+		clearMessages();
+		sendReply(info);
+	});
 }
 void Worker::handleProcedure(const std::string& d, const RPCInfo& info){
 	int pid = deserialize<int>(d);
@@ -107,15 +121,20 @@ void Worker::handleProcedure(const std::string& d, const RPCInfo& info){
 		default:
 			cerr<<"Wrong Procedure ID."<<endl;
 	}
+	if(tprcd.joinable())
+		tprcd.join();
 	tprcd = thread(fun);
 	sendReply(info);
 }
 void Worker::handleFinish(const std::string& d, const RPCInfo& info){
-	net->flush();
-	// TODO: abandon unprocessed procedure-related messages.
-	// TODO: clear the resources for this procedure (if something left).
-	tprcd.join();
-	sendReply(info);
+	if(tprcd.joinable())
+		tprcd.join();
+	tprcd = thread([&](){
+		// TODO: clear the resources for this procedure (if something left).
+		// TODO: abandon unprocessed procedure-related messages.
+		clearMessages();
+		sendReply(info);
+	});
 }
 
 void Worker::handleGNode(const std::string& d, const RPCInfo& info){

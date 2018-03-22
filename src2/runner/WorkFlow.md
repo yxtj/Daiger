@@ -14,17 +14,28 @@ In order to take some actions, one should be register the actions for this type 
 ## System start
 
 1. Master : when boot,
-	- end message "CRegister" to all workers.
-2. Worker : when receive "CRegister",
+	- send message "COnline" to all workers.
+2. Worker : when receive "COnline",
 	- store the sender's net-id as master's net-id.
-	- send message "CRegister" to master AS REPLY, whose content will be ignored.
+	- send message "CRegister" to master AS REPLY
+	- waiting for reply with a timeout
 3. Master : when receive "CRegister" from a worker,
 	- assign a worker-id for the network-id.
-	- send a reply
-4. Master : when all workers are registered,
+	- reply.
+4. Master : when all "CRegister" are received,
 	- finish.
-5. Master : if timeout,
-	- terminate the system.
+
+
+## Initialization
+
+1. Master :
+	- send message "CWorkers" to all workers, containing the assigned (net-id, worker-id) mapping of all workers.
+2. Worker : when receive "CWorkers" from master,
+	- store it.
+	- do local initialization
+	- send a reply to master.
+3. Master : when all workers replied,
+	- finish
 
 ## Run a procedure
 
@@ -75,17 +86,6 @@ In order to take some actions, one should be register the actions for this type 
 		- clear the resources for this procedure.
 
 	(This is actually the step 3, 4, 5 of Type 1.)
-
-## Procedure initialization (sharing working info)
-
-1. Master :
-	- send message "CWorkers" to all workers, containing the assigned (net-id, worker-id) mapping for all workers.
-2. Worker : when receive "CWorkers",
-	- store them.
-	- do local initialization
-	- send a reply to master.
-3. Master : when all workers replied,
-	- finish
 
 ## Progress report & Termination check
 

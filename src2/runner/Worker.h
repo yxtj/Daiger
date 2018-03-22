@@ -47,6 +47,7 @@ private:
 public:
 	void handleReply(const std::string& d, const RPCInfo& info);
 
+	void handleOnline(const std::string& d, const RPCInfo& info);
 	void handleRegister(const std::string& d, const RPCInfo& info);
 	void handleWorkers(const std::string& d, const RPCInfo& info);
 	void handleShutdown(const std::string& d, const RPCInfo& info); // normal exit
@@ -74,6 +75,7 @@ private:
 	int master_net_id;
 	int my_net_id;
 	WorkerIDMapper wm;
+	std::string log_name;
 	
 	GraphContainer graph;
 

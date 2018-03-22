@@ -54,12 +54,16 @@ void Runner::msgLoop(const std::string& name) {
 	while(running){
 		int n = 16; // prevent spending too much time in pushing but never popping 
 		while(msg_do_push && n-->=0 && net->tryReadAny(data, &info.source, &info.tag)){
-			DLOG(DEBUG)<<"Got a pkg from "<<info.source<<" to "<<info.dest<<", type "<<info.tag<<
-				", queue length="<<driver.queSize();
+			DLOG(DEBUG)<<"Get "<<info.source<<" -> "<<info.dest<<", type "<<info.tag
+				<<", queue: "<<driver.queSize()<<", net: "<<net->unpicked_pkgs();
 			driver.pushData(data, info);
 		}
 		while(msg_do_pop && !driver.empty()){
-			DLOG(DEBUG)<<"Pop a message. driver left "<<driver.queSize()<<" , net left "<<net->unpicked_pkgs();
+			#ifndef NDEBUG
+			auto& info = driver.front().second;
+			DLOG(DEBUG)<<"Pop "<<info.source<<" -> "<<info.dest<<", type "<<info.tag
+				<<", queue: "<<driver.queSize()<<", net: "<<net->unpicked_pkgs();
+			#endif
 			driver.popData();
 		}
 		sleep();

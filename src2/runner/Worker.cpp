@@ -12,12 +12,13 @@ Worker::Worker(AppBase& app, Option& opt)
 	: Runner(app, opt), graph(app, opt.conf)
 {
 	my_net_id = net->id();
-	setLogThreadName("W"+to_string(my_net_id));
+	log_name = "W"+to_string(my_net_id);
+	setLogThreadName(log_name);
 }
 
 void Worker::run() {
 	registerHandlers();
-	startMsgLoop("W"+to_string(my_net_id)+"-MSG");
+	startMsgLoop(log_name+"-MSG");
     registerWorker();
 
 	su_stop.wait(); // wait for handleShutdown which calls shutdownWorker
@@ -68,9 +69,11 @@ void Worker::storeWorkerInfo(const std::vector<std::pair<int, int>>& winfo){
 }
 
 void Worker::procedureInit(){
+	setLogThreadName(log_name+"-INT");
 	// notified by handleWorkers()
 	su_winfo.wait();
 	graph.init(wm.nid2wid(my_net_id), app.gh);
+	LOG(INFO)<<"graph initialized";
 }
 
 void Worker::procedureLoadGraph(){
@@ -78,6 +81,7 @@ void Worker::procedureLoadGraph(){
 		[&](const int wid, std::string& msg){
 			net->send(wm.wid2nid(wid), MType::GNode, move(msg));
 		};
+	setLogThreadName(log_name+"-PLG");
 	VLOG(1)<<"worker start loading graph";
 	graph.loadGraph(sender);
 }
@@ -87,6 +91,7 @@ void Worker::procedureLoadValue(){
 		[&](const int wid, std::string& msg){
 			net->send(wm.wid2nid(wid), MType::GValue, move(msg));
 		};
+	setLogThreadName(log_name+"-PLV");
 	VLOG(1)<<"worker start loading value";
 	graph.loadValue(sender);
 }
@@ -96,6 +101,7 @@ void Worker::procedureLoadDelta(){
 		[&](const int wid, std::string& msg){
 			net->send(wm.wid2nid(wid), MType::GDelta, move(msg));
 		};
+	setLogThreadName(log_name+"-PLD");
 	VLOG(1)<<"worker start loading delta";
 	graph.loadDelta(sender);
 }
@@ -105,6 +111,7 @@ void Worker::procedureBuildINCache(){
 		[&](const int wid, std::string& msg){
 			net->send(wm.wid2nid(wid), MType::GINCache, move(msg));
 		};
+	setLogThreadName(log_name+"-BIC");
 	VLOG(1)<<"worker start building in-neighbor cache";
 	graph.buildINCache(sender);
 }
@@ -130,6 +137,7 @@ void Worker::procedureUpdate(){
 		[&](const int wid, std::string& msg){
 			net->send(wm.wid2nid(wid), MType::VRequest, move(msg));
 		};
+	setLogThreadName(log_name+"-PU");
 	VLOG(1)<<"worker start updating";
 	graph.prepareUpdate(sender_val, sender_req);
 	// start periodic apply-and-send and periodic progress-report
@@ -161,6 +169,7 @@ void Worker::procedureUpdate(){
 }
 
 void Worker::procedureDumpResult(){
+	setLogThreadName(log_name+"-PDR");
 	VLOG(1)<<"worker start dumping result";
 	graph.dumpResult();
 }
