@@ -70,6 +70,7 @@ private:
 	std::vector<double> last;
 	double sum_gp_last;
 	double epsilon;
+	bool untouched;
 };
 
 template <typename V, typename N>
@@ -84,17 +85,19 @@ template <typename V, typename N>
 void TerminatorDiff<V, N>::prepare_global_checker(const size_t n_worker){
 	TerminatorBase::prepare_global_checker(n_worker);
 	last.resize(n_worker);
-	sum_gp_last=std::numeric_limits<double>::lowest();
+	sum_gp_last=0.0;
+	untouched = true;
 }
 template <typename V, typename N>
 void TerminatorDiff<V, N>::update_report(const size_t wid, const std::pair<double, size_t>& report){
+	untouched = false;
 	sum_gp_last += TerminatorBase::curr[wid].first - last[wid];
 	last[wid] = TerminatorBase::curr[wid].first;
 	TerminatorBase::update_report(wid, report);
 }
 template <typename V, typename N>
 bool TerminatorDiff<V, N>::check_term(){
-	return TerminatorBase::sum_gc == 0 && abs(sum_gp_last - TerminatorBase::sum_gp) < epsilon;
+	return !untouched && TerminatorBase::sum_gc == 0 && abs(sum_gp_last - TerminatorBase::sum_gp) < epsilon;
 }
 
 // -------- an example which stops when no one changes --------
@@ -111,21 +114,24 @@ public:
 private:
 	std::vector<size_t> last;
 	size_t sum_gc_last;
+	bool untouched;
 };
 
 template <typename V, typename N>
 void TerminatorStop<V, N>::prepare_global_checker(const size_t n_worker){
 	TerminatorBase::prepare_global_checker(n_worker);
 	last.resize(n_worker);
-	sum_gc_last=std::numeric_limits<size_t>::max();
+	sum_gc_last=0;
+	untouched = true;
 }
 template <typename V, typename N>
 void TerminatorStop<V, N>::update_report(const size_t wid, const std::pair<double, size_t>& report){
+	untouched = false;
 	sum_gc_last += TerminatorBase::curr[wid].second - last[wid];
 	last[wid] = TerminatorBase::curr[wid].second;
 	TerminatorBase::update_report(wid, report);
 }
 template <typename V, typename N>
 bool TerminatorStop<V, N>::check_term(){
-	return TerminatorBase::sum_gc == 0 && sum_gc_last == 0;
+	return !untouched && TerminatorBase::sum_gc == 0 && sum_gc_last == 0;
 }
