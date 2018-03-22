@@ -27,6 +27,7 @@ protected:
 	void msgPausePop();
 	void msgResumePush();
 	void msgResumePop();
+	void clearMessages();
 
 	virtual void registerWorker() = 0;
 	virtual void shutdownWorker() = 0;

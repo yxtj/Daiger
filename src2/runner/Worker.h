@@ -31,7 +31,6 @@ protected:
 
 // local logic functions
 private:
-	void clearMessages();
 	void storeWorkerInfo(const std::vector<std::pair<int, int>>& winfo);
 	void reportProgress();
 

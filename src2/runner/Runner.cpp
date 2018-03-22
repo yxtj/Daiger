@@ -71,6 +71,16 @@ void Runner::msgLoop(const std::string& name) {
 	}
 }
 
+void Runner::clearMessages(){
+	net->flush();
+	while(!driver.empty()){
+		sleep();
+		sleep();
+	}
+	net->flush();
+	DLOG(DEBUG)<<"messages get cleared";
+}
+
 // register helpers
 void Runner::regDSPImmediate(const int type, callback_t fp) {
     //driver.registerImmediateHandler(type, bind(fp, this, _1, _2));

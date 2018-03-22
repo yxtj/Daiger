@@ -34,9 +34,10 @@ void Master::run() {
     }
 
 	// finish
-    terminateWorker();
+    shutdownWorker();
+	clearMessages();
 	stopMsgLoop();
-    tmsg.join();
+	LOG(INFO)<<"master stops";
 }
 
 int Master::assignWid(const int nid){

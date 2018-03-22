@@ -22,11 +22,10 @@ void Worker::run() {
     registerWorker();
 
 	su_stop.wait(); // wait for handleShutdown which calls shutdownWorker
-
-	// finish
+	if(tprcd.joinable())
+		tprcd.join();
+	clearMessages();
 	stopMsgLoop();
-    tmsg.join();
-    shutdownWorker();
 }
 
 void Worker::registerWorker(){
@@ -48,16 +47,6 @@ void Worker::terminateWorker(){
 	LOG(ERROR)<<"Terminated by Master.";
 	NetworkThread::Terminate();
 	exit(0);
-}
-
-void Worker::clearMessages(){
-	net->flush();
-	while(!driver.empty()){
-		sleep();
-		sleep();
-	}
-	net->flush();
-	DLOG(DEBUG)<<"messages get cleared";
 }
 
 void Worker::storeWorkerInfo(const std::vector<std::pair<int, int>>& winfo){

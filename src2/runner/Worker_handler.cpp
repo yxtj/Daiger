@@ -86,6 +86,7 @@ void Worker::handleWorkers(const std::string& d, const RPCInfo& info){
 }
 void Worker::handleShutdown(const std::string& d, const RPCInfo& info){
 	shutdownWorker();
+	sendReply(info);
 }
 void Worker::handleTerminate(const std::string& d, const RPCInfo& info){
 	terminateWorker();
