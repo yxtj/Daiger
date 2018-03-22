@@ -1,4 +1,5 @@
 #include "sssp.h"
+#include "util/Util.h"
 #include <vector>
 #include <algorithm>
 #include <limits>
@@ -35,8 +36,7 @@ GlobalHolderBase* ShortestPath::generateGraph(){
 
 void ShortestPath::MyOperation::init(const std::vector<std::string>& arg_line){
 	source = stoid(arg_line[0]);
-	vector<string> true_options({"1", "t", "T", "true", "True", "TRUE", "y", "Y", "yes", "Yes", "YES"});
-	use_degree = find(true_options.begin(), true_options.end(), arg_line[1]) != true_options.end();
+	use_degree = beTrueOption(arg_line[0]);
 }
 ShortestPath::value_t ShortestPath::MyOperation::init_value(const id_t& k, const neighbor_list_t& neighbors){
 	return k == source ? 0 : numeric_limits<double>::max();

@@ -1,4 +1,6 @@
 #include "Util.h"
+#include <vector>
+#include <algorithm>
 
 #if defined(_WIN32) || defined(_WIN64)
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
@@ -30,5 +32,11 @@ std::pair<int, int> getScreenSize() {
 #endif 
 	return make_pair(cols, lines);
 }
+
+bool beTrueOption(const std::string& str){
+	static vector<string> true_options({"1", "t", "T", "true", "True", "TRUE", "y", "Y", "yes", "Yes", "YES"});
+	return find(true_options.begin(), true_options.end(), str) != true_options.end();
+}
+
 
 #undef _OS_WIN

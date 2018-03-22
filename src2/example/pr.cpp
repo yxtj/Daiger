@@ -1,4 +1,5 @@
 #include "pr.h"
+#include "util/Util.h"
 #include <vector>
 #include <algorithm>
 
@@ -37,8 +38,7 @@ void PageRank::MyOperation::init(const std::vector<std::string>& arg_line){
 	if(damp < 0.0 || damp > 1.0){
 		throw invalid_argument("Invalid damping factor: "+arg_line[0]);
 	}
-	vector<string> true_options({"1", "t", "T", "true", "True", "TRUE", "y", "Y", "yes", "Yes", "YES"});
-	use_degree = find(true_options.begin(), true_options.end(), arg_line[1]) != true_options.end();
+	use_degree = beTrueOption(arg_line[1]);
 }
 PageRank::value_t PageRank::MyOperation::init_value(const id_t& k, const neighbor_list_t& neighbors){
 	return 1.0 - damp;
