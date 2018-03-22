@@ -42,15 +42,12 @@ Option::Option()
 		("async", value<bool>(&conf.async)->default_value(true), "Whether to perform asynchronous computation.")
 		("cache-free", value<bool>(&conf.cache_free)->default_value(false), "Whether to perform cache-free computation.")
 		("timeout", value<float>(&timeout)->default_value(1.0f), "[float] time threshold (second) for determining error.")
-		//("schedule_portion", value<float>(&schedule_portion)->default_value(1.0f), "[float] the portion of nodes used in each run.")
-		//("priority_degree", value<bool>(&priority_degree)->default_value(0), "Whether to use degree information in priority function.")
 		("apply_interval", value<float>(&apply_interval)->default_value(0.5f), "[float] the maximum interval (second) of performing apply.")
 		("send_interval", value<float>(&send_interval)->default_value(0.5f), "[float] the maximum interval (second) of performing send.")
 		("term_interval", value<float>(&term_interval)->default_value(0.5f),
 			"[float] the minimum interval (second) of reporting progress and do termination check.")
 		("send_batch_size", value<int>(&conf.send_batch_size)->default_value(1024),
 			"[integer] the maximum size (# of target nodes) of each sending message.")
-		//("v", "logging verbose level (0-9)")
 		;
 }
 

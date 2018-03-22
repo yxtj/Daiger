@@ -70,6 +70,7 @@ public:
 	void handlePApply(const std::string& d, const RPCInfo& info);
 	void handlePSend(const std::string& d, const RPCInfo& info);
 	void handlePReport(const std::string& d, const RPCInfo& info);
+	void handlePFinish(const std::string& d, const RPCInfo& info);
 
 private:
 	int master_net_id;

@@ -48,6 +48,7 @@ void Worker::registerHandlers() {
 	regDSPProcess(MType::PApply, localCBBinder(&Worker::handlePApply));
 	regDSPProcess(MType::PSend, localCBBinder(&Worker::handlePSend));
 	regDSPProcess(MType::PReport, localCBBinder(&Worker::handlePReport));
+	regDSPProcess(MType::PFinish, localCBBinder(&Worker::handlePFinish));
 
 	// part 2: reply handler:
 	//type 1: called by handleReply() directly
@@ -93,12 +94,13 @@ void Worker::handleTerminate(const std::string& d, const RPCInfo& info){
 void Worker::handleClear(const std::string& d, const RPCInfo& info){
 	if(tprcd.joinable())
 		tprcd.join();
-	tprcd = thread([&](){
+	// pass info as an value copy to keep it until it is used
+	tprcd = thread([&](RPCInfo info){
 		// TODO: clear the resources for this procedure (if something left).
 		// TODO: abandon unprocessed procedure-related messages.
 		clearMessages();
 		sendReply(info);
-	});
+	}, info);
 }
 void Worker::handleProcedure(const std::string& d, const RPCInfo& info){
 	int pid = deserialize<int>(d);
@@ -129,12 +131,13 @@ void Worker::handleProcedure(const std::string& d, const RPCInfo& info){
 void Worker::handleFinish(const std::string& d, const RPCInfo& info){
 	if(tprcd.joinable())
 		tprcd.join();
-	tprcd = thread([&](){
+	// pass info as an value copy to keep it until it is used
+	tprcd = thread([&](RPCInfo info){
 		// TODO: clear the resources for this procedure (if something left).
 		// TODO: abandon unprocessed procedure-related messages.
 		clearMessages();
 		sendReply(info);
-	});
+	}, info);
 }
 
 void Worker::handleGNode(const std::string& d, const RPCInfo& info){
@@ -169,4 +172,8 @@ void Worker::handlePSend(const std::string& d, const RPCInfo& info){
 }
 void Worker::handlePReport(const std::string& d, const RPCInfo& info){
 	reportProgress();
+}
+void Worker::handlePFinish(const std::string& d, const RPCInfo& info){
+	update_finish = true;
+	su_update.notify();
 }

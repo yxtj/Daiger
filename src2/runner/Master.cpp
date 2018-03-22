@@ -43,10 +43,11 @@ int Master::assignWid(const int nid){
 	return nid - 1;
 }
 
-void Master::threadProgress(){
+void Master::terminationCheck(){
 	while(!app.tmt->check_term()){
 		su_term.wait();
 	}
+	net->broadcast(MType::PFinish, my_net_id);
 }
 void Master::updateProgress(const int wid, const std::pair<double, size_t>& report){
 	app.tmt->update_report(wid, report);
@@ -65,6 +66,7 @@ void Master::registerWorker(){
 }
 
 void Master::shutdownWorker(){
+	rph.resetTypeCondition(MType::CShutdown);
 	su_procedure.reset();
 	net->broadcast(MType::CShutdown, my_net_id);
 	su_procedure.wait();
@@ -76,11 +78,13 @@ void Master::terminateWorker(){
 
 void Master::startProcedure(const int pid){
 	// DLOG(INFO)<<"clearing for new procedure: "<<pid;
+	// rph.resetTypeCondition(MType::CClear);
 	// su_procedure.reset();
 	// net->broadcast(MType::CClear, my_net_id);
 	// su_procedure.wait();
 
 	DLOG(INFO)<<"starting new procedure: "<<pid;
+	rph.resetTypeCondition(MType::CProcedure);
 	su_procedure.reset();
 	net->broadcast(MType::CProcedure, pid);
 	su_procedure.wait();
@@ -89,6 +93,7 @@ void Master::startProcedure(const int pid){
 
 void Master::finishProcedure(const int pid){
 	DLOG(INFO)<<"finishing procedure: "<<pid;
+	rph.resetTypeCondition(MType::CFinish);
 	su_procedure.reset();
 	net->broadcast(MType::CFinish, my_net_id);
 	su_procedure.wait();
@@ -98,6 +103,7 @@ void Master::finishProcedure(const int pid){
 void Master::procedureInit(){
 	cpid = ProcedureType::ShareWorkers;
 	startProcedure(cpid);
+	app.tmt->prepare_global_checker(opt.conf.nPart);
 	vector<pair<int, int>> winfo; // nid -> wid
 	winfo.reserve(opt.conf.nPart);
 	for(auto& w : wm.cont){
@@ -147,8 +153,7 @@ void Master::procedureUpdate(){
 	cpid = ProcedureType::Update;
 	startProcedure(cpid);
 	LOG(INFO)<<"Starting updating.";
-	thread tp(bind(&Master::threadProgress, this));
-	tp.join();
+	terminationCheck();
 	finishProcedure(cpid);
 	LOG(INFO)<<"Finish updating.";
 }

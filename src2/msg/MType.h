@@ -33,6 +33,7 @@ struct MType {
 	static constexpr int PSend = 41;
 	static constexpr int PReport = 42;
 	static constexpr int PRequest = 43;
+	static constexpr int PFinish = 44;
 
 	// Staticstics
 	static constexpr int SGather = 60;

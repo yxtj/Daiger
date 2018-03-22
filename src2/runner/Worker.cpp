@@ -70,7 +70,7 @@ void Worker::storeWorkerInfo(const std::vector<std::pair<int, int>>& winfo){
 
 void Worker::procedureInit(){
 	setLogThreadName(log_name+"-INT");
-	// notified by handleWorkers()
+	// notified by handleWorkers() via storeWorkerInfo()
 	su_winfo.wait();
 	graph.init(wm.nid2wid(my_net_id), app.gh);
 	LOG(INFO)<<"graph initialized";
@@ -151,13 +151,13 @@ void Worker::procedureUpdate(){
 	info.dest = net->id();
 	while(!update_finish){
 		if(!su_update.wait_for(interval)){ // wake up by timeout
-			if(last_apply.elapseMS() > ams){
+			if(!update_finish && last_apply.elapseMS() > ams){
 				last_apply.restart();
 				info.tag = MType::PApply;
 				driver.pushData("", info);
 			}
 			//TODO: separate apply and send
-			if(last_term.elapseMS() > tms){
+			if(!update_finish && last_term.elapseMS() > tms){
 				last_term.restart();
 				info.tag = MType::PReport;
 				driver.pushData("", info);
