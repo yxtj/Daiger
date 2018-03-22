@@ -68,7 +68,7 @@ void GraphContainer::loadDelta(sender_t sender){
 }
 
 void GraphContainer::dumpResult(){
-	string fn = conf.prefix_result + to_string(wid);
+	string fn = conf.path_result + conf.prefix_result + to_string(wid);
 	ofstream fout(fn);
 	if(!fout){
 		throw runtime_error("Cannot create output file \"" + fn + "\"");
