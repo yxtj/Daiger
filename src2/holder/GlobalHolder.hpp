@@ -26,8 +26,8 @@ public:
 
 	virtual void init(OperationBase* opt, IOHandlerBase* ioh,
 		SchedulerBase* scd, SharderBase* shd, TerminatorBase* tmt,
-		const size_t nPart, const int localId, const bool incremental,
-		const bool cache_free, const bool localProcess);
+		const size_t nPart, const int localId, const size_t send_batch_size,
+		const bool incremental, const bool cache_free, const bool localProcess);
 
 	virtual int loadGraph(const std::string& line);
 	virtual int loadValue(const std::string& line);
@@ -45,6 +45,7 @@ public:
 
 	virtual bool needApply();
 	virtual void doApply();
+	virtual bool needSend(bool force);
 	virtual std::string collectMsg(const int pid);
 
 	virtual std::string collectLocalProgress();
@@ -68,6 +69,7 @@ private:
 	SharderBase* shd;
 	terminator_t* tmt;
 	size_t nPart;
+	size_t send_batch_size;
 	bool incremental;
 	bool cache_free;
 	bool enable_local_process;
@@ -78,13 +80,14 @@ private:
 
 	int pointer_dump;
 	bool applying;
+	bool sending;
 };
 
 template <class V, class N>
 void GlobalHolder<V, N>::init(OperationBase* opt, IOHandlerBase* ioh,
 		SchedulerBase* scd, SharderBase* shd, TerminatorBase* tmt,
-		const size_t nPart, const int localId, const bool incremental,
-		const bool cache_free, const bool localProcess)
+		const size_t nPart, const int localId, const size_t send_batch_size,
+		const bool incremental, const bool cache_free, const bool localProcess)
 {
 	this->opt = dynamic_cast<operation_t*>(opt);
 	this->ioh = dynamic_cast<iohandler_t*>(ioh);
@@ -93,6 +96,7 @@ void GlobalHolder<V, N>::init(OperationBase* opt, IOHandlerBase* ioh,
 	this->tmt = dynamic_cast<terminator_t*>(tmt);
 	this->nPart = nPart;
 	this->local_id = localId;
+	this->send_batch_size = send_batch_size;
 	this-> incremental = incremental;
 	this-> cache_free = cache_free;
 	this->enable_local_process = localProcess;
@@ -259,9 +263,25 @@ void GlobalHolder<V, N>::doApply(){
 	applying = false;
 }
 template <class V, class N>
+bool GlobalHolder<V, N>::needSend(bool force){
+	if(sending)
+		return false;
+	size_t th = force ? 0 : send_batch_size;
+	size_t sum = 0;
+	for(auto& t : remote_parts){
+		sum += t.size();
+		if(sum > th)
+			return true;
+	}
+	return false;
+}
+template <class V, class N>
 std::string GlobalHolder<V, N>::collectMsg(const int pid){
+	sending = true;
 	std::vector<std::pair<id_t, std::pair<id_t, value_t>>> data = remote_parts[pid].collect();
-	return serialize(data);
+	std::string res = serialize(data);
+	sending = false;
+	return res;
 }
 
 template <class V, class N>

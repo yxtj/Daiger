@@ -39,7 +39,9 @@ public:
 	}
 
 	// collect and remove from the table, format: to, from, v
-	std::vector<std::pair<id_t, std::pair<id_t, value_t>>> collect(); 
+	std::vector<std::pair<id_t, std::pair<id_t, value_t>>> collect(){
+		return collect(size());
+	}
 	std::vector<std::pair<id_t, std::pair<id_t, value_t>>> collect(const size_t num){
 		return f_collect(num);
 	}
@@ -185,10 +187,6 @@ bool RemoteHolder<V, N>::update_selective(const id_t& from, const id_t& to, cons
 
 
 template <class V, class N>
-std::vector<std::pair<id_t, std::pair<id_t, V>>> RemoteHolder<V, N>::collect(){
-	return collect(size());
-}
-template <class V, class N>
 std::vector<std::pair<id_t, std::pair<id_t, V>>> RemoteHolder<V, N>::collect_general(const size_t num){
 	std::vector<std::pair<id_t, std::pair<id_t, V>>> res;
 	auto it=cont.begin();
@@ -198,7 +196,10 @@ std::vector<std::pair<id_t, std::pair<id_t, V>>> RemoteHolder<V, N>::collect_gen
 			res.emplace_back(it->first, std::move(*jt));
 		}
 	}
-	cont.erase(cont.begin(), it);
+	if(it == cont.end())
+		cont.clear();
+	else
+		cont.erase(cont.begin(), it);
 	return res;
 }
 template <class V, class N>
@@ -213,7 +214,10 @@ std::vector<std::pair<id_t, std::pair<id_t, V>>> RemoteHolder<V, N>::collect_acc
 		}
 		res.emplace_back(it->first, std::make_pair(it->second.begin()->first, v));
 	}
-	cont.erase(cont.begin(), it);
+	if(it == cont.end())
+		cont.clear();
+	else
+		cont.erase(cont.begin(), it);
 	return res;
 }
 template <class V, class N>
@@ -232,6 +236,9 @@ std::vector<std::pair<id_t, std::pair<id_t, V>>> RemoteHolder<V, N>::collect_sel
 		}
 		res.emplace_back(it->first, std::make_pair(p, b));
 	}
-	cont.erase(cont.begin(), it);
+	if(it == cont.end())
+		cont.clear();
+	else
+		cont.erase(cont.begin(), it);
 	return res;
 }

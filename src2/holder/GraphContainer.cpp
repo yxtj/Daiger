@@ -16,7 +16,10 @@ GraphContainer::~GraphContainer(){
 void GraphContainer::init(int wid, GlobalHolderBase* holder, bool incremental, bool cache_free){
 	this->wid = wid;
 	this->holder = holder;
-	holder->init(app.opt, app.ioh, app.scd, app.shd, app.tmt, conf.nPart, wid, incremental, cache_free);
+	holder->init(app.opt, app.ioh, app.scd, app.shd, app.tmt,
+		conf.nPart, wid, conf.send_batch_size, incremental, cache_free);
+	applying = false;
+	sending = false;
 }
 
 void GraphContainer::loadGraph(sender_t sender){
@@ -98,15 +101,22 @@ void GraphContainer::prepareUpdate(sender_t sender_val, sender_t sender_req, sen
 }
 
 void GraphContainer::apply(){
-	if(holder->needApply())
+	if(!applying && holder->needApply()){
+		applying = true;
 		holder->doApply();
+		applying = false;
+	}
 }
 void GraphContainer::send(){
-	for(int i=0; i<conf.nPart; ++i){
-		if(i == wid)
-			continue;
-		string msg = holder->collectMsg(i);
-		sender_val(i, msg);
+	if(!sending && holder->needSend()){
+		sending = true;
+		for(int i=0; i<conf.nPart; ++i){
+			if(i == wid)
+				continue;
+			string msg = holder->collectMsg(i);
+			sender_val(i, msg);
+		}
+		sending = false;
 	}
 }
 
