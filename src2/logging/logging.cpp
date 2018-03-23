@@ -23,6 +23,7 @@ void initLogger(int argc, char* argv[]){
 
 	// default logger uses default configurations
 	el::Loggers::reconfigureLogger("default", defaultConf);
+	el::Loggers::addFlag(el::LoggingFlag::ColoredTerminalOutput);
 }
 
 void setLogThreadName(const std::string& name){
