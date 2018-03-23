@@ -90,9 +90,10 @@ void GraphContainer::buildINCache(sender_t sender){
 	}
 }
 
-void GraphContainer::prepareUpdate(sender_t sender_val, sender_t sender_req){
+void GraphContainer::prepareUpdate(sender_t sender_val, sender_t sender_req, sender0_t sender_pro){
 	this->sender_val = sender_val;
 	this->sender_req = sender_req;
+	this->sender_pro = sender_pro;
 	holder->prepareUpdate(sender_req);
 }
 
@@ -109,9 +110,9 @@ void GraphContainer::send(){
 	}
 }
 
-void GraphContainer::reportProgress(sender_master_t sender){
+void GraphContainer::reportProgress(){
 	string progress = holder->collectLocalProgress();
-	sender(progress);
+	sender_pro(progress);
 }
 // --------
 

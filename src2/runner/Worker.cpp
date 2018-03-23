@@ -106,11 +106,7 @@ void Worker::procedureBuildINCache(){
 }
 
 void Worker::reportProgress(){
-	std::function<void(std::string&)> sender = 
-		[&](std::string& msg){
-			net->send(master_net_id, MType::PReport, move(msg));
-		};
-	graph.reportProgress(sender);
+	graph.reportProgress();
 }
 
 static int _helper_gcd(int a, int b){
@@ -126,9 +122,14 @@ void Worker::procedureUpdate(){
 		[&](const int wid, std::string& msg){
 			net->send(wm.wid2nid(wid), MType::VRequest, move(msg));
 		};
+	std::function<void(std::string&)> sender_pro = 
+		[&](std::string& msg){
+			net->send(master_net_id, MType::PReport, move(msg));
+		};
 	setLogThreadName(log_name+"-PU");
 	VLOG(1)<<"worker start updating";
-	graph.prepareUpdate(sender_val, sender_req);
+	graph.prepareUpdate(sender_val, sender_req, sender_pro);
+	
 	// start periodic apply-and-send and periodic progress-report
 	update_finish=false;
 	int ams = static_cast<int>(opt.apply_interval*1000); // millisecond

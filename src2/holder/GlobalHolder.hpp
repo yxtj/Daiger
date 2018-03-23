@@ -72,6 +72,7 @@ private:
 	int local_id;
 
 	int pointer_dump;
+	bool applying;
 };
 
 template <class V, class N>
@@ -96,14 +97,15 @@ void GlobalHolder<V, N>::init(OperationBase* opt, IOHandlerBase* ioh,
 	for(size_t i = 1; i<nPart; ++i){
 		remote_parts[i].init(this->opt);
 	}
+	applying = false;
 }
 
 template <class V, class N>
 void GlobalHolder<V, N>::add_local_node(id_t& id, neighbor_list_t& nl){
 	node_t n;
 	n.id = std::move(id);
-	n.v = opt->init_value(id, nl);
-	n.u = opt->identity_element();
+	n.u = opt->init_value(id, nl);
+	n.v = opt->identity_element();
 	n.onb = std::move(nl);
 	scd->regist(n.id);
 	local_part.add(std::move(n));
@@ -219,11 +221,11 @@ void GlobalHolder<V, N>::msgReply(const std::string& line){
 
 template <class V, class N>
 bool GlobalHolder<V, N>::needApply(){
-	// TODO:
-	return true;
+	return !applying;
 }
 template <class V, class N>
 void GlobalHolder<V, N>::doApply(){
+	applying = true;
 	std::vector<id_t> nodes = scd->pick();
 	for(id_t id : nodes){
 		local_part.commit(id);
@@ -237,6 +239,7 @@ void GlobalHolder<V, N>::doApply(){
 			}
 		}
 	}
+	applying = false;
 }
 template <class V, class N>
 std::string GlobalHolder<V, N>::collectMsg(const int pid){
