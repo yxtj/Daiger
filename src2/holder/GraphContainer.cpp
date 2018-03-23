@@ -13,10 +13,10 @@ GraphContainer::GraphContainer(AppBase& app, const ConfData& conf)
 GraphContainer::~GraphContainer(){
 	delete holder;
 }
-void GraphContainer::init(int wid, GlobalHolderBase* holder){
+void GraphContainer::init(int wid, GlobalHolderBase* holder, bool incremental, bool cache_free){
 	this->wid = wid;
 	this->holder = holder;
-	holder->init(app.opt, app.ioh, app.scd, app.shd, app.tmt, conf.nPart, wid);
+	holder->init(app.opt, app.ioh, app.scd, app.shd, app.tmt, conf.nPart, wid, incremental, cache_free);
 }
 
 void GraphContainer::loadGraph(sender_t sender){

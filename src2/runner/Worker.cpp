@@ -61,7 +61,7 @@ void Worker::procedureInit(){
 	setLogThreadName(log_name+"-INT");
 	// notified by handleWorkers() via storeWorkerInfo()
 	su_winfo.wait();
-	graph.init(wm.nid2wid(my_net_id), app.gh);
+	graph.init(wm.nid2wid(my_net_id), app.gh, opt.do_incremental, opt.conf.cache_free);
 	LOG(INFO)<<"graph initialized";
 }
 
@@ -129,7 +129,7 @@ void Worker::procedureUpdate(){
 	setLogThreadName(log_name+"-PU");
 	VLOG(1)<<"worker start updating";
 	graph.prepareUpdate(sender_val, sender_req, sender_pro);
-	
+
 	// start periodic apply-and-send and periodic progress-report
 	update_finish=false;
 	int ams = static_cast<int>(opt.apply_interval*1000); // millisecond

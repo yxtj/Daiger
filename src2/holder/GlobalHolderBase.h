@@ -16,7 +16,8 @@ public:
 
 	virtual void init(OperationBase* opt, IOHandlerBase* ioh,
 		SchedulerBase* scd, SharderBase* shd, TerminatorBase* tmt,
-		const size_t nPart, const int localId, const bool localProcess = true) = 0;
+		const size_t nPart, const int localId, const bool incremental,
+		const bool cache_free, const bool localProcess = true) = 0;
 
 	// IO (loadXXXX returns the part-id (worker-id) should have the input line)
 	virtual int loadGraph(const std::string& line) = 0;

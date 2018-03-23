@@ -56,6 +56,7 @@ public:
 	// -------- key functions (assume every key exists) --------
 	void update_cache(const id_t& from, const id_t& to, const value_t& m); // update cache with received message
 	void cal_general(const id_t& k); // merge all caches, the result is stored in <u>
+	void cal_nonincremental(const id_t& from, const id_t& to, const value_t& m); // use oplus to accumulate new m onto current result (Maiter model)
 	bool need_commit(const id_t& k) const; // whether <u> is different from <v>
 	bool commit(const id_t& k); // update <v> to <u>, update progress, REQUIRE: the priority of corresponding node is reset before calling commit()
 	std::vector<std::pair<id_t, value_t>> spread(const id_t& k); // generate outgoing messages
@@ -110,11 +111,13 @@ void LocalHolder<V, N>::init(operation_t* opt, scheduler_t* scd, terminator_t* t
 template <class V, class N>
 void LocalHolder<V, N>::add(const node_t& n){
 	progress += tmt->progress(n);
+	update_priority(n);
 	cont[n.id]=n;
 }
 template <class V, class N>
 void LocalHolder<V, N>::add(node_t&& n){
 	progress += tmt->progress(n);
+	update_priority(n);
 	cont[n.id]=std::move(n);
 }
 template <class V, class N>
@@ -252,6 +255,13 @@ void LocalHolder<V, N>::cal_general(const id_t& k){
 		tmp = opt->oplus(tmp, p.second);
 	}
 	n.u = tmp;
+	update_priority(n);
+}
+// use oplus to accumulate new m onto current result (Maiter model)
+template <class V, class N>
+void LocalHolder<V, N>::cal_nonincremental(const id_t& from, const id_t& to, const value_t& m){
+	node_t& n=cont[to];
+	n.u = opt->oplus(n.u, m);
 	update_priority(n);
 }
 // whether <u> is different from <v>
