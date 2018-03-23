@@ -34,7 +34,7 @@ public:
 	};
 	struct CmpUnit{
 		bool operator()(const Unit& a, const Unit& b) const {
-			return a.p > b.p;
+			return a.p < b.p;
 		}
 	};
 protected:

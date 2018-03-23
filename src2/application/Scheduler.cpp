@@ -23,6 +23,7 @@ priority_t SchedulerBase::lowest() const{
 // -------- predefined class SchedulerRoundRobin --------
 
 void SchedulerRoundRobin::init(const std::vector<std::string>& args){
+	nNode = 0;
 	loop_pointer = 0;
 }
 void SchedulerRoundRobin::regist(const id_t& k){
@@ -129,6 +130,7 @@ SchedulerPriority::~SchedulerPriority(){
 	delete data;
 }
 void SchedulerPriority::init(const std::vector<std::string>& args){
+	nNode = 0;
 	data = new SCH_PrioritizedHolder();
 	try{
 		portion = stod(args[1]);
@@ -138,6 +140,7 @@ void SchedulerPriority::init(const std::vector<std::string>& args){
 }
 void SchedulerPriority::ready(){
 	n_each_pick = static_cast<size_t>(ceil(portion * nNode));
+	n_each_pick = max<size_t>(1, n_each_pick);
 }
 
 void SchedulerPriority::update(const id_t& k, const priority_t& p){
@@ -152,7 +155,7 @@ void SchedulerPriority::pop(){
 std::vector<id_t> SchedulerPriority::pick_n(const size_t n){
 	std::vector<id_t> res;
 	size_t i=0;
-	while(!data->empty() && ++i < n){
+	while(!data->empty() && i++ < n){
 		res.push_back(data->top());
 		data->pop();
 	}
