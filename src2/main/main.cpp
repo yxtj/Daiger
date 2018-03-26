@@ -64,6 +64,11 @@ int main(int argc, char* argv[]){
 			<<"\targs: "<<opt.app_args<<"\n"
 			<<"\tPartitioner: "<<opt.sharder_args<<"\n"
 			<<"\tScheduler: "<<opt.scheduler_args;
+		LOG(INFO)<<"Parameters: \n"
+			<<"\tTimeout: "<<opt.timeout<<"\n"
+			<<"\tApply interval: "<<opt.apply_interval<<"\n"
+			<<"\tSend interval: "<<opt.send_interval<<"\n"
+			<<"\tReport interval: "<<opt.term_interval;
 	}
 	
 	#ifndef NDEBUG
