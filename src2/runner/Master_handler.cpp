@@ -59,8 +59,9 @@ void Master::handleRegister(const std::string& d, const RPCInfo& info){
 }
 
 void Master::handleProgressReport(const std::string& d, const RPCInfo& info){
-	pair<double, size_t> report = deserialize<pair<double, size_t> >(d);
+	ProgressReport report = deserialize<ProgressReport>(d);
 	int wid = wm.nid2wid(info.source);
+	VLOG(1)<<"receive report from: "<<wid<<" ("<<report.sum<<", "<<report.n_inf<<", "<<report.n_change<<")";
 	updateProgress(wid, report);
 	wm.update_report_time(info.source, Timer::Now());
 }

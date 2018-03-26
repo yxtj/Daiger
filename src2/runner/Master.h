@@ -30,7 +30,7 @@ protected:
 private:
 	int assignWid(const int nid); // bind to specific implementation
 	void terminationCheck();
-	void updateProgress(const int wid, const std::pair<double, size_t>& report);
+	void updateProgress(const int wid, const ProgressReport& report);
 
 	void startProcedure(const int pid);
 	void finishProcedure(const int pid);

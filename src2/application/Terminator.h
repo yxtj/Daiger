@@ -4,12 +4,21 @@
 #include <string>
 #include <utility>
 #include <stdexcept>
+#include <cmath>
 #include <limits>
+
+struct ProgressReport{
+	double sum; // summation of the non-infinity progress value
+	size_t n_inf; // # of infinity progress values
+	size_t n_change; // # of changed nodes
+};
 
 class TerminatorBase {
 public:
 	virtual ~TerminatorBase() = default;
 	virtual void init(const std::vector<std::string>& args){};
+
+	static constexpr double INF = std::numeric_limits<double>::infinity();
 
 	// on workers:
 	//// get the progress of a single node (template function cannot be virtual)
@@ -20,7 +29,7 @@ public:
 	// initialize the curr variable, only needed on master
 	virtual void prepare_global_checker(const size_t n_worker);
 	// report format: (local progress, # nodes whose v changed after last report)
-	virtual void update_report(const size_t wid, const std::pair<double, size_t>& report);
+	virtual void update_report(const size_t wid, const ProgressReport& report);
 	// check whether to terminate via progress reports, default: no-one changed;
 	virtual bool check_term() = 0;
 	// get the current global progress value
@@ -29,10 +38,11 @@ public:
 protected:
 	double helper_global_progress_sum();
 	double helper_global_progress_sqrt();
-	static bool helper_no_change(const std::vector<std::pair<double, size_t>>& reports);
+	static bool helper_no_change(const std::vector<ProgressReport>& reports);
 
-	std::vector<std::pair<double, size_t>> curr;
+	std::vector<ProgressReport> curr;
 	double sum_gp; // sum global progress
+	double sum_gi; // sum global number of infinity
 	size_t sum_gc; // sum global number of changes
 };
 
@@ -42,7 +52,7 @@ class Terminator
 {
 public:
 	// on workers:
-	// get the progress of a single node
+	// get the progress of a single node, return INF for special nodes/values
 	virtual double progress(const Node<V, N>& n){ return helper_progress_value(n); };
 
 protected:
@@ -63,12 +73,13 @@ class TerminatorDiff
 public:
 	virtual void init(const std::vector<std::string>& args);
 	virtual void prepare_global_checker(const size_t n_worker);
-	virtual void update_report(const size_t wid, const std::pair<double, size_t>& report);
+	virtual void update_report(const size_t wid, const ProgressReport& report);
 	virtual bool check_term();
 	
 private:
-	std::vector<double> last;
+	std::vector<std::pair<double, size_t>> last; // sum, n_inf
 	double sum_gp_last;
+	size_t sum_gi_last;
 	double epsilon;
 	bool untouched;
 };
@@ -86,18 +97,22 @@ void TerminatorDiff<V, N>::prepare_global_checker(const size_t n_worker){
 	TerminatorBase::prepare_global_checker(n_worker);
 	last.resize(n_worker);
 	sum_gp_last=0.0;
+	sum_gi_last=0;
 	untouched = true;
 }
 template <typename V, typename N>
-void TerminatorDiff<V, N>::update_report(const size_t wid, const std::pair<double, size_t>& report){
+void TerminatorDiff<V, N>::update_report(const size_t wid, const ProgressReport& report){
 	untouched = false;
-	sum_gp_last += TerminatorBase::curr[wid].first - last[wid];
-	last[wid] = TerminatorBase::curr[wid].first;
+	sum_gp_last += TerminatorBase::curr[wid].sum - last[wid].first;
+	sum_gi_last += TerminatorBase::curr[wid].n_inf - last[wid].second;
+	last[wid].first = TerminatorBase::curr[wid].sum;
+	last[wid].second = TerminatorBase::curr[wid].n_inf;
 	TerminatorBase::update_report(wid, report);
 }
 template <typename V, typename N>
 bool TerminatorDiff<V, N>::check_term(){
-	return !untouched && TerminatorBase::sum_gc == 0 && abs(sum_gp_last - TerminatorBase::sum_gp) < epsilon;
+	return !untouched && TerminatorBase::sum_gc == 0
+		&& sum_gi_last == TerminatorBase::sum_gi && fabs(sum_gp_last - TerminatorBase::sum_gp) < epsilon;
 }
 
 // -------- an example which stops when no one changes --------
@@ -108,7 +123,7 @@ class TerminatorStop
 {
 public:
 	virtual void prepare_global_checker(const size_t n_worker);
-	virtual void update_report(const size_t wid, const std::pair<double, size_t>& report);
+	virtual void update_report(const size_t wid, const ProgressReport& report);
 	virtual bool check_term();
 	
 private:
@@ -125,10 +140,10 @@ void TerminatorStop<V, N>::prepare_global_checker(const size_t n_worker){
 	untouched = true;
 }
 template <typename V, typename N>
-void TerminatorStop<V, N>::update_report(const size_t wid, const std::pair<double, size_t>& report){
+void TerminatorStop<V, N>::update_report(const size_t wid, const ProgressReport& report){
 	untouched = false;
-	sum_gc_last += TerminatorBase::curr[wid].second - last[wid];
-	last[wid] = TerminatorBase::curr[wid].second;
+	sum_gc_last += TerminatorBase::curr[wid].n_change - last[wid];
+	last[wid] = TerminatorBase::curr[wid].n_change;
 	TerminatorBase::update_report(wid, report);
 }
 template <typename V, typename N>

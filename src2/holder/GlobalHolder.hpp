@@ -286,7 +286,8 @@ std::string GlobalHolder<V, N>::collectMsg(const int pid){
 
 template <class V, class N>
 std::string GlobalHolder<V, N>::collectLocalProgress(){
-	double progress = local_part.get_progress();
+	ProgressReport progress = local_part.get_progress();
+	local_part.reset_progress_count();
 	return serialize(progress);
 }
 

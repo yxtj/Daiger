@@ -48,9 +48,10 @@ void Master::terminationCheck(){
 	while(!app.tmt->check_term()){
 		su_term.wait();
 	}
+	VLOG(1)<<"update terminates";
 	net->broadcast(MType::PFinish, my_net_id);
 }
-void Master::updateProgress(const int wid, const std::pair<double, size_t>& report){
+void Master::updateProgress(const int wid, const ProgressReport& report){
 	app.tmt->update_report(wid, report);
 	rph.input(MType::PReport, wid);
 }
