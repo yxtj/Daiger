@@ -3,6 +3,7 @@
 #include <vector>
 #include <algorithm>
 #include <limits>
+#include <cmath>
 
 using namespace std;
 
@@ -58,4 +59,8 @@ AppArguments ShortestPath::MySeparator::separate(const std::vector<std::string>&
 	res.iohandler_arg = {};
 	res.terminator_arg = {args[2]};
 	return res;
+}
+
+double ShortestPath::MyTerminator::progress(const node_t& n){
+	return isinf(n.v) ? MyTerminator::INF : n.v;
 }
