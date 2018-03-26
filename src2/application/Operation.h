@@ -22,6 +22,13 @@ struct Operation
 
 	// initialize the starting value
 	virtual value_t init_value(const id_t& k, const neighbor_list_t& neighbors) = 0;
+	
+	// generate dummy nodes, if the result.first is true.
+	//virtual std::pair<bool, std::vector<node_t> > dummy_node();
+	// all node-level preprocess including value initialization, out-neighbor adjusting.
+	//virtual node_t preprocess_node(const id_t& k, neighbor_list_t& neighbors);
+	// prepare for output. like normalization
+	//virtual value_t postprocess_value(const node_t& n){ return n.v; }
 
 	// operations: identity_element, oplus, f-function
 	virtual value_t identity_element() const = 0; // identity_element
