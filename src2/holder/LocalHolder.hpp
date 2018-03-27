@@ -183,8 +183,10 @@ const typename LocalHolder<V, N>::node_t* LocalHolder<V, N>::enum_next(){
 	while(enum_it != cont.cend() && opt->is_dummy_node(enum_it->second.id)){
 		++enum_it;
 	}
-	if(enum_it != cont.cend())
+	if(enum_it != cont.cend()){
 		p = &(enum_it->second);
+		++enum_it;
+	}
 	return p;
 }
 
