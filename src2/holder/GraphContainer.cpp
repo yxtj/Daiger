@@ -36,6 +36,7 @@ void GraphContainer::loadGraph(sender_t sender){
 				loadGraphFile(conf.path_graph + "/" + fn, sender);
 		}
 	}
+	holder->addDummyNodes();
 }
 
 void GraphContainer::loadValue(sender_t sender){

@@ -36,6 +36,8 @@ public:
 	virtual void prepareDump();
 	virtual std::pair<bool, std::string> dumpResult();
 
+	virtual void addDummyNodes();
+
 	virtual void takeINCache(const std::string& line);
 	virtual std::unordered_map<int, std::string> collectINCache();
 
@@ -128,6 +130,19 @@ int GlobalHolder<V, N>::loadGraph(const std::string& line){
 }
 
 template <class V, class N>
+void GlobalHolder<V, N>::addDummyNodes(){
+	// TODO: add dummy nodes
+	std::vector<std::pair<DummyNodeType, node_t>> dummy = opt->dummy_nodes();
+	for(auto& p : dummy){
+		if(p.first == DummyNodeType::NORMAL){
+
+		}else if(p.first == DummyNodeType::TO_ALL){
+
+		}
+	}
+}
+
+template <class V, class N>
 int GlobalHolder<V, N>::loadValue(const std::string& line){
 	std::pair<id_t, value_t> d = ioh->load_value(line);
 	int pid = get_part(d.first);
@@ -167,7 +182,8 @@ template <class V, class N>
 std::pair<bool, std::string> GlobalHolder<V, N>::dumpResult(){
 	const node_t* p = local_part.enum_next();
 	if(p != nullptr){
-		return std::make_pair(true, ioh->dump_value(p->id, p->v));
+		V v = opt->postprocess_value(*p);
+		return std::make_pair(true, ioh->dump_value(p->id, v));
 	}else{
 		return std::make_pair(false, std::string());
 	}

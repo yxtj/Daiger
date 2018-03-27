@@ -28,6 +28,8 @@ public:
 	// return whether this call is success and the line to write
 	virtual std::pair<bool, std::string> dumpResult() = 0;
 
+	virtual void addDummyNodes() = 0;
+
 	// in-neighbor cache
 	virtual void takeINCache(const std::string& line) = 0;
 	virtual std::unordered_map<int, std::string> collectINCache() = 0;
