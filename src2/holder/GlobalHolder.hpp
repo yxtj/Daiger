@@ -114,13 +114,8 @@ void GlobalHolder<V, N>::init(OperationBase* opt, IOHandlerBase* ioh,
 
 template <class V, class N>
 void GlobalHolder<V, N>::add_local_node(id_t& id, neighbor_list_t& nl){
-	node_t n;
-	n.id = std::move(id);
-	n.u = opt->init_value(id, nl);
-	n.v = opt->identity_element();
-	n.onb = std::move(nl);
-	scd->regist(n.id);
-	local_part.add(std::move(n));
+	scd->regist(id);
+	local_part.add(opt->preprocess_node(id, nl));
 }
 template <class V, class N>
 int GlobalHolder<V, N>::loadGraph(const std::string& line){

@@ -33,6 +33,11 @@ struct NodeHasher{
     }
 };
 
+enum class DummyNodeType {
+	NORMAL,
+	TO_ALL
+};
+
 // -------- static functions for understanding the neighbor type --------
 
 inline id_t get_key(const id_t& n) { return n; }

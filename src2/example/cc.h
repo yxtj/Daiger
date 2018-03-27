@@ -6,8 +6,8 @@
 struct ConnectedComponent
 	: public AppKernel
 {
-	typedef id_t value_t;
-	typedef id_t neighbor_t;
+	using value_t = id_t;
+	using neighbor_t = id_t;
 	// typedef std::vector<neighbor_t> neighbor_list_t;
 	// typedef Node<id_t, value_t> node_t;
 	
@@ -21,7 +21,7 @@ struct ConnectedComponent
 
 		virtual void init(const std::vector<std::string>& arg_line);
 
-		virtual value_t init_value(const id_t& k, const neighbor_list_t& neighbors);
+		virtual node_t preprocess_node(const id_t& k, neighbor_list_t& neighbors);
 		virtual value_t func(const node_t& n, const neighbor_t& neighbor);
 		virtual priority_t priority(const node_t& n);
 	};

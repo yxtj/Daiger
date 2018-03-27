@@ -40,8 +40,10 @@ GlobalHolderBase* ConnectedComponent::generateGraph(){
 
 void ConnectedComponent::MyOperation::init(const std::vector<std::string>& arg_line){
 }
-ConnectedComponent::value_t ConnectedComponent::MyOperation::init_value(const id_t& k, const neighbor_list_t& neighbors){
-	return k;
+ConnectedComponent::MyOperation::node_t ConnectedComponent::MyOperation::preprocess_node(
+	const id_t& k, neighbor_list_t& neighbors)
+{
+	return make_node(k, k, neighbors);
 }
 ConnectedComponent::value_t ConnectedComponent::MyOperation::func(const node_t& n, const neighbor_t& neighbor){
 	return n.v;

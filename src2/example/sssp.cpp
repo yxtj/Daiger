@@ -38,9 +38,13 @@ GlobalHolderBase* ShortestPath::generateGraph(){
 void ShortestPath::MyOperation::init(const std::vector<std::string>& arg_line){
 	source = stoid(arg_line[0]);
 	use_degree = beTrueOption(arg_line[0]);
+	dummy_id = -1;
 }
-ShortestPath::value_t ShortestPath::MyOperation::init_value(const id_t& k, const neighbor_list_t& neighbors){
-	return k == source ? 0 : numeric_limits<double>::max();
+ShortestPath::MyOperation::node_t ShortestPath::MyOperation::preprocess_node(
+	const id_t& k, neighbor_list_t& neighbors)
+{
+	neighbors.emplace_back(k, 0.0); // add an dummy self loop for the incremental case
+	return make_node(k, k == source ? 0 : numeric_limits<double>::max(), neighbors);
 }
 ShortestPath::value_t ShortestPath::MyOperation::func(const node_t& n, const neighbor_t& neighbor){
 	return n.v + neighbor.second;

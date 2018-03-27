@@ -40,8 +40,15 @@ void PageRank::MyOperation::init(const std::vector<std::string>& arg_line){
 	}
 	use_degree = beTrueOption(arg_line[1]);
 }
-PageRank::value_t PageRank::MyOperation::init_value(const id_t& k, const neighbor_list_t& neighbors){
-	return 1.0 - damp;
+std::vector<std::pair<DummyNodeType, PageRank::node_t>> PageRank::MyOperation::dummy_nodes(){
+	neighbor_list_t onb;
+	node_t dummy = make_node(dummy_id, 1-damp, onb);
+	return { make_pair(DummyNodeType::TO_ALL, move(dummy)) };
+}
+PageRank::MyOperation::node_t PageRank::MyOperation::preprocess_node(
+	const id_t& k, neighbor_list_t& neighbors)
+{
+	return make_node(k, 0.2, neighbors);
 }
 PageRank::value_t PageRank::MyOperation::func(const node_t& n, const neighbor_t& neighbor){
 	return damp * n.v / n.onb.size();

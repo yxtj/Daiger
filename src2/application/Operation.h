@@ -20,15 +20,12 @@ struct Operation
 	using node_t = Node<V, N>;
 	using neighbor_list_t = typename node_t::neighbor_list_t;
 
-	// initialize the starting value
-	virtual value_t init_value(const id_t& k, const neighbor_list_t& neighbors) = 0;
-	
 	// generate dummy nodes, if the result.first is true.
-	//virtual std::pair<bool, std::vector<node_t> > dummy_node();
+	virtual std::vector<std::pair<DummyNodeType, node_t>> dummy_nodes(); // default: (false, empty vector)
 	// all node-level preprocess including value initialization, out-neighbor adjusting.
-	//virtual node_t preprocess_node(const id_t& k, neighbor_list_t& neighbors);
+	virtual node_t preprocess_node(const id_t& k, neighbor_list_t& neighbors) = 0; // use make_node() to make
 	// prepare for output. like normalization
-	//virtual value_t postprocess_value(const node_t& n){ return n.v; }
+	virtual value_t postprocess_value(const node_t& n){ return n.v; }
 
 	// operations: identity_element, oplus, f-function
 	virtual value_t identity_element() const = 0; // identity_element
@@ -48,7 +45,31 @@ struct Operation
 	virtual priority_t priority(const node_t& n){ return n.u; }; // default: current uncommitted value
 
 	virtual ~Operation()=default;
+
+protected:
+	// make a node with IE as <v> and given <k>, <u>, <onb>.
+	node_t make_node(const id_t& k, value_t& u, neighbor_list_t& neighbors);
+	node_t make_node(const id_t& k, const value_t& u, neighbor_list_t& neighbors);
 };
+
+template <class V, class N>
+std::vector<std::pair<DummyNodeType, Node<V, N>>> Operation<V, N>::dummy_nodes(){
+	return {};
+}
+template <class V, class N>
+Node<V, N> Operation<V, N>::make_node(const id_t& k, value_t& u, neighbor_list_t& neighbors){
+	node_t n;
+	n.id = k;
+	n.v = identity_element();
+	n.u = std::move(u);
+	n.onb = std::move(neighbors);
+	return n;
+}
+template <class V, class N>
+Node<V, N> Operation<V, N>::make_node(const id_t& k, const value_t& u, neighbor_list_t& neighbors){
+	value_t temp = u;
+	return make_node(k, u, neighbors);
+}
 
 template <class V, class N>
 std::vector<std::pair<id_t, V>> Operation<V, N>::func(const node_t& n)

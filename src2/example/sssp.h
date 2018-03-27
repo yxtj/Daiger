@@ -20,12 +20,13 @@ struct ShortestPath
 
 		virtual void init(const std::vector<std::string>& arg_line);
 
-		virtual value_t init_value(const id_t& k, const neighbor_list_t& neighbors);
+		virtual node_t preprocess_node(const id_t& k, neighbor_list_t& neighbors);
 		virtual value_t func(const node_t& n, const neighbor_t& neighbor);
 		virtual priority_t priority(const node_t& n);
 	private:
 		id_t source;
 		bool use_degree;
+		id_t dummy_id;
 	};
 
 	class MySeparator : public ArgumentSeparator {
