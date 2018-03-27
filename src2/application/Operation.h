@@ -1,9 +1,11 @@
 #pragma once
 #include "common/Node.h"
 #include <utility>
+#include <tuple>
 #include <string>
 #include <vector>
 #include <limits>
+#include <functional>
 
 struct OperationBase {
 	virtual ~OperationBase() = default;
@@ -20,8 +22,15 @@ struct Operation
 	using node_t = Node<V, N>;
 	using neighbor_list_t = typename node_t::neighbor_list_t;
 
-	// generate dummy nodes, if the result.first is true.
-	virtual std::vector<std::pair<DummyNodeType, node_t>> dummy_nodes(); // default: (false, empty vector)
+	// <node-body-without-neighbors, type, function-of-adding-neighbors>
+	struct DummyNode{
+		node_t node; // containing <id>, <u>, <v>
+		DummyNodeType type;
+		std::function<std::pair<bool, N>(const id_t&)> func; // return wether to add a neighbor to the given id
+	};
+
+	// generate dummy nodes. 
+	virtual std::vector<DummyNode> dummy_nodes(); // default: empty
 	// all node-level preprocess including value initialization, out-neighbor adjusting.
 	virtual node_t preprocess_node(const id_t& k, neighbor_list_t& neighbors) = 0; // use make_node() to make
 	// prepare for output. like normalization
@@ -53,7 +62,7 @@ protected:
 };
 
 template <class V, class N>
-std::vector<std::pair<DummyNodeType, Node<V, N>>> Operation<V, N>::dummy_nodes(){
+std::vector<typename Operation<V, N>::DummyNode> Operation<V, N>::dummy_nodes(){
 	return {};
 }
 template <class V, class N>

@@ -131,13 +131,19 @@ int GlobalHolder<V, N>::loadGraph(const std::string& line){
 
 template <class V, class N>
 void GlobalHolder<V, N>::addDummyNodes(){
-	// TODO: add dummy nodes
-	std::vector<std::pair<DummyNodeType, node_t>> dummy = opt->dummy_nodes();
-	for(auto& p : dummy){
-		if(p.first == DummyNodeType::NORMAL){
-
-		}else if(p.first == DummyNodeType::TO_ALL){
-
+	std::vector<typename operation_t::DummyNode> dummies = opt->dummy_nodes();
+	for(auto& p : dummies){
+		id_t id = p.node.id;
+		if(p.type == DummyNodeType::NORMAL){
+			// only add to its owner worker
+			if(is_local_id(id)){
+				local_part.add(std::move(p.node));
+				local_part.modify_onb_via_fun_all(id, p.func);
+			}
+		}else if(p.type == DummyNodeType::TO_ALL){
+			// add to all workers, and each one only connects to its local nodes
+			local_part.add(std::move(p.node));
+			local_part.modify_onb_via_fun_all(id, p.func);
 		}
 	}
 }

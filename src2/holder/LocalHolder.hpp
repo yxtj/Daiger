@@ -50,6 +50,7 @@ public:
 	bool modify_onb_add(const id_t& k, const neighbor_t& n); // add an out-neighbor
 	bool modify_onb_rmv(const id_t& k, const neighbor_t& n);
 	bool modify_onb_val(const id_t& k, const neighbor_t& n);
+	bool modify_onb_via_fun_all(const id_t& k, std::function<std::pair<bool, N>(const id_t& k)> func);
 	bool modify_cache_add(const id_t& k, const id_t& src, const value_t& v); // add a cache entry
 	bool modify_cache_rmv(const id_t& k, const id_t& src);
 	bool modify_cache_val(const id_t& from, const id_t& to, const value_t& m);
@@ -231,6 +232,19 @@ bool LocalHolder<V, N>::modify_onb_val(const id_t& k, const neighbor_t& n){
 	if(jt==it->second.onb.end())
 		return false;
 	*jt = n;
+	return true;
+}
+template <class V, class N>
+bool LocalHolder<V, N>::modify_onb_via_fun_all(const id_t& k, std::function<std::pair<bool, N>(const id_t& k)> func){
+	auto it=cont.find(k);
+	if(it==cont.end())
+		return false;
+	it->second.onb.clear();
+	for(auto& p : cont){
+		auto t = func(p.first);
+		if(t.first)
+			it->second.onb.emplace_back(std::move(t.second));
+	}
 	return true;
 }
 template <class V, class N>

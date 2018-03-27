@@ -40,10 +40,15 @@ void PageRank::MyOperation::init(const std::vector<std::string>& arg_line){
 	}
 	use_degree = beTrueOption(arg_line[1]);
 }
-std::vector<std::pair<DummyNodeType, PageRank::node_t>> PageRank::MyOperation::dummy_nodes(){
+std::vector<PageRank::MyOperation::DummyNode> PageRank::MyOperation::dummy_nodes(){
+	DummyNode res;
 	neighbor_list_t onb;
-	node_t dummy = make_node(dummy_id, 1-damp, onb);
-	return { make_pair(DummyNodeType::TO_ALL, move(dummy)) };
+	res.node = make_node(dummy_id, 1-damp, onb);
+	res.type = DummyNodeType::TO_ALL;
+	res.func = [](const id_t& id){
+		return make_pair(true, id);
+	};
+	return { res };
 }
 PageRank::MyOperation::node_t PageRank::MyOperation::preprocess_node(
 	const id_t& k, neighbor_list_t& neighbors)
@@ -51,7 +56,7 @@ PageRank::MyOperation::node_t PageRank::MyOperation::preprocess_node(
 	return make_node(k, 0.2, neighbors);
 }
 PageRank::value_t PageRank::MyOperation::func(const node_t& n, const neighbor_t& neighbor){
-	return damp * n.v / n.onb.size();
+	return n.id != dummy_id ? damp*n.v/n.onb.size() : 1-damp;
 }
 // scheduling - priority
 priority_t PageRank::MyOperation::priority(const node_t& n){

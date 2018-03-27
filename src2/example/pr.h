@@ -12,6 +12,7 @@ struct PageRank
 	
 	static const std::string name;
 
+	// calculate NON-NORMALIZED PageRank value. 
 	struct MyOperation : public OperationAddition<value_t, neighbor_t> {
 		using typename Operation<value_t, neighbor_t>::value_t;
 		using typename Operation<value_t, neighbor_t>::neighbor_t;
@@ -20,7 +21,7 @@ struct PageRank
 
 		virtual void init(const std::vector<std::string>& arg_line);
 
-		virtual std::vector<std::pair<DummyNodeType, node_t>> dummy_nodes();
+		virtual std::vector<DummyNode> dummy_nodes();
 		virtual node_t preprocess_node(const id_t& k, neighbor_list_t& neighbors);
 		virtual value_t func(const node_t& n, const neighbor_t& neighbor);
 		virtual priority_t priority(const node_t& n);
