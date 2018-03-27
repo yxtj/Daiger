@@ -24,20 +24,25 @@ vector<float> cal_pr(const vector<vector<int> >& g, const float damp,
 		old.swap(res); // old=move(res);
 		oldsum=sum;
 		res.assign(n, 1-damp);
-		sum=n*static_cast<double>(1-damp);
+		// sum=n*static_cast<double>(1-damp);
+		sum = 0.0;
 		for(size_t i=0;i<n;++i){
 			const vector<int>& line=g[i];
 			float out=damp*old[i]/line.size();
 			for(int dst : line){
 				res[dst]+=out;
 			}
-			sum+=damp*old[i];
+			//sum+=damp*old[i];
 		}
+		for(auto& v : res)
+			sum += v*v;
 	}
 	if(normalize){
-		for(auto& r : res){
-			r/=sum;
-		}
+		double s = 0.0;
+		for(auto& v : res)
+			s += v;
+		for(auto& v : res)
+			v /= s;
 	}
 	cout<<"  iterations: "<<iter<<"\tdifference: "<<sum-oldsum<<endl;
 	return res;
