@@ -57,7 +57,7 @@ struct Operation
 
 protected:
 	// make a node with IE as <v> and given <k>, <u>, <onb>.
-	node_t make_node(const id_t& k, value_t& u, neighbor_list_t& neighbors);
+	node_t make_node(const id_t& k, value_t&& u, neighbor_list_t& neighbors);
 	node_t make_node(const id_t& k, const value_t& u, neighbor_list_t& neighbors);
 };
 
@@ -66,7 +66,7 @@ std::vector<typename Operation<V, N>::DummyNode> Operation<V, N>::dummy_nodes(){
 	return {};
 }
 template <class V, class N>
-Node<V, N> Operation<V, N>::make_node(const id_t& k, value_t& u, neighbor_list_t& neighbors){
+Node<V, N> Operation<V, N>::make_node(const id_t& k, value_t&& u, neighbor_list_t& neighbors){
 	node_t n;
 	n.id = k;
 	n.v = identity_element();
@@ -77,7 +77,7 @@ Node<V, N> Operation<V, N>::make_node(const id_t& k, value_t& u, neighbor_list_t
 template <class V, class N>
 Node<V, N> Operation<V, N>::make_node(const id_t& k, const value_t& u, neighbor_list_t& neighbors){
 	value_t temp = u;
-	return make_node(k, u, neighbors);
+	return make_node(k, std::move(u), neighbors);
 }
 
 template <class V, class N>
