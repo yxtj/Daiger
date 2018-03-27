@@ -29,12 +29,14 @@ struct Operation
 		std::function<std::pair<bool, N>(const id_t&)> func; // return wether to add a neighbor to the given id
 	};
 
-	// generate dummy nodes. 
-	virtual std::vector<DummyNode> dummy_nodes(); // default: empty
 	// all node-level preprocess including value initialization, out-neighbor adjusting.
 	virtual node_t preprocess_node(const id_t& k, neighbor_list_t& neighbors) = 0; // use make_node() to make
 	// prepare for output. like normalization
 	virtual value_t postprocess_value(const node_t& n){ return n.v; }
+
+	// generate dummy nodes. 
+	virtual std::vector<DummyNode> dummy_nodes(); // default: empty
+	virtual bool is_dummy_node(const id_t& id) { return false; };
 
 	// operations: identity_element, oplus, f-function
 	virtual value_t identity_element() const = 0; // identity_element

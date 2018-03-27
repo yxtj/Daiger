@@ -39,6 +39,12 @@ void PageRank::MyOperation::init(const std::vector<std::string>& arg_line){
 		throw invalid_argument("Invalid damping factor: "+arg_line[0]);
 	}
 	use_degree = beTrueOption(arg_line[1]);
+	dummy_id = -1;
+}
+PageRank::MyOperation::node_t PageRank::MyOperation::preprocess_node(
+	const id_t& k, neighbor_list_t& neighbors)
+{
+	return make_node(k, 0.2, neighbors);
 }
 std::vector<PageRank::MyOperation::DummyNode> PageRank::MyOperation::dummy_nodes(){
 	DummyNode res;
@@ -50,10 +56,8 @@ std::vector<PageRank::MyOperation::DummyNode> PageRank::MyOperation::dummy_nodes
 	};
 	return { res };
 }
-PageRank::MyOperation::node_t PageRank::MyOperation::preprocess_node(
-	const id_t& k, neighbor_list_t& neighbors)
-{
-	return make_node(k, 0.2, neighbors);
+bool PageRank::MyOperation::is_dummy_node(const id_t& id){
+	return id == dummy_id;
 }
 PageRank::value_t PageRank::MyOperation::func(const node_t& n, const neighbor_t& neighbor){
 	return n.id != dummy_id ? damp*n.v/n.onb.size() : 1-damp;

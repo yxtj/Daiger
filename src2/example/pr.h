@@ -21,14 +21,15 @@ struct PageRank
 
 		virtual void init(const std::vector<std::string>& arg_line);
 
-		virtual std::vector<DummyNode> dummy_nodes();
 		virtual node_t preprocess_node(const id_t& k, neighbor_list_t& neighbors);
+		virtual std::vector<DummyNode> dummy_nodes();
+		virtual bool is_dummy_node(const id_t& id);
 		virtual value_t func(const node_t& n, const neighbor_t& neighbor);
 		virtual priority_t priority(const node_t& n);
 	private:
 		double damp;
 		bool use_degree;
-		id_t dummy_id;
+		id_t dummy_id = -1;
 	};
 
 	class MySeparator : public ArgumentSeparator {
