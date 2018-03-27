@@ -6,6 +6,8 @@ struct Edge{
 	float weight;
 };
 
+bool beTrueOption(const std::string& str);
+
 inline bool operator==(const Edge &a,const Edge &b){
 	return a.node == b.node;
 }

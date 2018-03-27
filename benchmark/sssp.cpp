@@ -215,7 +215,7 @@ int main(int argc, char* argv[]){
     start_t = chrono::system_clock::now();
 	vector<vector<Edge>> g;
 	for(int i=0;i<parts;++i){
-		string fn=inprefix+"/part"+to_string(i);
+		string fn=inprefix+"/part-"+to_string(i);
 		cout<<"  loading "<<fn<<endl;
 		if(!load_graph_weight(g, fn)){
 			cerr<<"Error: cannot open input file: "<<fn<<endl;
@@ -237,7 +237,7 @@ int main(int argc, char* argv[]){
 	start_t = chrono::system_clock::now();
 	vector<string> fnout;
 	for(int i=0;i<parts;++i){
-		fnout.push_back(outprefix+"/part-"+to_string(i));
+		fnout.push_back(outprefix+"/value-"+to_string(i));
 	}
 	if(!dump(fnout, sp)){
 		cerr<<"Error: cannot write to given file(s)"<<endl;

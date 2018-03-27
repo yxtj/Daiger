@@ -5,6 +5,11 @@
 
 using namespace std;
 
+bool beTrueOption(const std::string& str){
+	static vector<string> true_options({"1", "t", "T", "true", "True", "TRUE", "y", "Y", "yes", "Yes", "YES"});
+	return find(true_options.begin(), true_options.end(), str) != true_options.end();
+}
+
 bool load_graph_weight(std::vector<std::vector<Edge>>& res, const std::string& fn){
 	ifstream fin(fn);
 	if(!fin){
@@ -71,7 +76,7 @@ bool dump(const std::vector<std::string>& fnouts, const std::vector<float>& res)
 	}
 	size_t size=res.size();
 	for(size_t i=0;i<size;++i){
-		(*fouts[i%parts])<<i<<"\t0:"<<res[i]<<"\n";
+		(*fouts[i%parts])<<i<<"\t"<<res[i]<<"\n";
 	}
 	for(size_t i=0;i<parts;++i)
 		delete fouts[i];
@@ -89,7 +94,7 @@ bool dump(const std::vector<std::string>& fnouts, const std::vector<int>& res){
 	}
 	size_t size=res.size();
 	for(size_t i=0;i<size;++i){
-		(*fouts[i%parts])<<i<<"\t0:"<<res[i]<<"\n";
+		(*fouts[i%parts])<<i<<"\t"<<res[i]<<"\n";
 	}
 	for(size_t i=0;i<parts;++i)
 		delete fouts[i];

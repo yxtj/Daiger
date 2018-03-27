@@ -9,7 +9,9 @@
 
 using namespace std;
 
-vector<float> cal_pr(const vector<vector<int> >& g, const float damp, const int maxIter, const double epsilon) {
+vector<float> cal_pr(const vector<vector<int> >& g, const float damp,
+	const bool normalize, const int maxIter, const double epsilon)
+{
 	size_t n=g.size();
 
 	vector<float> res(n, 1-damp);
@@ -32,6 +34,11 @@ vector<float> cal_pr(const vector<vector<int> >& g, const float damp, const int 
 			sum+=damp*old[i];
 		}
 	}
+	if(normalize){
+		for(auto& r : res){
+			r/=sum;
+		}
+	}
 	cout<<"  iterations: "<<iter<<"\tdifference: "<<sum-oldsum<<endl;
 	return res;
 }
@@ -39,11 +46,12 @@ vector<float> cal_pr(const vector<vector<int> >& g, const float damp, const int 
 int main(int argc, char* argv[]){
 	if(argc<=3){
 		cerr<<"Calculate PageRank."<<endl;
-		cerr<<"Usage: <#parts> <in-folder> <out-folder> [dump-factor] [max-iter] [epsilon]\n"
+		cerr<<"Usage: <#parts> <in-folder> <out-folder> [dump-factor] [normalize] [max-iter] [epsilon]\n"
 			<<"  <in-folder>: input file prefix, file name: 'part<id>' is automatically used\n"
 			<<"  <out-folder>: output file prefix, file name 'part-<id>' is automatically used\n"
 			<<"  [damp-factor]: (=0.8) the damping factor (the portion of values transitted) for PageRank\n"
 			<<"  [max-iter]: (=inf) the maximum number of iterations until termination\n"
+			<<"  [normalize]: (=0) whether to normalize the result\n"
 			<<"  [epsilon]: (=1e-6) the minimum difference between consecutive iterations for termination check"
 			<<endl;
 		return 1;
@@ -54,12 +62,15 @@ int main(int argc, char* argv[]){
 	float damp=0.8;
 	if(argc>4)
 		damp=stof(argv[4]);
-	int maxIter=numeric_limits<int>::max();
+	bool normalize = false;
 	if(argc>5)
-		maxIter=stoi(argv[5]);
-	double termDiff=1e-6;
+		normalize = beTrueOption(argv[5]);
+	int maxIter=numeric_limits<int>::max();
 	if(argc>6)
-		termDiff=stod(argv[6]);
+		maxIter=stoi(argv[6]);
+	double termDiff=1e-6;
+	if(argc>7)
+		termDiff=stod(argv[7]);
 	
 	chrono::time_point<std::chrono::system_clock> start_t;
 	chrono::duration<double> elapsed;
@@ -69,7 +80,7 @@ int main(int argc, char* argv[]){
     start_t = chrono::system_clock::now();
 	vector<vector<int>> g;
 	for(int i=0;i<parts;++i){
-		string fn=inprefix+"/part"+to_string(i);
+		string fn=inprefix+"/part-"+to_string(i);
 		cout<<"  loading "<<fn<<endl;
 		if(!load_graph_unweight(g, fn)){
 			cerr<<"Error: cannot open input file: "<<fn<<endl;
@@ -82,7 +93,7 @@ int main(int argc, char* argv[]){
 	// calculate
 	cout<<"calculating"<<endl;
 	start_t = chrono::system_clock::now();
-	vector<float> res = cal_pr(g, damp, maxIter, termDiff);
+	vector<float> res = cal_pr(g, damp, normalize, maxIter, termDiff);
     elapsed = chrono::system_clock::now()-start_t;
 	cout<<"  finished in "<<elapsed.count()<<" seconds"<<endl;
 	
@@ -91,7 +102,7 @@ int main(int argc, char* argv[]){
 	start_t = chrono::system_clock::now();
 	vector<string> fnout;
 	for(int i=0;i<parts;++i){
-		fnout.push_back(outprefix+"/part-"+to_string(i));
+		fnout.push_back(outprefix+"/value-"+to_string(i));
 	}
 	if(!dump(fnout, res)){
 		cerr<<"Error: cannot write to given file(s)"<<endl;
