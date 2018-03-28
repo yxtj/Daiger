@@ -44,15 +44,15 @@ void PageRank::MyOperation::init(const std::vector<std::string>& arg_line){
 PageRank::MyOperation::node_t PageRank::MyOperation::preprocess_node(
 	const id_t& k, neighbor_list_t& neighbors)
 {
-	return make_node(k, 0.2, neighbors);
+	return make_node(k, 0.0, neighbors);
 }
 std::vector<PageRank::MyOperation::DummyNode> PageRank::MyOperation::dummy_nodes(){
 	DummyNode res;
 	neighbor_list_t onb;
 	res.node = make_node(dummy_id, 1-damp, onb);
 	res.type = DummyNodeType::TO_ALL;
-	res.func = [](const id_t& id){
-		return make_pair(true, id);
+	res.func = [=](const id_t& id){
+		return make_pair(id != dummy_id, id);
 	};
 	return { res };
 }
@@ -64,7 +64,7 @@ PageRank::value_t PageRank::MyOperation::func(const node_t& n, const neighbor_t&
 }
 // scheduling - priority
 priority_t PageRank::MyOperation::priority(const node_t& n){
-	double p = n.u - n.v;
+	double p = abs(n.u - n.v);
 	return static_cast<priority_t>(p * (use_degree ? n.onb.size() : 1));
 }
 
