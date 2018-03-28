@@ -64,7 +64,14 @@ int main(int argc, char* argv[]){
 			<<"\targs: "<<opt.app_args<<"\n"
 			<<"\tPartitioner: "<<opt.sharder_args<<"\n"
 			<<"\tScheduler: "<<opt.scheduler_args;
-		LOG(INFO)<<"Parameters: \n"
+		LOG(INFO)<<"Behavior parameters: \n"
+			<<"\tBalanced loading: "<<opt.conf.balance_load<<"\n"
+			<<"\tDo incremental: "<<opt.do_incremental<<"\n"
+			<<"\tDo output: "<<opt.do_output<<"\n"
+			<<"\t\tSort result: "<<opt.conf.sort_result<<"\n"
+			<<"\tAsynchronous: "<<opt.conf.async<<"\n"
+			<<"\tCache-free: "<<opt.conf.cache_free;
+		LOG(INFO)<<"Runtime parameters: \n"
 			<<"\tTimeout: "<<opt.timeout<<"\n"
 			<<"\tApply interval: "<<opt.apply_interval<<"\n"
 			<<"\tSend interval: "<<opt.send_interval<<"\n"
@@ -89,6 +96,7 @@ int main(int argc, char* argv[]){
 		w.run();
 	}
 
+	app.clear();
 	NetworkThread::Terminate();
 	return 0;
 }

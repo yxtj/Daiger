@@ -40,6 +40,7 @@ Option::Option()
 		("scheduler", value<vector<string>>(&scheduler_args)->multitoken()->default_value({"priority", "0.1"}, "priority"),
 			"Scheduler name and parameters. Supports: rr, priority, fifo.")
 		("async", value<bool>(&conf.async)->default_value(true), "Whether to perform asynchronous computation.")
+		("sort-result", value<bool>(&conf.sort_result)->default_value(false), "Whether to sort the result by node id before dumping.")
 		("cache-free", value<bool>(&conf.cache_free)->default_value(false), "Whether to perform cache-free computation.")
 		("timeout", value<float>(&timeout)->default_value(1.0f), "[float] time threshold (second) for determining error.")
 		("apply_interval", value<float>(&apply_interval)->default_value(0.5f), "[float] the maximum interval (second) of performing apply.")

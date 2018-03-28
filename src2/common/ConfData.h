@@ -21,4 +21,5 @@ struct ConfData {
 
 	bool async;
 	bool cache_free;
+	bool sort_result; // whether to sort the output by node id
 };
