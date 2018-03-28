@@ -20,6 +20,21 @@ bool AppBase::check() const {
 		&& shd!=nullptr && scd!=nullptr && gh!=nullptr;
 }
 
+void AppBase::clear() {
+	delete opt;
+	opt = nullptr;
+	delete tmt;
+	tmt = nullptr;
+	delete ioh;
+	ioh = nullptr;
+	delete shd;
+	shd = nullptr;
+	delete scd;
+	scd = nullptr;
+	delete gh;
+	gh = nullptr;
+}
+
 AppBase makeApplication(const std::string& app_name, const std::vector<std::string>& arg_app, 
 	const std::vector<std::string>& arg_sharder, const std::vector<std::string>& arg_scheduler)
 {
