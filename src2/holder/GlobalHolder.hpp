@@ -8,6 +8,10 @@
 #include <vector>
 #include <string>
 #include <functional>
+#ifndef NDEBUG
+#include "dbg/dbg.h"
+#include "logging/logging.h"
+#endif
 
 template <class V, class N>
 class GlobalHolder
@@ -27,7 +31,7 @@ public:
 	virtual void init(OperationBase* opt, IOHandlerBase* ioh,
 		SchedulerBase* scd, SharderBase* shd, TerminatorBase* tmt,
 		const size_t nPart, const int localId, const size_t send_batch_size,
-		const bool incremental, const bool cache_free, const bool localProcess);
+		const bool incremental, const bool cache_free, const bool sort_result);
 
 	virtual int loadGraph(const std::string& line);
 	virtual int loadValue(const std::string& line);
@@ -74,7 +78,7 @@ private:
 	size_t send_batch_size;
 	bool incremental;
 	bool cache_free;
-	bool enable_local_process;
+	bool sort_result;
 	
 	std::vector<RemoteHolder<V, N>> remote_parts;
 	LocalHolder<V, N> local_part;
@@ -89,7 +93,7 @@ template <class V, class N>
 void GlobalHolder<V, N>::init(OperationBase* opt, IOHandlerBase* ioh,
 		SchedulerBase* scd, SharderBase* shd, TerminatorBase* tmt,
 		const size_t nPart, const int localId, const size_t send_batch_size,
-		const bool incremental, const bool cache_free, const bool localProcess)
+		const bool incremental, const bool cache_free, const bool sort_result)
 {
 	this->opt = dynamic_cast<operation_t*>(opt);
 	this->ioh = dynamic_cast<iohandler_t*>(ioh);
@@ -99,9 +103,9 @@ void GlobalHolder<V, N>::init(OperationBase* opt, IOHandlerBase* ioh,
 	this->nPart = nPart;
 	this->local_id = localId;
 	this->send_batch_size = send_batch_size;
-	this-> incremental = incremental;
-	this-> cache_free = cache_free;
-	this->enable_local_process = localProcess;
+	this->incremental = incremental;
+	this->cache_free = cache_free;
+	this->sort_result = sort_result;
 
 	this->shd->setParts(nPart);
 	pointer_dump = 0;
@@ -182,11 +186,20 @@ void GlobalHolder<V, N>::prepareUpdate(sender_t f_req){
 }
 template <class V, class N>
 void GlobalHolder<V, N>::prepareDump(){
-	local_part.enum_rewind();
+	if(sort_result){
+		local_part.enum_sorted_prepare();
+		local_part.enum_sorted_rewind();
+	}else{
+		local_part.enum_rewind();
+	}
 }
 template <class V, class N>
 std::pair<bool, std::string> GlobalHolder<V, N>::dumpResult(){
-	const node_t* p = local_part.enum_next();
+	const node_t* p;
+	if(sort_result)
+		p = local_part.enum_sorted_next();
+	else
+		p = local_part.enum_next();
 	if(p != nullptr){
 		V v = opt->postprocess_value(*p);
 		return std::make_pair(true, ioh->dump_value(p->id, v));
@@ -213,7 +226,7 @@ std::unordered_map<int, std::string> GlobalHolder<V, N>::collectINCache(){
 			id_t dst = get_key(nb);
 			int pid = get_part(dst);
 			value_t v = opt->func(*p, nb);
-			if(enable_local_process && is_local_part(pid)){
+			if(is_local_part(pid)){
 				local_part.update_cache(p->id, dst, v);
 			}else{
 				msgs[pid].emplace_back(p->id, dst, v);
@@ -232,10 +245,11 @@ std::unordered_map<int, std::string> GlobalHolder<V, N>::collectINCache(){
 
 template <class V, class N>
 void GlobalHolder<V, N>::local_update_cal(const id_t& from, const id_t& to, const value_t& v){
-	if(incremental)
+	if(!cache_free)
 		local_part.cal_incremental(from, to, v);
 	else
-		local_part.cal_nonincremental(from, to, v);
+		// TODO: cache_free version
+		local_part.cal_incremental(from, to, v);
 }
 
 template <class V, class N>
@@ -266,11 +280,17 @@ void GlobalHolder<V, N>::doApply(){
 	applying = true;
 	std::vector<id_t> nodes = scd->pick();
 	for(id_t id : nodes){
-		local_part.commit(id);
+		#ifndef NDEBUG
+		const node_t& n = local_part.get(id);
+		DVLOG(3)<<"k="<<n.id<<" v="<<n.v<<" u="<<n.u<<" cache="<<n.cs;
+		#endif
+		if(!local_part.commit(id))
+			continue;
 		std::vector<std::pair<id_t, value_t>> data = local_part.spread(id);
+		DVLOG(3)<<data;
 		for(auto& p : data){
 			int pid = get_part(p.first);
-			if(enable_local_process && is_local_part(pid)){
+			if(is_local_part(pid)){
 				local_update_cal(id, p.first, p.second);
 			}else{
 				remote_parts[pid].update(id, p.first, p.second);

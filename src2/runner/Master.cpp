@@ -94,7 +94,7 @@ void Master::startProcedure(const int pid){
 }
 
 void Master::finishProcedure(const int pid){
-	DLOG(INFO)<<"finishing procedure: "<<pid;
+	DLOG(INFO)<<"waiting for finishing procedure: "<<pid;
 	rph.resetTypeCondition(MType::CFinish);
 	su_procedure.reset();
 	net->broadcast(MType::CFinish, my_net_id);
