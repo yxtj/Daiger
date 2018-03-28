@@ -62,13 +62,26 @@ protected:
 
 template <typename V, typename N>
 class Terminator
-	: public TerminatorBase, public TerminatorTypedInterface<V, N>
-{};
+	: virtual public TerminatorBase
+{
+public:
+	// on workers:
+	// get the progress of a single node, return INF for special nodes/values
+	virtual double progress(const Node<V, N>& n){ return helper_progress_value(n); };
+
+protected:
+	static double helper_progress_value(const Node<V, N>& n){
+		return static_cast<double>(n.v);
+	}
+	static double helper_progress_vsquare(const Node<V, N>& n){
+		return static_cast<double>(n.v*n.v);
+	}
+};
 
 // -------- an example which stops when no one changes --------
 
 class TerminatorStopBase
-	: public TerminatorBase
+	: virtual public TerminatorBase
 {
 public:
 	virtual void prepare_global_checker(const size_t n_worker);
@@ -83,13 +96,13 @@ private:
 
 template <typename V, typename N>
 class TerminatorStop
-	: public TerminatorStopBase, public TerminatorTypedInterface<V, N>
+	: public TerminatorStopBase, public Terminator<V, N>
 {};
 
 // -------- an example of a difference-based terminator --------
 
 class TerminatorDiffBase
-	: public TerminatorBase
+	: virtual public TerminatorBase
 {
 public:
 	virtual void init(const std::vector<std::string>& args);
@@ -107,5 +120,5 @@ private:
 
 template <typename V, typename N>
 class TerminatorDiff
-	: public TerminatorDiffBase, public TerminatorTypedInterface<V, N>
+	: public TerminatorDiffBase, public Terminator<V, N>
 {};

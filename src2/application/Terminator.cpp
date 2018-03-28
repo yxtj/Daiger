@@ -81,7 +81,6 @@ void TerminatorDiffBase::update_report(const size_t wid, const ProgressReport& r
 }
 
 bool TerminatorDiffBase::check_term(){
-	return !untouched && TerminatorBase::sum_gc == 0
-		&& sum_gi_last == TerminatorBase::sum_gi
+	return !untouched && sum_gi_last == TerminatorBase::sum_gi
 		&& fabs(sum_gp_last - TerminatorBase::sum_gp) < epsilon;
 }
