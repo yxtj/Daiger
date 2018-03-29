@@ -56,3 +56,12 @@ std::vector<std::string> FileEnumerator::listDirectory(
 	return res;
 }
 
+bool FileEnumerator::ensureDirectory(const std::string& folder){
+	path p(folder);
+	if(!exists(p)){
+		return create_directories(p);
+	}else if(!is_directory(p)){
+		return false;
+	}
+	return true;
+}

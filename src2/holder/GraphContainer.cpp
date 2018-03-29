@@ -70,6 +70,9 @@ void GraphContainer::loadDelta(sender_t sender){
 }
 
 void GraphContainer::dumpResult(){
+	if(!FileEnumerator::ensureDirectory(conf.path_result)){
+		throw invalid_argument("Cannot access or create output folder \"" + conf.path_result + "\"");
+	}
 	string fn = conf.path_result + conf.prefix_result + to_string(wid);
 	ofstream fout(fn);
 	if(!fout){
