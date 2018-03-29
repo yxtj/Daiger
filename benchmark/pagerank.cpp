@@ -51,9 +51,10 @@ vector<float> cal_pr(const vector<vector<int> >& g, const float damp,
 int main(int argc, char* argv[]){
 	if(argc<=3){
 		cerr<<"Calculate PageRank."<<endl;
-		cerr<<"Usage: <#parts> <in-folder> <out-folder> [dump-factor] [normalize] [max-iter] [epsilon]\n"
-			<<"  <in-folder>: input file prefix, file name: 'part<id>' is automatically used\n"
-			<<"  <out-folder>: output file prefix, file name 'part-<id>' is automatically used\n"
+		cerr<<"Usage: <#parts> <in-folder> <out-folder> [delta-folder] [dump-factor] [normalize] [max-iter] [epsilon]\n"
+			<<"  <in-folder>: input file folder, file name: 'part-<id>' is automatically used\n"
+			<<"  <out-folder>: output file folder, file name 'value-<id>' is automatically used\n"
+			<<"  [delta-folder]: (=-) delta file folder, not used by default. File name: 'delta-<id>' is automatically used\n"
 			<<"  [damp-factor]: (=0.8) the damping factor (the portion of values transitted) for PageRank\n"
 			<<"  [max-iter]: (=inf) the maximum number of iterations until termination\n"
 			<<"  [normalize]: (=0) whether to normalize the result\n"
@@ -64,18 +65,19 @@ int main(int argc, char* argv[]){
 	int parts=stoi(argv[1]);
 	string inprefix=argv[2];
 	string outprefix=argv[3];
+	string deltaprefix=argv[4];
 	float damp=0.8;
-	if(argc>4)
-		damp=stof(argv[4]);
-	bool normalize = false;
 	if(argc>5)
-		normalize = beTrueOption(argv[5]);
-	int maxIter=numeric_limits<int>::max();
+		damp=stof(argv[5]);
+	bool normalize = false;
 	if(argc>6)
-		maxIter=stoi(argv[6]);
-	double termDiff=1e-6;
+		normalize = beTrueOption(argv[6]);
+	int maxIter=numeric_limits<int>::max();
 	if(argc>7)
-		termDiff=stod(argv[7]);
+		maxIter=stoi(argv[7]);
+	double termDiff=1e-6;
+	if(argc>8)
+		termDiff=stod(argv[8]);
 	
 	chrono::time_point<std::chrono::system_clock> start_t;
 	chrono::duration<double> elapsed;
@@ -84,13 +86,11 @@ int main(int argc, char* argv[]){
 	cout<<"loading graph"<<endl;
     start_t = chrono::system_clock::now();
 	vector<vector<int>> g;
-	for(int i=0;i<parts;++i){
-		string fn=inprefix+"/part-"+to_string(i);
-		cout<<"  loading "<<fn<<endl;
-		if(!load_graph_unweight(g, fn)){
-			cerr<<"Error: cannot open input file: "<<fn<<endl;
-			return 3;
-		}
+	try{
+		g = general_load_unweight(parts, inprefix, "part-", deltaprefix, "delta-");
+	}catch(exception& e){
+		cerr<<e.what()<<endl;
+		return 3;
 	}
     elapsed = chrono::system_clock::now()-start_t;
 	cout<<"  load "<<g.size()<<" nodes in "<<elapsed.count()<<" seconds"<<endl;

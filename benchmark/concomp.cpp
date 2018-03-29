@@ -50,14 +50,16 @@ int main(int argc, char* argv[]){
 	if(argc<=3){
 		cerr<<"Calculate Connected Component."<<endl;
 		cerr<<"Usage: <#parts> <in-folder> <out-folder> [source] [algorithm]\n"
-			<<"  <in-folder>: input file prefix, file name: 'part<id>' is automatically used\n"
-			<<"  <out-folder>: output file prefix, file name 'part-<id>' is automatically used"
+			<<"  <in-folder>: input file prefix, file name: 'part-<id>' is automatically used\n"
+			<<"  <out-folder>: output file prefix, file name 'value-<id>' is automatically used\n"
+			<<"  [delta-folder]: (=-) delta file folder, not used by default. File name: 'delta-<id>' is automatically used\n"
 			<<endl;
 		return 1;
 	}
 	int parts=stoi(argv[1]);
 	string inprefix=argv[2];
 	string outprefix=argv[3];
+	string deltaprefix=argv[4];
 	
 	chrono::time_point<std::chrono::system_clock> start_t;
 	chrono::duration<double> elapsed;
@@ -66,13 +68,11 @@ int main(int argc, char* argv[]){
 	cout<<"loading graph"<<endl;
     start_t = chrono::system_clock::now();
 	vector<vector<int>> g;
-	for(int i=0;i<parts;++i){
-		string fn=inprefix+"/part-"+to_string(i);
-		cout<<"  loading "<<fn<<endl;
-		if(!load_graph_unweight(g, fn)){
-			cerr<<"Error: cannot open input file: "<<fn<<endl;
-			return 3;
-		}
+	try{
+		g = general_load_unweight(parts, inprefix, "part-", deltaprefix, "delta-");
+	}catch(exception& e){
+		cerr<<e.what()<<endl;
+		return 3;
 	}
     elapsed = chrono::system_clock::now()-start_t;
 	cout<<"  load "<<g.size()<<" nodes in "<<elapsed.count()<<" seconds"<<endl;

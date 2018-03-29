@@ -120,8 +120,9 @@ int main(int argc, char* argv[]){
 	if(argc<=3){
 		cerr<<"Calculate Singe Source Widest Path."<<endl;
 		cerr<<"Usage: <#parts> <in-folder> <out-folder> [source] [opt-critical-edge] [algorithm]\n"
-			<<"  <in-folder>: input file prefix, file name: 'part<id>' is automatically used\n"
-			<<"  <out-folder>: output file prefix, file name 'part-<id>' is automatically used\n"
+			<<"  <in-folder>: input file prefix, file name: 'part-<id>' is automatically used\n"
+			<<"  <out-folder>: output file prefix, file name 'value-<id>' is automatically used\n"
+			<<"  [delta-folder]: (=-) delta file folder, not used by default. File name: 'delta-<id>' is automatically used\n"
 			<<"  [source]: (=0) the source node in the graph\n"
 			<<"  [opt-critical-edge]: (=0) whether to output the critical edge in the shortest paths (file name prefix: cedge)\n"
 			<<"  [algorithm]: (=spfa) the algorithm for SSWP. Supports: spfa"
@@ -131,19 +132,18 @@ int main(int argc, char* argv[]){
 	int parts=stoi(argv[1]);
 	string inprefix=argv[2];
 	string outprefix=argv[3];
+	string deltaprefix=argv[4];
 	int source=0;
-	if(argc>4){
-		source=stoi(argv[4]);
+	if(argc>5){
+		source=stoi(argv[5]);
 	}
 	bool get_cedge=false;
-	if(argc>5){
-		string opt=argv[5];
-		if(opt=="1" || opt=="y" || opt=="t" || opt=="yes" || opt=="true")
-			get_cedge=true;
+	if(argc>6){
+		get_cedge=beTrueOption(argv[6]);
 	}
 	string method="spfa";
-	if(argc>6){
-		method=argv[6];
+	if(argc>7){
+		method=argv[7];
 	}
 	if(method!="spfa"){
 		cerr<<"Error: unsupported algorithm: "<<method<<endl;
@@ -156,13 +156,11 @@ int main(int argc, char* argv[]){
 	cout<<"loading graph"<<endl;
     start_t = chrono::system_clock::now();
 	vector<vector<Edge>> g;
-	for(int i=0;i<parts;++i){
-		string fn=inprefix+"/part-"+to_string(i);
-		cout<<"  loading "<<fn<<endl;
-		if(!load_graph_weight(g, fn)){
-			cerr<<"Error: cannot open input file: "<<fn<<endl;
-			return 3;
-		}
+	try{
+		g = general_load_weight(parts, inprefix, "part-", deltaprefix, "delta-");
+	}catch(exception& e){
+		cerr<<e.what()<<endl;
+		return 3;
 	}
     elapsed = chrono::system_clock::now()-start_t;
 	cout<<"  load "<<g.size()<<" nodes in "<<elapsed.count()<<" seconds"<<endl;
