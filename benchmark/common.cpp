@@ -126,9 +126,9 @@ bool merge_graph_weight(std::vector<std::vector<Edge>>& res, const std::string& 
 			continue;
 		char type = line[0];
 		size_t p1 = line.find(',', 2);
-		int src = stoi(line.substr(2, p1));
+		int src = stoi(line.substr(2, p1-2));
 		size_t p2 = line.find(',', p1+1);
-		int dst = stoi(line.substr(p1+1, p2));
+		int dst = stoi(line.substr(p1+1, p2-p1-1));
 		auto& vec = res[src];
 		auto it = lower_bound(vec.begin(), vec.end(), dst, [](const Edge& e, int dst){
 			return e.node < dst;
