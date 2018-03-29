@@ -87,12 +87,20 @@ void GraphContainer::dumpResult(){
 }
 
 void GraphContainer::buildINCache(sender_t sender){
+	holder->prepareCollectINCache();
 	unordered_map<int, string> ic = holder->collectINCache();
-	for(auto& p : ic){
-		if(!p.second.empty()){
-			sender(p.first, p.second);
+	while(!ic.empty()){
+		for(auto& p : ic){
+			if(!p.second.empty()){
+				sender(p.first, p.second);
+			}
 		}
+		ic = holder->collectINCache();
 	}
+}
+
+void GraphContainer::genIncrInitMsg(){
+	holder->intializedProcess();
 }
 
 void GraphContainer::prepareUpdate(sender_t sender_val, sender_t sender_req, sender0_t sender_pro){

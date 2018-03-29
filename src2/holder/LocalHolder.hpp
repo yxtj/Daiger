@@ -42,8 +42,8 @@ public:
 
 	// enumerate nodes
 	void enum_rewind();
-	const node_t* enum_next();
-	void enum_sorted_prepare();
+	const node_t* enum_next(const bool with_dummy = false);
+	void enum_sorted_prepare(const bool with_dummy = false);
 	void enum_sorted_rewind();
 	const node_t* enum_sorted_next();
 	
@@ -195,9 +195,9 @@ void LocalHolder<V, N>::enum_rewind(){
 	enum_it = cont.cbegin();
 }
 template <class V, class N>
-const typename LocalHolder<V, N>::node_t* LocalHolder<V, N>::enum_next(){
+const typename LocalHolder<V, N>::node_t* LocalHolder<V, N>::enum_next(const bool with_dummy){
 	const node_t* p = nullptr;
-	while(enum_it != cont.cend() && opt->is_dummy_node(enum_it->second.id)){
+	while(!with_dummy && enum_it != cont.cend() && opt->is_dummy_node(enum_it->second.id)){
 		++enum_it;
 	}
 	if(enum_it != cont.cend()){
@@ -208,11 +208,11 @@ const typename LocalHolder<V, N>::node_t* LocalHolder<V, N>::enum_next(){
 }
 
 template <class V, class N>
-void LocalHolder<V, N>::enum_sorted_prepare(){
+void LocalHolder<V, N>::enum_sorted_prepare(const bool with_dummy){
 	sorted_it_cont.clear();
 	sorted_it_cont.reserve(cont.size());
 	for(auto it = cont.cbegin(); it != cont.cend(); ++it){
-		if(!opt->is_dummy_node(it->second.id))
+		if(with_dummy || !opt->is_dummy_node(it->second.id))
 			sorted_it_cont.push_back(it);
 	}
 	std::sort(sorted_it_cont.begin(), sorted_it_cont.end(), [](iterator_t a, iterator_t b){

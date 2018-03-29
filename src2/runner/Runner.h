@@ -38,6 +38,7 @@ protected:
 	virtual void procedureLoadValue() = 0;
 	virtual void procedureLoadDelta() = 0;
 	virtual void procedureBuildINCache() = 0;
+	virtual void procedureGenIncrInitMsg() = 0;
 	virtual void procedureUpdate() = 0;
 	virtual void procedureDumpResult() = 0;
 

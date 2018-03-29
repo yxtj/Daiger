@@ -117,6 +117,8 @@ void Worker::handleProcedure(const std::string& d, const RPCInfo& info){
 			fun = bind(&Worker::procedureLoadDelta, this); break;
 		case ProcedureType::BuildINCache:
 			fun = bind(&Worker::procedureBuildINCache, this); break;
+		case ProcedureType::GenIncrInitMsg:
+			fun = bind(&Worker::procedureGenIncrInitMsg, this); break;
 		case ProcedureType::Update:
 			fun = bind(&Worker::procedureUpdate, this); break;
 		case ProcedureType::DumpResult:

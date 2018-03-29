@@ -37,6 +37,8 @@ public:
 	virtual int loadValue(const std::string& line);
 	virtual int loadDelta(const std::string& line);
 	virtual void prepareUpdate(sender_t f_req);
+	virtual void prepareCollectINCache();
+	virtual void intializedProcess();
 	virtual void prepareDump();
 	virtual std::pair<bool, std::string> dumpResult();
 
@@ -180,9 +182,21 @@ int GlobalHolder<V, N>::loadDelta(const std::string& line){
 }
 
 template <class V, class N>
+void GlobalHolder<V, N>::intializedProcess(){
+	local_part.enum_rewind();
+	for(const node_t* p = local_part.enum_next(true); p != nullptr; p = local_part.enum_next(true)){
+		local_part.cal_general(p->id);
+	}
+}
+
+template <class V, class N>
 void GlobalHolder<V, N>::prepareUpdate(sender_t f_req){
 	scd->ready();
 	local_part.registerRequestCallback(f_req);
+}
+template <class V, class N>
+void GlobalHolder<V, N>::prepareCollectINCache(){
+	local_part.enum_rewind();
 }
 template <class V, class N>
 void GlobalHolder<V, N>::prepareDump(){
@@ -218,10 +232,9 @@ template <class V, class N>
 std::unordered_map<int, std::string> GlobalHolder<V, N>::collectINCache(){
 	// vector<vector<Msg>> : for each worker, for each unit
 	std::unordered_map<int, typename msg_t::MsgGINCache_t> msgs;
+	size_t bs = 0;
 	msgs.reserve(nPart);
-	local_part.enum_rewind();
-	const node_t* p = local_part.enum_next();
-	while(p != nullptr){
+	for(const node_t* p = local_part.enum_next(true); bs < send_batch_size && p != nullptr; p = local_part.enum_next(true)){
 		for(auto& nb : p->onb){
 			id_t dst = get_key(nb);
 			int pid = get_part(dst);
@@ -230,15 +243,16 @@ std::unordered_map<int, std::string> GlobalHolder<V, N>::collectINCache(){
 				local_part.update_cache(p->id, dst, v);
 			}else{
 				msgs[pid].emplace_back(p->id, dst, v);
+				++bs;
 			}
 		}
-		p = local_part.enum_next();
 	}
 	std::unordered_map<int, std::string> res;
 	res.reserve(nPart);
 	for(auto& mp : msgs){
 		if(!mp.second.empty())
 			res[mp.first]=serialize(mp.second);
+		mp.second.clear();
 	}
 	return res;
 }
