@@ -49,7 +49,7 @@ vector<int> cal_cc(const vector<vector<int> >& g) {
 int main(int argc, char* argv[]){
 	if(argc<=3){
 		cerr<<"Calculate Connected Component."<<endl;
-		cerr<<"Usage: <#parts> <in-folder> <out-folder> [source] [algorithm]\n"
+		cerr<<"Usage: <#parts> <in-folder> <out-folder> [delta-folder]\n"
 			<<"  <in-folder>: input file prefix, file name: 'part-<id>' is automatically used\n"
 			<<"  <out-folder>: output file prefix, file name 'value-<id>' is automatically used\n"
 			<<"  [delta-folder]: (=-) delta file folder, not used by default. File name: 'delta-<id>' is automatically used\n"
@@ -59,7 +59,9 @@ int main(int argc, char* argv[]){
 	int parts=stoi(argv[1]);
 	string inprefix=argv[2];
 	string outprefix=argv[3];
-	string deltaprefix=argv[4];
+	string deltaprefix;
+	if(argc>4)
+		deltaprefix=argv[4];
 	
 	chrono::time_point<std::chrono::system_clock> start_t;
 	chrono::duration<double> elapsed;

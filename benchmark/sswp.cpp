@@ -119,7 +119,7 @@ bool dump_cedge(const vector<string>& fncedge, const vector<pair<int, int>>& ced
 int main(int argc, char* argv[]){
 	if(argc<=3){
 		cerr<<"Calculate Singe Source Widest Path."<<endl;
-		cerr<<"Usage: <#parts> <in-folder> <out-folder> [source] [opt-critical-edge] [algorithm]\n"
+		cerr<<"Usage: <#parts> <in-folder> <out-folder> [delta-folder] [source] [opt-critical-edge] [algorithm]\n"
 			<<"  <in-folder>: input file prefix, file name: 'part-<id>' is automatically used\n"
 			<<"  <out-folder>: output file prefix, file name 'value-<id>' is automatically used\n"
 			<<"  [delta-folder]: (=-) delta file folder, not used by default. File name: 'delta-<id>' is automatically used\n"
@@ -132,7 +132,9 @@ int main(int argc, char* argv[]){
 	int parts=stoi(argv[1]);
 	string inprefix=argv[2];
 	string outprefix=argv[3];
-	string deltaprefix=argv[4];
+	string deltaprefix;
+	if(argc>4)
+		deltaprefix=argv[4];
 	int source=0;
 	if(argc>5){
 		source=stoi(argv[5]);

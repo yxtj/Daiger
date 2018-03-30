@@ -65,7 +65,9 @@ int main(int argc, char* argv[]){
 	int parts=stoi(argv[1]);
 	string inprefix=argv[2];
 	string outprefix=argv[3];
-	string deltaprefix=argv[4];
+	string deltaprefix;
+	if(argc>4)
+		deltaprefix=argv[4];
 	float damp=0.8;
 	if(argc>5)
 		damp=stof(argv[5]);
