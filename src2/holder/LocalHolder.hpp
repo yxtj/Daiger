@@ -61,14 +61,17 @@ public:
 
 	// -------- key functions (assume every key exists) --------
 	void update_cache(const id_t& from, const id_t& to, const value_t& m); // update cache with received message
-	void cal_general(const id_t& k); // merge all caches, the result is stored in <u>
+	void cal_general(const id_t& k){ (this->*f_update_general)(k); } // merge all caches, the result is stored in <u>
 	bool need_commit(const id_t& k) const; // whether <u> is different from <v>
 	bool commit(const id_t& k); // update <v> to <u>, update progress, REQUIRE: the priority of corresponding node is reset before calling commit()
 	std::vector<std::pair<id_t, value_t>> spread(const id_t& k); // generate outgoing messages
 
+	void cal_general_general(const id_t& k);
+	void cal_general_selective(const id_t& k);
+
 	// -------- incremental update functions (assume every key exists, assume the cache is not updated yet) --------
 	void cal_incremental(const id_t& from, const id_t& to, const value_t& m)
-		{ f_update_incremental(from, to, m); }
+		{ (this->*f_update_incremental)(from, to, m); }
 	void inc_cal_general(const id_t& from, const id_t& to, const value_t& m); // incremental update using recalculate
 	void inc_cal_accumulative(const id_t& from, const id_t& to, const value_t& m); // incremental update
 	void inc_cal_selective(const id_t& from, const id_t& to, const value_t& m); // incremental update
@@ -94,11 +97,16 @@ private:
 	void update_progress(const double old_p, const double new_p); // when n.v changes
 
 private:
+	using f_update_general_t = void (LocalHolder::*)(const id_t&);
+	using f_update_incremental_t = void (LocalHolder::*)(const id_t&, const id_t&, const value_t&);
+
 	operation_t* opt;
 	scheduler_t* scd;
 	terminator_t* tmt;
 	std::unordered_map<id_t, node_t> cont;
-	std::function<void(const id_t&, const id_t&, const value_t&)> f_update_incremental;
+	f_update_general_t f_update_general;
+	//std::function<void(const id_t&, const id_t&, const value_t&)> f_update_incremental;
+	f_update_incremental_t f_update_incremental;
 	sender_t f_send_req;
 
 	double progress_value; // summation of the non-infinity value
@@ -124,19 +132,26 @@ void LocalHolder<V, N>::init(operation_t* opt, scheduler_t* scd, terminator_t* t
 	progress_inf = 0;
 	progress_changed = 0;
 	if(opt->is_accumulative()){
-		f_update_incremental = std::bind(&LocalHolder<V, N>::inc_cal_accumulative,
-			this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+		f_update_general = &LocalHolder<V, N>::cal_general_general;
+		// f_update_incremental = std::bind(&LocalHolder<V, N>::inc_cal_accumulative,
+		// 	this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+		f_update_incremental = &LocalHolder<V, N>::inc_cal_accumulative;
 	}else if(opt->is_selective()){
+		f_update_general = &LocalHolder<V, N>::cal_general_selective;
 		if(incremental){
-			f_update_incremental = std::bind(&LocalHolder<V, N>::inc_cal_selective,
-				this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+			// f_update_incremental = std::bind(&LocalHolder<V, N>::inc_cal_selective,
+			// 	this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+			f_update_incremental = &LocalHolder<V, N>::inc_cal_selective;
 		}else{
-			f_update_incremental = std::bind(&LocalHolder<V, N>::noninc_cal_selective,
-				this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+			// f_update_incremental = std::bind(&LocalHolder<V, N>::noninc_cal_selective,
+			// 	this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+			f_update_incremental = &LocalHolder<V, N>::noninc_cal_selective;
 		}
 	}else{
-		f_update_incremental = std::bind(&LocalHolder<V, N>::inc_cal_general,
-			this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+		f_update_general = &LocalHolder<V, N>::cal_general_general;
+		// f_update_incremental = std::bind(&LocalHolder<V, N>::inc_cal_general,
+		// 	this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+		f_update_incremental = &LocalHolder<V, N>::inc_cal_general;
 	}
 	if(n != 0)
 		cont.reserve(n);
@@ -245,7 +260,11 @@ const typename LocalHolder<V, N>::node_t* LocalHolder<V, N>::enum_sorted_next(){
 
 template <class V, class N>
 bool LocalHolder<V, N>::modify(const id_t& k, const value_t& v){
-	MODIFY_TEMPLATE( it->second.v=v; )
+	MODIFY_TEMPLATE(
+		double oldp = tmt->progress(*it);
+		it->second.v=v;
+		update_progress(oldp, tmt->progress(*it));
+	)
 }
 template <class V, class N>
 bool LocalHolder<V, N>::modify(const id_t& k, const neighbor_list_t& nl){
@@ -327,13 +346,28 @@ void LocalHolder<V, N>::update_cache(const id_t& from, const id_t& to, const val
 }
 // merge all caches, the result is stored in <u>
 template <class V, class N>
-void LocalHolder<V, N>::cal_general(const id_t& k){
+void LocalHolder<V, N>::cal_general_general(const id_t& k){
 	node_t& n=cont[k];
 	value_t tmp=opt->identity_element();
 	for(auto& p : n.cs){
 		tmp = opt->oplus(tmp, p.second);
 	}
 	n.u = tmp;
+	update_priority(n);
+}
+template <class V, class N>
+void LocalHolder<V, N>::cal_general_selective(const id_t& k){
+	node_t& n=cont[k];
+	value_t tmp=opt->identity_element();
+	id_t bp;
+	for(auto& c : n.cs){
+		if(opt->better(c.second, tmp)){
+			tmp=c.second;
+			bp=c.first;
+		}
+	}
+	n.u = tmp;
+	n.b = bp;
 	update_priority(n);
 }
 // whether <u> is different from <v>
