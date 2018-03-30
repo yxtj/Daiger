@@ -33,8 +33,14 @@ int main(int argc, char* argv[]){
 	registerFactories();
 	initLogger(argc, argv);
 	// init App
-	AppBase app = makeApplication(opt.app_name, opt.app_args,
-		opt.sharder_args, opt.scheduler_args);
+	AppBase app;
+	try{
+		app = makeApplication(opt.app_name, opt.app_args,
+			opt.sharder_args, opt.scheduler_args);
+	}catch(exception& e){
+		LOG(ERROR)<<"Error in generating App via parameter: "<<e.what();
+		return 2;
+	}
 	if(!app.check()){
 		LOG(ERROR)<<"The application is not correctly setup.";
 		return 2;
