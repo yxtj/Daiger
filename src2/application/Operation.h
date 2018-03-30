@@ -79,7 +79,7 @@ Node<V, N> Operation<V, N>::make_node(const id_t& k, value_t&& u, neighbor_list_
 template <class V, class N>
 Node<V, N> Operation<V, N>::make_node(const id_t& k, const value_t& u, neighbor_list_t& neighbors){
 	value_t temp = u;
-	return make_node(k, std::move(u), neighbors);
+	return make_node(k, std::move(temp), neighbors);
 }
 
 template <class V, class N>
