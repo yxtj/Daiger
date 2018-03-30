@@ -155,43 +155,69 @@ struct OperationMultiplication
 	virtual value_t ominus(const value_t& a, const value_t& b){ return a / b; }
 };
 
+// -------- Selective --------
+
+template <typename V, typename N, bool HAS_INF = true>
+struct OperationMinBase
+	: public OperationSelective<V, N>
+{
+	virtual V identity_element() const{ return std::numeric_limits<V>::infinity(); }
+};
+template <typename V, typename N>
+struct OperationMinBase<V, N, false>
+	: public OperationSelective<V, N>
+{
+	virtual V identity_element() const{ return std::numeric_limits<V>::max(); }
+};
+
 template <typename V, typename N>
 struct OperationMin
-	: public OperationSelective<V, N>
+	: public OperationMinBase<V, N, std::numeric_limits<V>::has_infinity>
 {
 	using value_t = V;
 
-	virtual value_t identity_element() const{ return std::numeric_limits<value_t>::max(); }
 	virtual value_t oplus(const value_t& a, const value_t& b){ return a < b ? a : b; }
 	virtual bool better(const value_t& a, const value_t& b){ return a < b; }
 };
 template <typename V, typename N>
 struct OperationMinEqual
-	: public OperationSelective<V, N>
+	: public OperationMinBase<V, N, std::numeric_limits<V>::has_infinity>
 {
 	using value_t = V;
 
-	virtual value_t identity_element() const{ return std::numeric_limits<value_t>::max(); }
 	virtual value_t oplus(const value_t& a, const value_t& b){ return a <= b ? a : b; }
 	virtual bool better(const value_t& a, const value_t& b){ return a <= b; }
 };
+
+
+template <typename V, typename N, bool HAS_INF = true>
+struct OperationMaxBase
+	: public OperationSelective<V, N>
+{
+	virtual V identity_element() const{ return -std::numeric_limits<V>::infinity(); }
+};
+template <typename V, typename N>
+struct OperationMaxBase<V, N, false>
+	: public OperationSelective<V, N>
+{
+	virtual V identity_element() const{ return std::numeric_limits<V>::lowest(); }
+};
+
 template <typename V, typename N>
 struct OperationMax
-	: public OperationSelective<V, N>
+	: public OperationMaxBase<V, N, std::numeric_limits<V>::has_infinity>
 {
 	using value_t = V;
 
-	virtual value_t identity_element() const{ return std::numeric_limits<value_t>::lowest(); }
 	virtual value_t oplus(const value_t& a, const value_t& b){ return a > b ? a : b; }
 	virtual bool better(const value_t& a, const value_t& b){ return a > b; }
 };
 template <typename V, typename N>
 struct OperationMaxEqual
-	: public OperationSelective<V, N>
+	: public OperationMaxBase<V, N, std::numeric_limits<V>::has_infinity>
 {
 	using value_t = V;
 
-	virtual value_t identity_element() const{ return std::numeric_limits<value_t>::lowest(); }
 	virtual value_t oplus(const value_t& a, const value_t& b){ return a >= b ? a : b; }
 	virtual bool better(const value_t& a, const value_t& b){ return a >= b; }
 };

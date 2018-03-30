@@ -44,14 +44,10 @@ protected:
 	size_t sum_gc; // sum global number of changes
 };
 
-template <typename V, typename N>
-class TerminatorTypedInterface {
-public:
-	// on workers:
-	// get the progress of a single node, return INF for special nodes/values
-	virtual double progress(const Node<V, N>& n){ return helper_progress_value(n); };
-
-protected:
+// get the progress of a single node, return INF for special nodes/values
+template <typename V, typename N, bool HAS_INF = true>
+struct ProgressHelperBase
+{
 	static double helper_progress_value(const Node<V, N>& n){
 		return static_cast<double>(n.v);
 	}
@@ -59,23 +55,34 @@ protected:
 		return static_cast<double>(n.v*n.v);
 	}
 };
+template <typename V, typename N>
+struct ProgressHelperBase<V, N, false>
+{
+	static constexpr double MAX = std::numeric_limits<V>::max();
+	static constexpr double INF = std::numeric_limits<double>::infinity();
+
+	static double helper_progress_value(const Node<V, N>& n){
+		return static_cast<double>(n.v == MAX ? INF : n.v);
+	}
+	static double helper_progress_vsquare(const Node<V, N>& n){
+		return static_cast<double>(n.v == MAX ? INF : n.v*n.v);
+	}
+};
+template <typename V, typename N>
+struct ProgressHelper
+	: public ProgressHelperBase<V, N, std::numeric_limits<V>::has_infinity>
+{};
 
 template <typename V, typename N>
 class Terminator
-	: virtual public TerminatorBase
+	: virtual public TerminatorBase, public ProgressHelper<V, N>
 {
 public:
 	// on workers:
 	// get the progress of a single node, return INF for special nodes/values
-	virtual double progress(const Node<V, N>& n){ return helper_progress_value(n); };
-
-protected:
-	static double helper_progress_value(const Node<V, N>& n){
-		return static_cast<double>(n.v);
-	}
-	static double helper_progress_vsquare(const Node<V, N>& n){
-		return static_cast<double>(n.v*n.v);
-	}
+	virtual double progress(const Node<V, N>& n){
+		return ProgressHelper<V, N>::helper_progress_value(n);
+	};
 };
 
 // -------- an example which stops when no one changes --------
