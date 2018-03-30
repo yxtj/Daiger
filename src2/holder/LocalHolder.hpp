@@ -412,8 +412,11 @@ void LocalHolder<V, N>::inc_cal_selective(const id_t& from, const id_t& to, cons
 template <class V, class N>
 void LocalHolder<V, N>::noninc_cal_selective(const id_t& from, const id_t& to, const value_t& m){
 	node_t& n=cont[to];
-	n.u = m;
-	n.b = from;
+	// if(opt->better(m, n.u)){
+	// 	n.u = m;
+	// 	n.b = from;
+	// }
+	n.u = opt->oplus(n.u, m);
 	update_priority(n);
 }
 
@@ -421,8 +424,10 @@ void LocalHolder<V, N>::noninc_cal_selective(const id_t& from, const id_t& to, c
 
 template <class V, class N>
 void LocalHolder<V, N>::update_priority(const node_t& n){
-	scd->update(n.id, opt->priority(n));
-	++n_uncommitted;
+	if(n.u != n.v){
+		scd->update(n.id, opt->priority(n));
+		++n_uncommitted;
+	}
 }
 
 template <class V, class N>
