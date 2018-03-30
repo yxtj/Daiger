@@ -85,10 +85,13 @@ public:
 	void reset_progress_count(){
 		progress_changed = 0;
 	}
+	size_t get_n_uncommitted() const { return n_uncommitted; }
+	bool has_uncommitted() const { return n_uncommitted != 0; }
+	void reset_n_uncommitted(){ n_uncommitted = 0; }
 	
 private:
-	void update_priority(const node_t& n);
-	void update_progress(const double old_p, const double new_p);
+	void update_priority(const node_t& n); // when n.u changes. ALSO update n_uncommitted
+	void update_progress(const double old_p, const double new_p); // when n.v changes
 
 private:
 	operation_t* opt;
@@ -101,6 +104,8 @@ private:
 	double progress_value; // summation of the non-infinity value
 	size_t progress_inf; // # of the infinity
 	size_t progress_changed; // # of changed nodes
+
+	size_t n_uncommitted; // # of uncommitted changes on n.u
 
 	using iterator_t = typename decltype(cont)::const_iterator;
 	iterator_t enum_it;
@@ -417,6 +422,7 @@ void LocalHolder<V, N>::noninc_cal_selective(const id_t& from, const id_t& to, c
 template <class V, class N>
 void LocalHolder<V, N>::update_priority(const node_t& n){
 	scd->update(n.id, opt->priority(n));
+	++n_uncommitted;
 }
 
 template <class V, class N>

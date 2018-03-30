@@ -287,7 +287,7 @@ void GlobalHolder<V, N>::msgReply(const std::string& line){
 
 template <class V, class N>
 bool GlobalHolder<V, N>::needApply(){
-	return !applying;
+	return !applying && local_part.has_uncommitted();
 }
 template <class V, class N>
 void GlobalHolder<V, N>::doApply(){
