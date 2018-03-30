@@ -26,8 +26,10 @@ void Master::run() {
     if (opt.do_incremental) {
         procedureLoadValue();
         procedureLoadDelta();
-		procedureBuildINCache();
-		procedureGenIncrInitMsg();
+		if(!opt.conf.cache_free){
+			procedureBuildINCache();
+			procedureGenIncrInitMsg();
+		}
     }
     procedureUpdate();
     if (opt.do_output) {
