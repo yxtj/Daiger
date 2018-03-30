@@ -33,15 +33,11 @@ struct ShortestPath
 	public:
 		virtual AppArguments separate(const std::vector<std::string>& args);
 	};
-	class MyTerminator : public TerminatorDiff<value_t, neighbor_t> {
-	public:
-		virtual double progress(const node_t& n);
-	};
 
 	typedef MySeparator separator_t;
 	typedef MyOperation operation_t;
 	typedef IOHandlerWeighted<value_t, neighbor_t> iohandler_t;
-	typedef MyTerminator terminator_t;
+	typedef TerminatorDiff<value_t, neighbor_t> terminator_t;
 	typedef GlobalHolder<value_t, neighbor_t> graph_t;
 
 	virtual std::string getName() const;
