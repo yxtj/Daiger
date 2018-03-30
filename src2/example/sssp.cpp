@@ -43,7 +43,8 @@ void ShortestPath::MyOperation::init(const std::vector<std::string>& arg_line){
 ShortestPath::MyOperation::node_t ShortestPath::MyOperation::preprocess_node(
 	const id_t& k, neighbor_list_t& neighbors)
 {
-	neighbors.emplace_back(k, 0.0); // add an dummy self loop for the incremental case
+	if(k == source)
+		neighbors.emplace_back(k, 0.0); // add an dummy self loop for the incremental case
 	return make_node(k, k == source ? 0.0 : identity_element(), neighbors);
 }
 ShortestPath::value_t ShortestPath::MyOperation::func(const node_t& n, const neighbor_t& neighbor){
