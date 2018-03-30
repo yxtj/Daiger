@@ -213,6 +213,7 @@ SchedulerFIFO::~SchedulerFIFO(){
 }
 
 void SchedulerFIFO::init(const std::vector<std::string>& args){
+	nNode = 0;
 	data = new SCH_FIFOHolder();
 }
 void SchedulerFIFO::ready(){

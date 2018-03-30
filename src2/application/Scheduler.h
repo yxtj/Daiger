@@ -38,7 +38,7 @@ public:
 		}
 	};
 protected:
-	size_t nNode;
+	size_t nNode = 0;
 };
 
 // -------- predefined round-robin Scheduler --------
