@@ -268,6 +268,7 @@ ModelManifest.xml
 *.o
 *.so
 *.a
+*.out
 
 # clang-format
 .clang-format
