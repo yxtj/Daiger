@@ -25,6 +25,9 @@ struct MarkovChain
 		virtual priority_t priority(const node_t& n);
 	private:
 		bool use_degree;
+
+		struct InnerHelper;
+		InnerHelper* impl;
 	};
 
 	class MySeparator : public ArgumentSeparator {
