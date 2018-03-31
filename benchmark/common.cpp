@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <iostream>
 #include <stdexcept>
+#include <tuple>
 
 using namespace std;
 
@@ -185,6 +186,30 @@ bool merge_graph_unweight(std::vector<std::vector<int>>& res, const std::string&
 	return true;
 }
 
+/*
+bool general_dump(const std::string& folder, const std::string& prefix, const int npart, const std::vector<float>& res){
+	vector<string> fnout;
+	for(int i=0;i<npart;++i){
+		fnout.push_back(folder+"/"+prefix+to_string(i));
+	}
+	return dump(fnout, res);
+}
+bool general_dump(const std::string& folder, const std::string& prefix, const int npart, const std::vector<int>& res){
+	vector<string> fnout;
+	for(int i=0;i<npart;++i){
+		fnout.push_back(folder+"/"+prefix+to_string(i));
+	}
+	return dump(fnout, res);
+}
+bool general_dump(const std::string& folder, const std::string& prefix, const int npart, const std::vector<std::pair<int, int>>& res){
+	vector<string> fnout;
+	for(int i=0;i<npart;++i){
+		fnout.push_back(folder+"/"+prefix+to_string(i));
+	}
+	return dump(fnout, res);
+}
+*/
+
 bool dump(const std::vector<std::string>& fnouts, const std::vector<float>& res){
 	size_t parts=fnouts.size();
 	vector<ofstream*> fouts;
@@ -221,4 +246,23 @@ bool dump(const std::vector<std::string>& fnouts, const std::vector<int>& res){
 	return true;
 }
 
+bool dump(const std::vector<std::string>& fnouts, const std::vector<std::pair<int, int>>& cedges){
+	size_t parts=fnouts.size();
+	vector<ofstream*> fouts;
+	for(size_t i=0;i<parts;++i){
+		ofstream* pf=new ofstream(fnouts[i]);
+		if(!pf || !pf->is_open())
+			return false;
+		fouts.push_back(pf);
+	}
+	size_t size=cedges.size();
+	for(size_t i=0;i<size;++i){
+		int src, dst;
+		tie(src, dst)=cedges[i];
+		(*fouts[src%parts])<<src<<" "<<dst<<"\n";
+	}
+	for(size_t i=0;i<parts;++i)
+		delete fouts[i];
+	return true;
+}
 

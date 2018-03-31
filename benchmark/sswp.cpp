@@ -177,11 +177,7 @@ int main(int argc, char* argv[]){
 	// dump
 	cout<<"dumping SSWP"<<endl;
 	start_t = chrono::system_clock::now();
-	vector<string> fnout;
-	for(int i=0;i<parts;++i){
-		fnout.push_back(outprefix+"/value-"+to_string(i));
-	}
-	if(!dump(fnout, wp)){
+	if(!general_dump(outprefix, "value-", parts, wp)){
 		cerr<<"Error: cannot write to given file(s)"<<endl;
 		return 4;
 	}
@@ -201,10 +197,7 @@ int main(int argc, char* argv[]){
 	
 	cout<<"dumping critical edges"<<endl;
 	start_t = chrono::system_clock::now();
-	vector<string> fncedge;
-	for(int i=0;i<parts;++i)
-		fncedge.push_back(outprefix+"/cedge-"+to_string(i));
-	if(!dump_cedge(fncedge, cedges)){
+	if(!general_dump(outprefix, "cedge-", parts, cedges)){
 		cerr<<"Error: cannot write to given file(s)"<<endl;
 		return 5;
 	}

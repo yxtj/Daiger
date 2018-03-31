@@ -1,5 +1,6 @@
 #include <vector>
 #include <string>
+#include <utility>
 
 struct Edge{
 	int node;
@@ -24,6 +25,7 @@ std::vector<std::vector<Edge>> general_load_weight(const int npart,
 std::vector<std::vector<int>> general_load_unweight(const int npart,
 	const std::string& gfolder, const std::string& gprefix, const std::string& dfolder, const std::string& dprefix);
 
+
 bool load_graph_weight(std::vector<std::vector<Edge>>& res, const std::string& fn);
 bool load_graph_unweight(std::vector<std::vector<int>>& res, const std::string& fn);
 
@@ -32,3 +34,14 @@ bool merge_graph_unweight(std::vector<std::vector<int>>& res, const std::string&
 
 bool dump(const std::vector<std::string>& fnouts, const std::vector<float>& res);
 bool dump(const std::vector<std::string>& fnouts, const std::vector<int>& res);
+bool dump(const std::vector<std::string>& fnouts, const std::vector<std::pair<int, int>>& cedges);
+
+template <class T>
+inline bool general_dump(const std::string& folder, const std::string& prefix, const int npart, const std::vector<T>& res){
+	std::vector<std::string> fnout;
+	for(int i=0;i<npart;++i){
+		fnout.push_back(folder+"/"+prefix+std::to_string(i));
+	}
+	return dump(fnout, res);
+}
+

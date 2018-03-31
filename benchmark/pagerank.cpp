@@ -2,8 +2,8 @@
 #include <string>
 #include <fstream>
 #include <vector>
-#include <cmath>
 #include <chrono>
+#include <algorithm>
 
 #include "common.h"
 
@@ -56,8 +56,8 @@ int main(int argc, char* argv[]){
 			<<"  <out-folder>: output file folder, file name 'value-<id>' is automatically used\n"
 			<<"  [delta-folder]: (=-) delta file folder, not used by default. File name: 'delta-<id>' is automatically used\n"
 			<<"  [damp-factor]: (=0.8) the damping factor (the portion of values transitted) for PageRank\n"
-			<<"  [max-iter]: (=inf) the maximum number of iterations until termination\n"
 			<<"  [normalize]: (=0) whether to normalize the result\n"
+			<<"  [max-iter]: (=inf) the maximum number of iterations until termination\n"
 			<<"  [epsilon]: (=1e-6) the minimum difference between consecutive iterations for termination check"
 			<<endl;
 		return 1;
@@ -107,11 +107,7 @@ int main(int argc, char* argv[]){
 	// dump
 	cout<<"dumping"<<endl;
 	start_t = chrono::system_clock::now();
-	vector<string> fnout;
-	for(int i=0;i<parts;++i){
-		fnout.push_back(outprefix+"/value-"+to_string(i));
-	}
-	if(!dump(fnout, res)){
+	if(!general_dump(outprefix, "value-", parts, res)){
 		cerr<<"Error: cannot write to given file(s)"<<endl;
 		return 4;
 	}

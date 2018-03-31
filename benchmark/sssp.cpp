@@ -124,26 +124,6 @@ vector<pair<int,int>> cal_critical_edges(const vector<vector<Edge>>& g, const ve
 	return res;
 }
 
-bool dump_cedge(const vector<string>& fncedge, const vector<pair<int, int>>& cedges){
-	size_t parts=fncedge.size();
-	vector<ofstream*> fouts;
-	for(size_t i=0;i<parts;++i){
-		ofstream* pf=new ofstream(fncedge[i]);
-		if(!pf || !pf->is_open())
-			return false;
-		fouts.push_back(pf);
-	}
-	size_t size=cedges.size();
-	for(size_t i=0;i<size;++i){
-		int src, dst;
-		tie(src, dst)=cedges[i];
-		(*fouts[src%parts])<<src<<" "<<dst<<"\n";
-	}
-	for(size_t i=0;i<parts;++i)
-		delete fouts[i];
-	return true;
-}
-
 // for checking
 void build_sp_with_critical_edges(const vector<vector<Edge>>& g, const vector<pair<int, int>>& cedges, string fn){
 	size_t n=g.size();
@@ -235,11 +215,7 @@ int main(int argc, char* argv[]){
 	// dump
 	cout<<"dumping SSSP"<<endl;
 	start_t = chrono::system_clock::now();
-	vector<string> fnout;
-	for(int i=0;i<parts;++i){
-		fnout.push_back(outprefix+"/value-"+to_string(i));
-	}
-	if(!dump(fnout, sp)){
+	if(!general_dump(outprefix, "value-", parts, sp)){
 		cerr<<"Error: cannot write to given file(s)"<<endl;
 		return 4;
 	}
@@ -259,10 +235,7 @@ int main(int argc, char* argv[]){
 	
 	cout<<"dumping critical edges"<<endl;
 	start_t = chrono::system_clock::now();
-	vector<string> fncedge;
-	for(int i=0;i<parts;++i)
-		fncedge.push_back(outprefix+"/cedge-"+to_string(i));
-	if(!dump_cedge(fncedge, cedges)){
+	if(!general_dump(outprefix, "cedge-", parts, cedges)){
 		cerr<<"Error: cannot write to given file(s)"<<endl;
 		return 5;
 	}

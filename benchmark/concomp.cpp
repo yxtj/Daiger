@@ -89,11 +89,7 @@ int main(int argc, char* argv[]){
 	// dump
 	cout<<"dumping"<<endl;
 	start_t = chrono::system_clock::now();
-	vector<string> fnout;
-	for(int i=0;i<parts;++i){
-		fnout.push_back(outprefix+"/value-"+to_string(i));
-	}
-	if(!dump(fnout, cc)){
+	if(!general_dump(outprefix, "value-", parts, cc)){
 		cerr<<"Error: cannot write to given file(s)"<<endl;
 		return 4;
 	}
