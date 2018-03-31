@@ -3,7 +3,7 @@
 #include "api/api.h"
 #include <string>
 
-struct ShortestPath
+struct WidestPath
 	: public AppKernel
 {
 	using value_t = double;
@@ -12,7 +12,7 @@ struct ShortestPath
 	
 	static const std::string name;
 
-	struct MyOperation : public OperationMin<value_t, neighbor_t> {
+	struct MyOperation : public OperationMax<value_t, neighbor_t> {
 		using typename Operation<value_t, neighbor_t>::value_t;
 		using typename Operation<value_t, neighbor_t>::neighbor_t;
 		using typename Operation<value_t, neighbor_t>::neighbor_list_t;

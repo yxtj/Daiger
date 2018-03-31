@@ -38,7 +38,6 @@ GlobalHolderBase* ShortestPath::generateGraph(){
 void ShortestPath::MyOperation::init(const std::vector<std::string>& arg_line){
 	source = stoid(arg_line[0]);
 	use_degree = beTrueOption(arg_line[1]);
-	dummy_id = -1;
 }
 ShortestPath::MyOperation::node_t ShortestPath::MyOperation::preprocess_node(
 	const id_t& k, neighbor_list_t& neighbors)

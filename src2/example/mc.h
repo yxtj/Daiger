@@ -3,7 +3,7 @@
 #include "api/api.h"
 #include <string>
 
-struct ShortestPath
+struct MarkovChain
 	: public AppKernel
 {
 	using value_t = double;
@@ -12,7 +12,7 @@ struct ShortestPath
 	
 	static const std::string name;
 
-	struct MyOperation : public OperationMin<value_t, neighbor_t> {
+	struct MyOperation : public OperationAddition<value_t, neighbor_t> {
 		using typename Operation<value_t, neighbor_t>::value_t;
 		using typename Operation<value_t, neighbor_t>::neighbor_t;
 		using typename Operation<value_t, neighbor_t>::neighbor_list_t;
@@ -24,7 +24,6 @@ struct ShortestPath
 		virtual value_t func(const node_t& n, const neighbor_t& neighbor);
 		virtual priority_t priority(const node_t& n);
 	private:
-		id_t source;
 		bool use_degree;
 	};
 
