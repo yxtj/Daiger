@@ -17,7 +17,7 @@ public:
 	virtual void init(OperationBase* opt, IOHandlerBase* ioh,
 		SchedulerBase* scd, SharderBase* shd, TerminatorBase* tmt,
 		const size_t nPart, const int localId, const size_t send_batch_size,
-		const bool incremental, const bool cache_free, const bool sort_result) = 0;
+		const bool incremental, const bool async, const bool cache_free, const bool sort_result) = 0;
 
 	// IO (loadXXXX returns the part-id (worker-id) should have the input line)
 	virtual int loadGraph(const std::string& line) = 0;

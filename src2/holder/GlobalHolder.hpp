@@ -31,7 +31,7 @@ public:
 	virtual void init(OperationBase* opt, IOHandlerBase* ioh,
 		SchedulerBase* scd, SharderBase* shd, TerminatorBase* tmt,
 		const size_t nPart, const int localId, const size_t send_batch_size,
-		const bool incremental, const bool cache_free, const bool sort_result);
+		const bool incremental, const bool async, const bool cache_free, const bool sort_result);
 
 	virtual int loadGraph(const std::string& line);
 	virtual int loadValue(const std::string& line);
@@ -78,7 +78,9 @@ private:
 	terminator_t* tmt;
 	size_t nPart;
 	size_t send_batch_size;
+
 	bool incremental;
+	bool async;
 	bool cache_free;
 	bool sort_result;
 	
@@ -95,7 +97,7 @@ template <class V, class N>
 void GlobalHolder<V, N>::init(OperationBase* opt, IOHandlerBase* ioh,
 		SchedulerBase* scd, SharderBase* shd, TerminatorBase* tmt,
 		const size_t nPart, const int localId, const size_t send_batch_size,
-		const bool incremental, const bool cache_free, const bool sort_result)
+		const bool incremental, const bool async, const bool cache_free, const bool sort_result)
 {
 	this->opt = dynamic_cast<operation_t*>(opt);
 	this->ioh = dynamic_cast<iohandler_t*>(ioh);
@@ -106,13 +108,14 @@ void GlobalHolder<V, N>::init(OperationBase* opt, IOHandlerBase* ioh,
 	this->local_id = localId;
 	this->send_batch_size = send_batch_size;
 	this->incremental = incremental;
+	this->async = async;
 	this->cache_free = cache_free;
 	this->sort_result = sort_result;
 
 	this->shd->setParts(nPart);
 	pointer_dump = 0;
 
-	local_part.init(this->opt, this->scd, this->tmt, nPart, incremental, cache_free);
+	local_part.init(this->opt, this->scd, this->tmt, nPart, incremental, async, cache_free);
 	remote_parts.resize(nPart);
 	for(size_t i = 1; i<nPart; ++i){
 		remote_parts[i].init(this->opt);

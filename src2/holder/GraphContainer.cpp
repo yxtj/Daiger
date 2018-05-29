@@ -11,11 +11,11 @@ GraphContainer::GraphContainer(AppBase& app, const ConfData& conf)
 {
 }
 
-void GraphContainer::init(int wid, GlobalHolderBase* holder, bool incremental, bool cache_free){
+void GraphContainer::init(int wid, GlobalHolderBase* holder, bool incremental){
 	this->wid = wid;
 	this->holder = holder;
 	holder->init(app.opt, app.ioh, app.scd, app.shd, app.tmt,
-		conf.nPart, wid, conf.send_batch_size, incremental, cache_free, conf.sort_result);
+		conf.nPart, wid, conf.send_batch_size, incremental, conf.async, conf.cache_free, conf.sort_result);
 	applying = false;
 	sending = false;
 }

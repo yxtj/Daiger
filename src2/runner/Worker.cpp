@@ -61,7 +61,7 @@ void Worker::procedureInit(){
 	setLogThreadName(log_name+"-INT");
 	// notified by handleWorkers() via storeWorkerInfo()
 	su_winfo.wait();
-	graph.init(wm.nid2wid(my_net_id), app.gh, opt.do_incremental, opt.conf.cache_free);
+	graph.init(wm.nid2wid(my_net_id), app.gh, opt.do_incremental);
 	LOG(INFO)<<"graph initialized";
 }
 

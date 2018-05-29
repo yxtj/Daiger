@@ -9,7 +9,7 @@
 class GraphContainer {
 public:
 	GraphContainer(AppBase& app, const ConfData& conf);
-	void init(int wid, GlobalHolderBase* holder, bool incremental, bool cache_free);
+	void init(int wid, GlobalHolderBase* holder, bool incremental);
 
 	using sender_t = std::function<void(const int, std::string&)>;
 	using sender0_t = std::function<void(std::string&)>;
