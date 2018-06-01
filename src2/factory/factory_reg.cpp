@@ -1,8 +1,8 @@
 #include "factory_reg.h"
-#include "SharderFactory.h"
+#include "PartitionerFactory.h"
 #include "SchedulerFactory.h"
 
 void registerFactories(){
-	SharderFactory::init();
+	PartitionerFactory::init();
 	SchedulerFactory::init();
 }

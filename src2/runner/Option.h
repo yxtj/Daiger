@@ -14,7 +14,7 @@ public:
 
 	std::string app_name;
 	std::vector<std::string> app_args;
-	std::vector<std::string> sharder_args;
+	std::vector<std::string> partitioner_args;
 	std::vector<std::string> scheduler_args;
 
 	//float schedule_portion;

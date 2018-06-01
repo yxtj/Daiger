@@ -1,11 +1,11 @@
-#include "SharderFactory.h"
+#include "PartitionerFactory.h"
 
 using namespace std;
 
-using parent_t = SharderFactory::parent_t;
+using parent_t = PartitionerFactory::parent_t;
 
 template <>
-const std::string parent_t::optName("sharder");
+const std::string parent_t::optName("partitioner");
 template <>
 const std::string parent_t::usagePrefix("");
 
@@ -15,9 +15,9 @@ template <>
 std::map<std::string, std::string> parent_t::contUsage{};
 
 
-void SharderFactory::init()
+void PartitionerFactory::init()
 {
 	// TODO: add new strategy here
-	registerClass<SharderMod>("mod", "mod. Use mod method to spread nodes.");
+	registerClass<PartitionerMod>("mod", "mod. Use mod method to spread nodes.");
 	
 }

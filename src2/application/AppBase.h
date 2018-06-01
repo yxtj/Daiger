@@ -3,7 +3,7 @@
 #include "Operation.h"
 #include "IOHandler.h"
 #include "Terminator.h"
-#include "Sharder.h"
+#include "Partitioner.h"
 #include "Scheduler.h"
 #include "holder/GlobalHolderBase.h"
 #include <string>
@@ -18,7 +18,7 @@ struct AppBase {
 	IOHandlerBase* ioh;
 
 	// application-independent
-	SharderBase* shd;
+	PartitionerBase* ptn;
 	SchedulerBase* scd;
 
 	GlobalHolderBase* gh; // graph holder

@@ -35,13 +35,13 @@ Option::Option()
 		("prefix_result", value<string>(&conf.prefix_result)->default_value(string("res-")), "Prefix of the output value files.")
 		("app", value<string>(&app_name), "The name of the application to run.")
 		("app_args", value<vector<string>>(&app_args)->multitoken()->default_value({}, ""), "Application parameters.")
-		("sharder", value<vector<string>>(&sharder_args)->multitoken()->default_value({"mod"}, "mod"),
-			"Sharder strategy name and parameters. Supports: mod.")
+		("partitioner", value<vector<string>>(&partitioner_args)->multitoken()->default_value({"mod"}, "mod"),
+			"Partition strategy name and parameters. Supports: mod.")
 		("scheduler", value<vector<string>>(&scheduler_args)->multitoken()->default_value({"priority", "0.1"}, "priority"),
 			"Scheduler name and parameters. Supports: rr, priority, fifo.")
 		("async", value<bool>(&conf.async)->default_value(true), "Whether to perform asynchronous computation.")
-		("sort-result", value<bool>(&conf.sort_result)->default_value(false), "Whether to sort the result by node id before dumping.")
-		("cache-free", value<bool>(&conf.cache_free)->default_value(false), "Whether to perform cache-free computation.")
+		("sort_result", value<bool>(&conf.sort_result)->default_value(false), "Whether to sort the result by node id before dumping.")
+		("cache_free", value<bool>(&conf.cache_free)->default_value(false), "Whether to perform cache-free computation.")
 		("timeout", value<float>(&timeout)->default_value(1.0f), "[float] time threshold (second) for determining error.")
 		("apply_interval", value<float>(&apply_interval)->default_value(0.5f), "[float] the maximum interval (second) of performing apply.")
 		("send_interval", value<float>(&send_interval)->default_value(0.5f), "[float] the maximum interval (second) of performing send.")

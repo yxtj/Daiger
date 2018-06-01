@@ -5,14 +5,14 @@ set(HEADERS
 	IOHandler.h
 	IOHandler_Helper.h
 	Scheduler.h
-	Sharder.h
+	Partitioner.h
 	Terminator.h
 )
 set(SOURCES
 	AppBase.cpp
 	IOHandler_Helper.cpp
 	Scheduler.cpp
-	Sharder.cpp
+	Partitioner.cpp
 	Terminator.cpp
 )
 add_library(application

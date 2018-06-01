@@ -14,6 +14,6 @@
 
 #include "holder/GlobalHolder.hpp"
 
-#include "factory/SharderFactory.h"
+#include "factory/PartitionerFactory.h"
 #include "factory/SchedulerFactory.h"
 

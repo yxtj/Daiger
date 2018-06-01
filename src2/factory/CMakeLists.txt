@@ -4,7 +4,7 @@ set(HEADERS
 	ArgumentSeparatorFactory.h
 	IOHandlerFactory.h
 	SchedulerFactory.h
-	SharderFactory.h
+	PartitionerFactory.h
 	TerminatorFactory.h
 	factory_reg.h
 )
@@ -13,7 +13,7 @@ set(SOURCES
 	ArgumentSeparatorFactory.cpp
 	IOHandlerFactory.cpp
 	SchedulerFacrory.cpp
-	SharderFactory.cpp
+	PartitionerFactory.cpp
 	TerminatorFactory.cpp
 	factory_reg.cpp
 )

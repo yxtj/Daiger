@@ -29,7 +29,7 @@ public:
 	using msg_t = MessageDef<V>;
 
 	virtual void init(OperationBase* opt, IOHandlerBase* ioh,
-		SchedulerBase* scd, SharderBase* shd, TerminatorBase* tmt,
+		SchedulerBase* scd, PartitionerBase* ptn, TerminatorBase* tmt,
 		const size_t nPart, const int localId, const size_t send_batch_size,
 		const bool incremental, const bool async, const bool cache_free, const bool sort_result);
 
@@ -60,7 +60,7 @@ public:
 
 private:
 	int get_part(const id_t id){
-		return shd->owner(id);
+		return ptn->owner(id);
 	};
 	bool is_local_part(const int pid){ return pid == local_id; }
 	bool is_local_id(const id_t id){ return get_part(id) == local_id; }
@@ -74,7 +74,7 @@ private:
 	operation_t* opt;
 	iohandler_t* ioh;
 	SchedulerBase* scd;
-	SharderBase* shd;
+	PartitionerBase* ptn;
 	terminator_t* tmt;
 	size_t nPart;
 	size_t send_batch_size;
@@ -95,14 +95,14 @@ private:
 
 template <class V, class N>
 void GlobalHolder<V, N>::init(OperationBase* opt, IOHandlerBase* ioh,
-		SchedulerBase* scd, SharderBase* shd, TerminatorBase* tmt,
+		SchedulerBase* scd, PartitionerBase* ptn, TerminatorBase* tmt,
 		const size_t nPart, const int localId, const size_t send_batch_size,
 		const bool incremental, const bool async, const bool cache_free, const bool sort_result)
 {
 	this->opt = dynamic_cast<operation_t*>(opt);
 	this->ioh = dynamic_cast<iohandler_t*>(ioh);
 	this->scd = scd;
-	this->shd = shd;
+	this->ptn = ptn;
 	this->tmt = dynamic_cast<terminator_t*>(tmt);
 	this->nPart = nPart;
 	this->local_id = localId;
@@ -112,7 +112,7 @@ void GlobalHolder<V, N>::init(OperationBase* opt, IOHandlerBase* ioh,
 	this->cache_free = cache_free;
 	this->sort_result = sort_result;
 
-	this->shd->setParts(nPart);
+	this->ptn->setParts(nPart);
 	pointer_dump = 0;
 
 	local_part.init(this->opt, this->scd, this->tmt, nPart, incremental, async, cache_free);

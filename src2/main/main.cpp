@@ -36,7 +36,7 @@ int main(int argc, char* argv[]){
 	AppBase app;
 	try{
 		app = makeApplication(opt.app_name, opt.app_args,
-			opt.sharder_args, opt.scheduler_args);
+			opt.partitioner_args, opt.scheduler_args);
 	}catch(exception& e){
 		LOG(ERROR)<<"Error in generating App via parameter: "<<e.what();
 		return 2;
@@ -54,7 +54,7 @@ int main(int argc, char* argv[]){
 			<<") does not match required ("<<1 + opt.conf.nPart<<").";
 		return 3;
 	}
-	app.shd->setParts(net->size());
+	app.ptn->setParts(net->size());
 
 	if(opt.show && net->id() == 0){
 		LOG(INFO)<<"Successfully initialized.\n"
@@ -68,7 +68,7 @@ int main(int argc, char* argv[]){
 			<<"\tPrefix result: "<<opt.conf.prefix_result;
 		LOG(INFO)<<"Application: "<<opt.app_name<<"\n"
 			<<"\targs: "<<opt.app_args<<"\n"
-			<<"\tPartitioner: "<<opt.sharder_args<<"\n"
+			<<"\tPartitioner: "<<opt.partitioner_args<<"\n"
 			<<"\tScheduler: "<<opt.scheduler_args;
 		LOG(INFO)<<"Behavior parameters: \n"
 			<<"\tBalanced loading: "<<opt.conf.balance_load<<"\n"

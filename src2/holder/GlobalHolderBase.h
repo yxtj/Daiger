@@ -2,7 +2,7 @@
 #include "application/Operation.h"
 #include "application/IOHandler.h"
 #include "application/Scheduler.h"
-#include "application/Sharder.h"
+#include "application/Partitioner.h"
 #include "application/Terminator.h"
 #include <vector>
 #include <string>
@@ -15,7 +15,7 @@ public:
 	virtual ~GlobalHolderBase() = default;
 
 	virtual void init(OperationBase* opt, IOHandlerBase* ioh,
-		SchedulerBase* scd, SharderBase* shd, TerminatorBase* tmt,
+		SchedulerBase* scd, PartitionerBase* ptn, TerminatorBase* tmt,
 		const size_t nPart, const int localId, const size_t send_batch_size,
 		const bool incremental, const bool async, const bool cache_free, const bool sort_result) = 0;
 
