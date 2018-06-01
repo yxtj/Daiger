@@ -65,13 +65,11 @@ public:
 	// update cache with received message
 	void update_cache(const id_t& from, const id_t& to, const value_t& m);
 	// merge all caches, the result is stored in <u>
-	void cal_general(const id_t& k)
+	void cal_general(const id_t& k);
 		//{ (this->*f_update_general)(k); }
-		{ plu->batch_update(cont[k]); }
 	// update <u> incrementally with <m> from <from> (assume every key exists)
-	void cal_incremental(const id_t& from, const id_t& to, const value_t& m)
+	void cal_incremental(const id_t& from, const id_t& to, const value_t& m);
 		//{ (this->*f_update_incremental)(from, to, m); }
-		{ plu->d_incremental_update(from, cont[to], m); }
 	// whether <u> is different from <v>
 	bool need_commit(const id_t& k) const;
 	// update <v> to <u>, update progress, REQUIRE: the priority of corresponding node is reset before calling commit()
@@ -408,6 +406,73 @@ template <class V, class N>
 void LocalHolder<V, N>::update_cache(const id_t& from, const id_t& to, const value_t& m){
 	cont[to].cs[from]=m;
 }
+template <class V, class N>
+void LocalHolder<V, N>::cal_general(const id_t& k){
+	node_t& n=cont[k];
+	plu->batch_update(n);
+	update_priority(n);
+}
+// update <u> incrementally with <m> from <from> (assume every key exists)
+template <class V, class N>
+void LocalHolder<V, N>::cal_incremental(const id_t& from, const id_t& to, const value_t& m){
+	node_t& n=cont[to];
+	plu->d_incremental_update(from, n, m);
+	update_priority(n);
+}
+// whether <u> is different from <v>
+template <class V, class N>
+bool LocalHolder<V, N>::need_commit(const id_t& k) const{
+	const node_t& n=cont[k];
+	return plu->need_commit(n);
+}
+// update <v> to <u>
+// GUARANTE: the priority of n is reset before calling commit()
+template <class V, class N>
+bool LocalHolder<V, N>::commit(const id_t& k){
+	node_t& n=cont[k];
+	if(!plu->need_commit(n))
+		return false;
+	double oldp = tmt->progress(n);
+	plu->commit(n);
+	update_progress(oldp, tmt->progress(n));
+	return true;
+}
+// generate outgoing messages
+template <class V, class N>
+std::vector<std::pair<id_t, V>> LocalHolder<V, N>::spread(const id_t& k){
+	node_t& n=cont[k];
+	return opt->func(n);
+}
+
+// -------- others --------
+
+template <class V, class N>
+void LocalHolder<V, N>::update_priority(const node_t& n){
+	if(n.u != n.v){
+		scd->update(n.id, opt->priority(n));
+		++n_uncommitted;
+	}
+}
+
+template <class V, class N>
+void LocalHolder<V, N>::update_progress(const double old_p, const double new_p){
+	if(old_p == new_p)
+		return;
+	if(std::isinf(old_p)){
+		--progress_inf;
+	}else{
+		progress_value -= old_p;
+	}
+	if(std::isinf(new_p)){
+		++progress_inf;
+	}else{
+		progress_value += new_p;
+	}
+	++progress_changed;
+}
+
+// -------- update functions --------
+
 // merge all caches, the result is stored in <u>
 template <class V, class N>
 void LocalHolder<V, N>::_s_non_cb_general(const id_t& k){
@@ -438,33 +503,6 @@ void LocalHolder<V, N>::_s_non_cb_sel(const id_t& k){
 	n.b = bp;
 	update_priority(n);
 }
-// whether <u> is different from <v>
-template <class V, class N>
-bool LocalHolder<V, N>::need_commit(const id_t& k) const{
-	const node_t& n=cont[k];
-	return n.v == n.u;
-}
-// update <v> to <u>
-// GUARANTE: the priority of n is reset before calling commit()
-template <class V, class N>
-bool LocalHolder<V, N>::commit(const id_t& k){
-	node_t& n=cont[k];
-	if(n.v == n.u)
-		return false;
-	double oldp = tmt->progress(n);
-	n.v = n.u;
-	update_progress(oldp, tmt->progress(n));
-	return true;
-}
-// generate outgoing messages
-template <class V, class N>
-std::vector<std::pair<id_t, V>> LocalHolder<V, N>::spread(const id_t& k){
-	node_t& n=cont[k];
-	return opt->func(n);
-}
-
-
-// -------- incremental update functions --------
 
 // incremental update using recalculation
 template <class V, class N>
@@ -520,31 +558,4 @@ void LocalHolder<V, N>::_a_non_cb_sel(const id_t& from, const id_t& to, const va
 	// }
 	n.u = opt->oplus(n.u, m);
 	update_priority(n);
-}
-
-// -------- others --------
-
-template <class V, class N>
-void LocalHolder<V, N>::update_priority(const node_t& n){
-	if(n.u != n.v){
-		scd->update(n.id, opt->priority(n));
-		++n_uncommitted;
-	}
-}
-
-template <class V, class N>
-void LocalHolder<V, N>::update_progress(const double old_p, const double new_p){
-	if(old_p == new_p)
-		return;
-	if(std::isinf(old_p)){
-		--progress_inf;
-	}else{
-		progress_value -= old_p;
-	}
-	if(std::isinf(new_p)){
-		++progress_inf;
-	}else{
-		progress_value += new_p;
-	}
-	++progress_changed;
 }

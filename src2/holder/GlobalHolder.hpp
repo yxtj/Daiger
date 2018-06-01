@@ -267,11 +267,7 @@ std::unordered_map<int, std::string> GlobalHolder<V, N>::collectINCache(){
 
 template <class V, class N>
 void GlobalHolder<V, N>::local_update_cal(const id_t& from, const id_t& to, const value_t& v){
-	if(!cache_free)
-		local_part.cal_incremental(from, to, v);
-	else
-		// TODO: cache_free version
-		local_part.cal_incremental(from, to, v);
+	local_part.cal_incremental(from, to, v);
 }
 
 template <class V, class N>
