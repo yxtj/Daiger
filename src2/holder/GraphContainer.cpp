@@ -181,7 +181,7 @@ void GraphContainer::msgUpdate(const std::string& line){
 	holder->msgUpdate(line);
 }
 void GraphContainer::msgRequest(const std::string& line){
-	holder->msgReply(line);
+	holder->msgRequest(line);
 }
 void GraphContainer::msgReply(const std::string& line){
 	holder->msgReply(line);
