@@ -1,4 +1,5 @@
 set(HEADERS
+	LocalUpdater.hpp
 	LocalHolder.hpp
 	RemoteHolder.hpp
 	GlobalHolder.hpp

@@ -3,6 +3,7 @@
 #include "application/Operation.h"
 #include "application/Scheduler.h"
 #include "application/Terminator.h"
+#include "LocalUpdater.hpp"
 #include <vector>
 #include <unordered_map>
 #include <functional>
@@ -22,7 +23,7 @@ public:
 	using value_t = V; //typename node_t::value_t;
 	using neighbor_t = typename node_t::neighbor_t;
 	using neighbor_list_t = typename node_t::neighbor_list_t;
-	using sender_t = std::function<void(const int, std::string&)>;
+	using sender_req_t = std::function<void(const id_t&, const id_t&)>;
 
 	LocalHolder() = default;
 	void init(operation_t* opt, scheduler_t* scd, terminator_t* tmt, size_t n,
@@ -39,7 +40,7 @@ public:
 	bool empty() const;
 	size_t size() const;
 	void clear();
-	void registerRequestCallback(sender_t f);
+	void registerRequestCallback(sender_req_t f);
 
 	// enumerate nodes
 	void enum_rewind();
@@ -61,17 +62,23 @@ public:
 	bool modify_cache_val(const id_t& from, const id_t& to, const value_t& m);
 
 	// -------- key functions (assume every key exists) --------
-	void update_cache(const id_t& from, const id_t& to, const value_t& m); // update cache with received message
+	// update cache with received message
+	void update_cache(const id_t& from, const id_t& to, const value_t& m);
+	// merge all caches, the result is stored in <u>
 	void cal_general(const id_t& k)
-		{ (this->*f_update_general)(k); } // merge all caches, the result is stored in <u>
-	bool need_commit(const id_t& k) const; // whether <u> is different from <v>
-	bool commit(const id_t& k); // update <v> to <u>, update progress, REQUIRE: the priority of corresponding node is reset before calling commit()
-	std::vector<std::pair<id_t, value_t>> spread(const id_t& k); // generate outgoing messages
-
-	// -------- incremental update functions (assume every key exists, assume the cache is not updated yet) --------
+		//{ (this->*f_update_general)(k); }
+		{ plu->batch_update(cont[k]); }
+	// update <u> incrementally with <m> from <from> (assume every key exists)
 	void cal_incremental(const id_t& from, const id_t& to, const value_t& m)
-		{ (this->*f_update_incremental)(from, to, m); }
-
+		//{ (this->*f_update_incremental)(from, to, m); }
+		{ plu->d_incremental_update(from, cont[to], m); }
+	// whether <u> is different from <v>
+	bool need_commit(const id_t& k) const;
+	// update <v> to <u>, update progress, REQUIRE: the priority of corresponding node is reset before calling commit()
+	bool commit(const id_t& k);
+	// generate outgoing messages
+	std::vector<std::pair<id_t, value_t>> spread(const id_t& k);
+	
 	// -------- others --------
 	ProgressReport get_progress() const {
 		return ProgressReport{progress_value, progress_inf, progress_changed};
@@ -103,26 +110,24 @@ public:
 	void _a_inc_cb_general(const id_t& from, const id_t& to, const value_t& m); // incremental update using recalculate
 	void _a_inc_cb_acc(const id_t& from, const id_t& to, const value_t& m); // incremental update
 	void _a_inc_cb_sel(const id_t& from, const id_t& to, const value_t& m); // incremental update
-
-	// TODO: -------- cache-free version incremental update function --------
-	
 		
 private:
 	void update_priority(const node_t& n); // when n.u changes. ALSO update n_uncommitted
 	void update_progress(const double old_p, const double new_p); // when n.v changes
 
 private:
-	using f_update_general_t = void (LocalHolder::*)(const id_t&);
-	using f_update_incremental_t = void (LocalHolder::*)(const id_t&, const id_t&, const value_t&);
+	//using f_update_general_t = void (LocalHolder::*)(const id_t&);
+	//using f_update_incremental_t = void (LocalHolder::*)(const id_t&, const id_t&, const value_t&);
+	LocalUpdater<V, N>* plu;
 
 	operation_t* opt;
 	scheduler_t* scd;
 	terminator_t* tmt;
 	std::unordered_map<id_t, node_t> cont;
-	f_update_general_t f_update_general;
+	//f_update_general_t f_update_general;
 	//std::function<void(const id_t&, const id_t&, const value_t&)> f_update_incremental;
-	f_update_incremental_t f_update_incremental;
-	sender_t f_send_req;
+	//f_update_incremental_t f_update_incremental;
+	//sender_req_t f_send_req;
 
 	double progress_value; // summation of the non-infinity value
 	size_t progress_inf; // # of the infinity
@@ -155,20 +160,23 @@ void LocalHolder<V, N>::init(operation_t* opt, scheduler_t* scd, terminator_t* t
 
 template <class V, class N>
 void LocalHolder<V, N>::setUpdateFunction(bool incremental, bool async, bool cache_free){
+	plu = LocalUpdaterFactory<V, N>::gen(opt, cache_free);
+	plu->init(opt);
+	/*
 	if(incremental){
 		if(opt->is_accumulative()){
 			if(!cache_free){
 				f_update_general = &LocalHolder<V, N>::_s_non_cb_sel;
 				f_update_incremental = &LocalHolder<V, N>::_a_inc_cb_acc;
 			}else{
-				// TODO:
+				
 			}
 		}else if(opt->is_selective()){
 			if(!cache_free){
 				f_update_general = &LocalHolder<V, N>::_s_non_cb_sel;
 				f_update_incremental = &LocalHolder<V, N>::_a_inc_cb_sel;
 			}else{
-				// TODO:
+				
 			}
 		}else{
 			if(!cache_free){
@@ -180,13 +188,13 @@ void LocalHolder<V, N>::setUpdateFunction(bool incremental, bool async, bool cac
 		}
 	}else{
 		if(async){
-
 			f_update_general = &LocalHolder<V, N>::_s_non_cb_general;
 			f_update_incremental = &LocalHolder<V, N>::_a_inc_cb_general;
 		}else{
-			// TODO: add synchronous version
+			
 		}
 	}
+	*/
 	/*
 	if(opt->is_accumulative()){
 		f_update_general = &LocalHolder<V, N>::_s_non_cb_general;
@@ -261,8 +269,9 @@ void LocalHolder<V, N>::clear(){
 	cont.clear();
 }
 template <class V, class N>
-void LocalHolder<V, N>::registerRequestCallback(sender_t f){
-	f_send_req = f;
+void LocalHolder<V, N>::registerRequestCallback(sender_req_t f){
+	//f_send_req = f;
+	plu->registerRequestCallback(f);
 }
 
 template <class V, class N>

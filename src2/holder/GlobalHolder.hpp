@@ -195,7 +195,12 @@ void GlobalHolder<V, N>::intializedProcess(){
 template <class V, class N>
 void GlobalHolder<V, N>::prepareUpdate(sender_t f_req){
 	scd->ready();
-	local_part.registerRequestCallback(f_req);
+	//local_part.registerRequestCallback(f_req);
+	local_part.registerRequestCallback([=](const id_t& rf, const id_t& rt){
+		int pid = this->get_part(rt);
+		std::string msg = serialize<typename msg_t::VRequest_t>(std::make_pair(rf, rt));
+		f_req(pid, msg);
+	});
 }
 template <class V, class N>
 void GlobalHolder<V, N>::prepareCollectINCache(){
