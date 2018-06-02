@@ -28,4 +28,4 @@ struct AppBase {
 };
 
 AppBase makeApplication(const std::string& app_name, const std::vector<std::string>& arg_app, 
-	const std::vector<std::string>& arg_sharder, const std::vector<std::string>& arg_scheduler);
+	const std::vector<std::string>& arg_partitioner, const std::vector<std::string>& arg_scheduler);
