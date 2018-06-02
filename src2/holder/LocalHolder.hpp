@@ -124,6 +124,7 @@ private:
 	std::unordered_map<id_t, node_t> cont;
 	//f_update_general_t f_update_general;
 	//std::function<void(const id_t&, const id_t&, const value_t&)> f_update_incremental;
+	std::function<void(const id_t&, node_t&, const value_t&)> f_update_incremental;
 	//f_update_incremental_t f_update_incremental;
 	//sender_req_t f_send_req;
 
@@ -160,6 +161,15 @@ template <class V, class N>
 void LocalHolder<V, N>::setUpdateFunction(bool incremental, bool async, bool cache_free){
 	plu = LocalUpdaterFactory<V, N>::gen(opt, cache_free);
 	plu->init(opt);
+	if(incremental){
+		f_update_incremental = [&](const id_t& from, node_t& n, const value_t& m){
+			plu->d_incremental_update(from, n, m);
+		};
+	}else{
+		f_update_incremental = [&](const id_t& from, node_t& n, const value_t& m){
+			plu->s_incremental_update(from, n, m);
+		};
+	}
 	/*
 	if(incremental){
 		if(opt->is_accumulative()){
@@ -416,7 +426,8 @@ void LocalHolder<V, N>::cal_general(const id_t& k){
 template <class V, class N>
 void LocalHolder<V, N>::cal_incremental(const id_t& from, const id_t& to, const value_t& m){
 	node_t& n=cont[to];
-	plu->d_incremental_update(from, n, m);
+	//plu->d_incremental_update(from, n, m);
+	f_update_incremental(from, n, m);
 	update_priority(n);
 }
 // whether <u> is different from <v>
