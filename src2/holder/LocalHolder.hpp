@@ -72,7 +72,7 @@ public:
 		//{ (this->*f_update_incremental)(from, to, m); }
 	// whether <u> is different from <v>
 	bool need_commit(const id_t& k) const;
-	// update <v> to <u>, update progress, REQUIRE: the priority of corresponding node is reset before calling commit()
+	// update <v> to <u>, update progress, PRECONDITION: the priority of corresponding node is reset before calling commit()
 	bool commit(const id_t& k);
 	// generate outgoing messages
 	std::vector<std::pair<id_t, value_t>> spread(const id_t& k);
