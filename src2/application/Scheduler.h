@@ -16,6 +16,8 @@ public:
 	// make the scheduler ready to run (call after all nodes are registered)
 	virtual void ready() {}
 
+	// test whether there are any elements to top
+	virtual bool empty() const = 0;
 	// update/set the priority of a node
 	virtual void update(const id_t& k, const priority_t& p) = 0;
 	// get the node id with top priority
@@ -53,6 +55,7 @@ public:
 	virtual void init(const std::vector<std::string>& args);
 	virtual void regist(const id_t& k);
 
+	virtual bool empty() const;
 	virtual void update(const id_t& k, const priority_t& p);
 	virtual id_t top();
 	virtual void pop();
@@ -81,6 +84,7 @@ public:
 	virtual void init(const std::vector<std::string>& args);
 	virtual void ready();
 
+	virtual bool empty() const;
 	virtual void update(const id_t& k, const priority_t& p);
 	virtual id_t top();
 	virtual void pop();
@@ -109,7 +113,8 @@ public:
 
 	virtual void init(const std::vector<std::string>& args);
 	virtual void ready();
-
+	
+	virtual bool empty() const;
 	virtual void update(const id_t& k, const priority_t& p);
 	virtual id_t top();
 	virtual void pop();

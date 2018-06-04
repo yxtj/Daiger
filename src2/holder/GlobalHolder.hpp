@@ -146,11 +146,13 @@ void GlobalHolder<V, N>::addDummyNodes(){
 		if(p.type == DummyNodeType::NORMAL){
 			// only add to its owner worker
 			if(is_local_id(id)){
+				scd->regist(id);
 				local_part.add(std::move(p.node));
 				local_part.modify_onb_via_fun_all(id, p.func);
 			}
 		}else if(p.type == DummyNodeType::TO_ALL){
 			// add to all workers, and each one only connects to its local nodes
+			scd->regist(id);
 			local_part.add(std::move(p.node));
 			local_part.modify_onb_via_fun_all(id, p.func);
 		}
@@ -291,7 +293,8 @@ void GlobalHolder<V, N>::msgReply(const std::string& line){
 
 template <class V, class N>
 bool GlobalHolder<V, N>::needApply(){
-	return !applying && local_part.has_uncommitted();
+	return !applying && !scd->empty();
+		//local_part.has_uncommitted();
 }
 template <class V, class N>
 void GlobalHolder<V, N>::doApply(){
@@ -301,6 +304,8 @@ void GlobalHolder<V, N>::doApply(){
 		#ifndef NDEBUG
 		const node_t& n = local_part.get(id);
 		DVLOG(3)<<"k="<<n.id<<" v="<<n.v<<" u="<<n.u<<" cache="<<n.cs;
+		auto pgs = local_part.get_progress();
+		DVLOG(3)<<"progress=("<<pgs.sum<<","<<pgs.n_inf<<","<<pgs.n_change<<") update="<<local_part.get_n_uncommitted();
 		#endif
 		if(!local_part.commit(id))
 			continue;

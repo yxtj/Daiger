@@ -31,6 +31,9 @@ void SchedulerRoundRobin::regist(const id_t& k){
 	data.push_back(k);
 }
 
+bool SchedulerRoundRobin::empty() const {
+	return data.empty();
+}
 void SchedulerRoundRobin::update(const id_t& k, const priority_t& p){
 }
 id_t SchedulerRoundRobin::top(){
@@ -143,6 +146,9 @@ void SchedulerPriority::ready(){
 	n_each_pick = max<size_t>(1, n_each_pick);
 }
 
+bool SchedulerPriority::empty() const {
+	return data->empty();
+}
 void SchedulerPriority::update(const id_t& k, const priority_t& p){
 	data->update(k, p);
 }
@@ -220,6 +226,9 @@ void SchedulerFIFO::ready(){
 	data->reserve(nNode);
 }
 
+bool SchedulerFIFO::empty() const {
+	return data->empty();
+}
 void SchedulerFIFO::update(const id_t& k, const priority_t& p){
 	data->update(k, p);
 }
