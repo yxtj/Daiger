@@ -53,7 +53,7 @@ void Worker::storeWorkerInfo(const std::vector<std::pair<int, int>>& winfo){
 	for(auto& p : winfo){
 		wm.register_worker(p.first, p.second);
 	}
-	LOG(INFO)<<"worker information received";
+	LOG(INFO)<<"Worker information received";
 	su_winfo.notify();
 }
 
@@ -62,7 +62,7 @@ void Worker::procedureInit(){
 	// notified by handleWorkers() via storeWorkerInfo()
 	su_winfo.wait();
 	graph.init(wm.nid2wid(my_net_id), app.gh, opt.do_incremental);
-	LOG(INFO)<<"graph initialized";
+	LOG(INFO)<<"Graph initialized";
 }
 
 void Worker::procedureLoadGraph(){
@@ -71,7 +71,7 @@ void Worker::procedureLoadGraph(){
 			net->send(wm.wid2nid(wid), MType::GNode, move(msg));
 		};
 	setLogThreadName(log_name+"-PLG");
-	VLOG(1)<<"worker start loading graph";
+	VLOG(1)<<"Worker start loading graph";
 	graph.loadGraph(sender);
 }
 
@@ -81,7 +81,7 @@ void Worker::procedureLoadValue(){
 			net->send(wm.wid2nid(wid), MType::GValue, move(msg));
 		};
 	setLogThreadName(log_name+"-PLV");
-	VLOG(1)<<"worker start loading value";
+	VLOG(1)<<"Worker start loading value";
 	graph.loadValue(sender);
 }
 
@@ -91,7 +91,7 @@ void Worker::procedureLoadDelta(){
 			net->send(wm.wid2nid(wid), MType::GDelta, move(msg));
 		};
 	setLogThreadName(log_name+"-PLD");
-	VLOG(1)<<"worker start loading delta";
+	VLOG(1)<<"Worker start loading delta";
 	graph.loadDelta(sender);
 }
 
@@ -101,13 +101,13 @@ void Worker::procedureBuildINCache(){
 			net->send(wm.wid2nid(wid), MType::GINCache, move(msg));
 		};
 	setLogThreadName(log_name+"-BIC");
-	VLOG(1)<<"worker start building in-neighbor cache";
+	VLOG(1)<<"Worker start building in-neighbor cache";
 	graph.buildINCache(sender);
 }
 
 void Worker::procedureGenIncrInitMsg(){
 	setLogThreadName(log_name+"-GIM");
-	VLOG(1)<<"worker start generating initial incremental messages";
+	VLOG(1)<<"Worker start generating initial incremental messages";
 	graph.genIncrInitMsg();
 }
 
@@ -133,7 +133,7 @@ void Worker::procedureUpdate(){
 			net->send(master_net_id, MType::PReport, move(msg));
 		};
 	setLogThreadName(log_name+"-PU");
-	VLOG(1)<<"worker start updating";
+	VLOG(1)<<"Worker start updating";
 	graph.prepareUpdate(sender_val, sender_req, sender_pro);
 
 	// start periodic apply-and-send and periodic progress-report
@@ -153,6 +153,7 @@ void Worker::procedureUpdate(){
 	driver.pushData("", info);
 	while(!update_finish){
 		if(!su_update.wait_for(interval)){ // wake up by timeout
+			su_update.reset();
 			if(!update_finish && last_apply.elapseMS() > ams){
 				last_apply.restart();
 				info.tag = MType::PApply;
@@ -169,6 +170,7 @@ void Worker::procedureUpdate(){
 				driver.pushData("", info);
 			}
 		}else{ // wake up by termination singal
+			LOG(INFO)<<"Force finish updating by master";
 			break;
 		}
 	}
@@ -176,7 +178,7 @@ void Worker::procedureUpdate(){
 
 void Worker::procedureDumpResult(){
 	setLogThreadName(log_name+"-PDR");
-	VLOG(1)<<"worker start dumping result";
+	VLOG(1)<<"Worker start dumping result";
 	graph.dumpResult();
 }
 

@@ -50,6 +50,7 @@ int Master::assignWid(const int nid){
 void Master::terminationCheck(){
 	while(!app.tmt->check_term()){
 		su_term.wait();
+		su_term.reset();
 	}
 	VLOG(1)<<"update terminates";
 	net->broadcast(MType::PFinish, my_net_id);

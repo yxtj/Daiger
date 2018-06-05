@@ -12,7 +12,9 @@ struct LocalUpdater {
 	// update on a static graph for incremental input
 	virtual void s_incremental_update(const id_t& from, Node<V, N>& n, const V& m) = 0;
 	// update on a dynamic graph for incremental input
-	virtual void d_incremental_update(const id_t& from, Node<V, N>& n, const V& m) = 0;
+	virtual void d_incremental_update(const id_t& from, Node<V, N>& n, const V& m){
+		return this->s_incremental_update(from, n, m);
+	}
 	virtual bool need_commit(const Node<V, N>& n){
 		return n.v != n.u;
 	}
@@ -45,17 +47,13 @@ struct LuCbGen : public LuCacheBased<V, N>{
 	}
 	virtual void s_incremental_update(const id_t& from, Node<V, N>& n, const V& m){
 		n.cs[from] = m;
-		n.u = this->opt->oplus(n.u, m);
-	}
-	virtual void d_incremental_update(const id_t& from, Node<V, N>& n, const V& m){
-		n.cs[from] = m;
 		return batch_update(n);
 	}
 };
 // Accumulative operator, Cache-based
 template <class V, class N>
 struct LuCbAcc : public LuCbGen<V, N>{
-	virtual void d_incremental_update(const id_t& from, Node<V, N>& n, const V& m){
+	virtual void s_incremental_update(const id_t& from, Node<V, N>& n, const V& m){
 		n.u = this->opt->oplus(this->opt->ominus(n.u, n.cs[from]), m);
 		n.cs[from] = m;
 	}
@@ -104,7 +102,7 @@ struct LuCfGen : public LuCbGen<V, N>{};
 // Accumulative operator, Cache-free
 template <class V, class N>
 struct LuCfAcc : public LuCbAcc<V, N>{
-	virtual void d_incremental_update(const id_t& from, Node<V, N>& n, const V& m){
+	virtual void s_incremental_update(const id_t& from, Node<V, N>& n, const V& m){
 		n.u = this->opt->oplus(n.u, m);
 	}
 	virtual bool need_commit(const Node<V, N>& n){
