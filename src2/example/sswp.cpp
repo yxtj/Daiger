@@ -7,7 +7,7 @@
 
 using namespace std;
 
-const std::string WidestPath::name("sssp");
+const std::string WidestPath::name("sswp");
 
 std::string WidestPath::getName() const {
 	return name;
