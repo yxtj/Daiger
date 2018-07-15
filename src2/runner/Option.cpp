@@ -66,9 +66,6 @@ bool Option::parseInput(int argc, char* argv[]) {
 		boost::program_options::store(p, vm);
 		boost::program_options::notify(vm);
 
-		delete pimpl;
-		pimpl = nullptr;
-
 		if(vm.count("help")) {
 			flag_help = true;
 		}
@@ -122,6 +119,9 @@ bool Option::parseInput(int argc, char* argv[]) {
 		cerr << pimpl->desc << endl;
 		return false;
 	}
+	// clear pimpl to save memory and copy time
+	delete pimpl;
+	pimpl = nullptr;
 	return true;
 }
 
