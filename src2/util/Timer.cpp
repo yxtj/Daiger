@@ -26,6 +26,12 @@ int Timer::elapseS() const
 		chrono::system_clock::now() - _time).count();
 }
 
+double Timer::elapseSd() const
+{
+	return chrono::duration_cast<chrono::duration<double>>(
+		chrono::system_clock::now() - _time).count();
+}
+
 double Timer::elapseMin() const
 {
 	chrono::duration<double, ratio<60> > passed = chrono::system_clock::now() - _time;

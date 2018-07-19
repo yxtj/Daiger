@@ -89,6 +89,7 @@ void Master::startProcedure(const int pid){
 	// net->broadcast(MType::CClear, my_net_id);
 	// su_procedure.wait();
 
+	tmr_procedure.restart();
 	DLOG(INFO)<<"starting new procedure: "<<pid;
 	rph.resetTypeCondition(MType::CProcedure);
 	su_procedure.reset();
@@ -104,6 +105,7 @@ void Master::finishProcedure(const int pid){
 	net->broadcast(MType::CFinish, my_net_id);
 	su_procedure.wait();
 	DLOG(INFO)<<"finished procedure: "<<pid;
+	LOG(INFO)<<"Time used: "<<tmr_procedure.elapseSd();
 }
 
 void Master::procedureInit(){
@@ -125,48 +127,48 @@ void Master::procedureInit(){
 
 void Master::procedureLoadGraph(){
 	cpid = ProcedureType::LoadGraph;
-	startProcedure(cpid);
 	LOG(INFO)<<"Starting loading graph.";
+	startProcedure(cpid);
 	finishProcedure(cpid);
 	LOG(INFO)<<"Finish loading graph.";
 }
 
 void Master::procedureLoadValue(){
 	cpid = ProcedureType::LoadValue;
-	startProcedure(cpid);
 	LOG(INFO)<<"Starting loading value.";
+	startProcedure(cpid);
 	finishProcedure(cpid);
 	LOG(INFO)<<"Finish loading value.";
 }
 
 void Master::procedureLoadDelta(){
 	cpid = ProcedureType::LoadDelta;
-	startProcedure(cpid);
 	LOG(INFO)<<"Starting loading delta.";
+	startProcedure(cpid);
 	finishProcedure(cpid);
 	LOG(INFO)<<"Finish loading delta.";
 }
 
 void Master::procedureBuildINCache(){
 	cpid = ProcedureType::BuildINCache;
-	startProcedure(cpid);
 	LOG(INFO)<<"Starting building in-neighbor cache.";
+	startProcedure(cpid);
 	finishProcedure(cpid);
 	LOG(INFO)<<"Finish building in-neighbor cache.";
 }
 
 void Master::procedureGenIncrInitMsg(){
 	cpid = ProcedureType::GenIncrInitMsg;
-	startProcedure(cpid);
 	LOG(INFO)<<"Starting generating initial incremental messages.";
+	startProcedure(cpid);
 	finishProcedure(cpid);
 	LOG(INFO)<<"Finish generating initial incremental messages.";
 }
 
 void Master::procedureUpdate(){
 	cpid = ProcedureType::Update;
-	startProcedure(cpid);
 	LOG(INFO)<<"Starting updating.";
+	startProcedure(cpid);
 	terminationCheck();
 	finishProcedure(cpid);
 	LOG(INFO)<<"Finish updating.";
@@ -174,8 +176,8 @@ void Master::procedureUpdate(){
 
 void Master::procedureDumpResult(){
 	cpid = ProcedureType::DumpResult;
-	startProcedure(cpid);
 	LOG(INFO)<<"Starting damping.";
+	startProcedure(cpid);
 	finishProcedure(cpid);
 	LOG(INFO)<<"Finish damping.";
 }

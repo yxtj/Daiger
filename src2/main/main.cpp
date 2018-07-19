@@ -6,6 +6,7 @@
 #include "runner/Master.h"
 #include "runner/Worker.h"
 #include "logging/logging.h"
+#include "util/Timer.h"
 #include <iostream>
 #include <string>
 
@@ -24,6 +25,7 @@ ostream& operator<<(ostream& os, const vector<T>& vec){
 //INITIALIZE_EASYLOGGINGPP
 
 int main(int argc, char* argv[]){
+	Timer tmr;
 	// init option
 	Option opt;
 	if(!opt.parseInput(argc, argv)){
@@ -103,6 +105,10 @@ int main(int argc, char* argv[]){
 	}
 
 	app.clear();
+	if(net->id()==0){
+		LOG(INFO)<<"Total Time used: "<<tmr.elapseSd();
+	}
+	// this should be the last one, because it invalids the pointer net.
 	NetworkThread::Terminate();
 	return 0;
 }

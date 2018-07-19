@@ -2,6 +2,7 @@
 #include "Runner.h"
 #include "driver/tools/SyncUnit.h"
 #include "runner_helpers.h"
+#include "util/Timer.h"
 #include <string>
 
 class NetworkThread;
@@ -60,4 +61,5 @@ private:
 	SyncUnit su_term;
 	SyncUnit su_clear;
 
+	Timer tmr_procedure;
 };
