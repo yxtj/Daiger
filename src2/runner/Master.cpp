@@ -51,6 +51,12 @@ void Master::terminationCheck(){
 	while(!app.tmt->check_term()){
 		su_term.wait();
 		su_term.reset();
+		if(VLOG_IS_ON(1)){
+			auto s = app.tmt->state();
+			auto d = app.tmt->difference();
+			VLOG(1)<<"current progress: ("<<s.first<<","<<s.second<<") improvement: ("
+				<<d.first<<","<<d.second<<")";
+		}
 	}
 	VLOG(1)<<"update terminates";
 	net->broadcast(MType::PFinish, my_net_id);

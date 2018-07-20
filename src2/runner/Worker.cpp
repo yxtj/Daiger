@@ -112,6 +112,7 @@ void Worker::procedureGenIncrInitMsg(){
 }
 
 void Worker::reportProgress(){
+	VLOG(2)<<"sending progress report";
 	graph.reportProgress();
 }
 
