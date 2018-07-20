@@ -30,6 +30,9 @@ public:
 	virtual void update_report(const size_t wid, const ProgressReport& report);
 	// check whether to terminate via progress reports, default: no-one changed;
 	virtual bool check_term() = 0;
+	// get the progress state & improvement over the last report
+	std::pair<double, size_t> state();
+	virtual std::pair<double, size_t> difference() = 0;
 	// get the current global progress value
 	virtual double global_progress() { return helper_global_progress_sum(); }
 
@@ -39,9 +42,7 @@ protected:
 	static bool helper_no_change(const std::vector<ProgressReport>& reports);
 
 	std::vector<ProgressReport> curr;
-	double sum_gp; // sum global progress
-	size_t sum_gi; // sum global number of infinity
-	size_t sum_gc; // sum global number of changes
+	ProgressReport sum; // summary of all elements in curr (by accumulating)
 };
 
 // get the progress of a single node, return INF for special nodes/values
@@ -94,10 +95,11 @@ public:
 	virtual void prepare_global_checker(const size_t n_worker);
 	virtual void update_report(const size_t wid, const ProgressReport& report);
 	virtual bool check_term();
+	virtual std::pair<double, size_t> difference();
 	
 private:
-	std::vector<size_t> last;
-	size_t sum_gc_last;
+	std::vector<ProgressReport> last;
+	ProgressReport sum_last;
 	bool untouched;
 };
 
@@ -116,6 +118,7 @@ public:
 	virtual void prepare_global_checker(const size_t n_worker);
 	virtual void update_report(const size_t wid, const ProgressReport& report);
 	virtual bool check_term();
+	virtual std::pair<double, size_t> difference();
 	
 private:
 	std::vector<std::pair<double, size_t>> last; // sum, n_inf
