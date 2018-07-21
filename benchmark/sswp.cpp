@@ -177,7 +177,7 @@ int main(int argc, char* argv[]){
 	// dump
 	cout<<"dumping SSWP"<<endl;
 	start_t = chrono::system_clock::now();
-	if(!general_dump(outprefix, "value-", parts, wp)){
+	if(!general_dump(outprefix, "value-", parts, wp, true)){
 		cerr<<"Error: cannot write to given file(s)"<<endl;
 		return 4;
 	}

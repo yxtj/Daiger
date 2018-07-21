@@ -107,7 +107,7 @@ int main(int argc, char* argv[]){
 	// dump
 	cout<<"dumping"<<endl;
 	start_t = chrono::system_clock::now();
-	if(!general_dump(outprefix, "value-", parts, res)){
+	if(!general_dump(outprefix, "value-", parts, res, true)){
 		cerr<<"Error: cannot write to given file(s)"<<endl;
 		return 4;
 	}
