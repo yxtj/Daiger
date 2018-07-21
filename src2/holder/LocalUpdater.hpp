@@ -157,9 +157,9 @@ LocalUpdater<V, N>* LocalUpdaterFactory<V, N>::gen(Operation<V, N>* opt, const b
 			p = new LuCbSel<V, N>();
 	}else{
 		if(cache_free)
-			p = new LuCbGen<V, N>();
-		else
 			p = new LuCfGen<V, N>();
+		else
+			p = new LuCbGen<V, N>();
 	}
 	return p;
 }
