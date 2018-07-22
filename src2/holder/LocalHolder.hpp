@@ -40,6 +40,7 @@ public:
 	bool empty() const;
 	size_t size() const;
 	void clear();
+	void update_value(const id_t& k, const value_t& v);
 	void registerRequestCallback(sender_req_t f);
 
 	// enumerate nodes
@@ -275,6 +276,15 @@ size_t LocalHolder<V, N>::size() const{
 template <class V, class N>
 void LocalHolder<V, N>::clear(){
 	cont.clear();
+}
+template <class V, class N>
+void LocalHolder<V, N>::update_value(const id_t& k, const value_t& v){
+	node_t& n = get(k);
+	if(n.v != v){
+		double oldp = tmt->progress(n);
+		n.v = v;
+		update_progress(oldp, tmt->progress(n));
+	}
 }
 template <class V, class N>
 void LocalHolder<V, N>::registerRequestCallback(sender_req_t f){

@@ -165,8 +165,7 @@ int GlobalHolder<V, N>::loadValue(const std::string& line){
 	int pid = get_part(d.first);
 	if(!is_local_part(pid))
 		return pid;
-	node_t& n = get_node(d.first);
-	n.v = d.second;
+	local_part.update_value(d.first, d.second);
 	return pid;
 }
 
