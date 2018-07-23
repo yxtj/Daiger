@@ -12,7 +12,7 @@ enum ProcedureType : int {
 	LoadValue = 2,
 	LoadDelta = 3,
 	BuildINCache = 4,
-	GenIncrInitMsg = 5,
+	GenInitMsg = 5,
 	Update = 6,
 	DumpResult = 7
 };

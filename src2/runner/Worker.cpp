@@ -105,10 +105,10 @@ void Worker::procedureBuildINCache(){
 	graph.buildINCache(sender);
 }
 
-void Worker::procedureGenIncrInitMsg(){
+void Worker::procedureGenInitMsg(){
 	setLogThreadName(log_name+"-GIM");
-	VLOG(1)<<"Worker start generating initial incremental messages";
-	graph.genIncrInitMsg();
+	VLOG(1)<<"Worker start generating initial messages";
+	graph.genInitMsg();
 }
 
 void Worker::reportProgress(){

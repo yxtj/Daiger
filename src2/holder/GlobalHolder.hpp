@@ -59,6 +59,10 @@ public:
 	virtual std::string collectLocalProgress();
 
 private:
+	void intializedProcessNormal();
+	void intializedProcessOnDelta();
+
+private:
 	int get_part(const id_t id){
 		return ptn->owner(id);
 	};
@@ -91,6 +95,9 @@ private:
 	int pointer_dump;
 	bool applying;
 	bool sending;
+
+ 	// used for incremental case, store the source nodes of delta edges
+	std::vector<id_t>* changed_sources; // new at init(), delete at intializedProcessOnDelta()
 };
 
 template <class V, class N>
@@ -121,6 +128,9 @@ void GlobalHolder<V, N>::init(OperationBase* opt, IOHandlerBase* ioh,
 		remote_parts[i].init(this->opt);
 	}
 	applying = false;
+
+	if(incremental)
+		changed_sources = new std::vector<id_t>();
 }
 
 template <class V, class N>
@@ -182,15 +192,50 @@ int GlobalHolder<V, N>::loadDelta(const std::string& line){
 	}else{
 		local_part.modify_onb_val(d.src, d.dst);
 	}
+	changed_sources->push_back(d.src);
 	return pid;
 }
 
 template <class V, class N>
 void GlobalHolder<V, N>::intializedProcess(){
+	if(!incremental){
+		intializedProcessNormal();
+	}else{
+		intializedProcessOnDelta();
+	}
+}
+
+template <class V, class N>
+void GlobalHolder<V, N>::intializedProcessNormal(){
 	local_part.enum_rewind();
 	for(const node_t* p = local_part.enum_next(true); p != nullptr; p = local_part.enum_next(true)){
 		local_part.cal_general(p->id);
 	}
+}
+
+template <class V, class N>
+void GlobalHolder<V, N>::intializedProcessOnDelta(){
+	std::sort(changed_sources->begin(), changed_sources->end());
+	bool is_first = true;
+	id_t last = 0;
+	for(const id_t& id : *changed_sources){
+		if(is_first || last != id){
+			last = id;
+			// do an update
+			std::vector<std::pair<id_t, value_t>> data = local_part.spread(id);
+			for(auto& p : data){
+				int pid = get_part(p.first);
+				if(is_local_part(pid)){
+					local_update_cal(id, p.first, p.second);
+				}else{
+					remote_parts[pid].update(id, p.first, p.second);
+				}
+			}
+		}
+		is_first = false;
+	}
+	delete changed_sources;
+	changed_sources = nullptr;
 }
 
 template <class V, class N>

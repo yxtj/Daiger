@@ -19,7 +19,7 @@ public:
 	void loadValue(sender_t sender = {});
 	void loadDelta(sender_t sender = {});
 	void buildINCache(sender_t sender);
-	void genIncrInitMsg();
+	void genInitMsg();
 	void prepareUpdate(sender_t sender_val, sender_t sender_req, sender0_t sender_pro);
 	void dumpResult();
 

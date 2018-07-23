@@ -99,7 +99,7 @@ void GraphContainer::buildINCache(sender_t sender){
 	}
 }
 
-void GraphContainer::genIncrInitMsg(){
+void GraphContainer::genInitMsg(){
 	holder->intializedProcess();
 }
 

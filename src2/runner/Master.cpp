@@ -28,9 +28,9 @@ void Master::run() {
         procedureLoadDelta();
 		if(!opt.conf.cache_free){
 			procedureBuildINCache();
-			procedureGenIncrInitMsg();
 		}
-    }
+	}
+	procedureGenInitMsg();
     procedureUpdate();
     if (opt.do_output) {
         procedureDumpResult();
@@ -163,12 +163,12 @@ void Master::procedureBuildINCache(){
 	LOG(INFO)<<"Finish building in-neighbor cache.";
 }
 
-void Master::procedureGenIncrInitMsg(){
-	cpid = ProcedureType::GenIncrInitMsg;
-	LOG(INFO)<<"Starting generating initial incremental messages.";
+void Master::procedureGenInitMsg(){
+	cpid = ProcedureType::GenInitMsg;
+	LOG(INFO)<<"Starting generating initial messages.";
 	startProcedure(cpid);
 	finishProcedure(cpid);
-	LOG(INFO)<<"Finish generating initial incremental messages.";
+	LOG(INFO)<<"Finish generating initial messages.";
 }
 
 void Master::procedureUpdate(){
