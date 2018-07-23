@@ -40,8 +40,9 @@ public:
 	bool empty() const;
 	size_t size() const;
 	void clear();
-	void update_value(const id_t& k, const value_t& v);
 	void registerRequestCallback(sender_req_t f);
+
+	void init_value(const id_t& k, const value_t& v); // used for loading value
 
 	// enumerate nodes
 	void enum_rewind();
@@ -122,6 +123,7 @@ private:
 	operation_t* opt;
 	scheduler_t* scd;
 	terminator_t* tmt;
+	bool cache_free;
 	std::unordered_map<id_t, node_t> cont;
 	//f_update_general_t f_update_general;
 	//std::function<void(const id_t&, const id_t&, const value_t&)> f_update_incremental;
@@ -148,6 +150,7 @@ void LocalHolder<V, N>::init(operation_t* opt, scheduler_t* scd, terminator_t* t
 	this->opt = opt;
 	this->scd = scd;
 	this->tmt = tmt;
+	this->cache_free = cache_free;
 	progress_value = 0.0;
 	progress_inf = 0;
 	progress_changed = 0;
@@ -278,18 +281,29 @@ void LocalHolder<V, N>::clear(){
 	cont.clear();
 }
 template <class V, class N>
-void LocalHolder<V, N>::update_value(const id_t& k, const value_t& v){
+void LocalHolder<V, N>::registerRequestCallback(sender_req_t f){
+	//f_send_req = f;
+	plu->registerRequestCallback(f);
+}
+
+template <class V, class N>
+void LocalHolder<V, N>::init_value(const id_t& k, const value_t& v){
 	node_t& n = get(k);
 	if(n.v != v){
 		double oldp = tmt->progress(n);
 		n.v = v;
 		update_progress(oldp, tmt->progress(n));
 	}
-}
-template <class V, class N>
-void LocalHolder<V, N>::registerRequestCallback(sender_req_t f){
-	//f_send_req = f;
-	plu->registerRequestCallback(f);
+	if(!cache_free){
+		n.u = v;
+	}else{
+		if(opt->is_selective()){
+			n.u = v;
+		}else if(opt->is_accumulative()){
+			n.u = opt->identity_element();
+		}
+	}
+	update_priority(n);
 }
 
 template <class V, class N>
