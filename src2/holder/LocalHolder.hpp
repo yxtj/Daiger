@@ -450,7 +450,6 @@ void LocalHolder<V, N>::cal_general(const id_t& k){
 template <class V, class N>
 void LocalHolder<V, N>::cal_incremental(const id_t& from, const id_t& to, const value_t& m){
 	node_t& n=cont[to];
-	//plu->d_incremental_update(from, n, m);
 	f_update_incremental(from, n, m);
 	update_priority(n);
 }
@@ -483,7 +482,7 @@ std::vector<std::pair<id_t, V>> LocalHolder<V, N>::spread(const id_t& k){
 
 template <class V, class N>
 void LocalHolder<V, N>::update_priority(const node_t& n){
-	if(n.u != n.v){
+	if(plu->need_commit(n)){
 		scd->update(n.id, opt->priority(n));
 		++n_uncommitted;
 	}
