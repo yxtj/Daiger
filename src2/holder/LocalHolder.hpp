@@ -313,7 +313,7 @@ void LocalHolder<V, N>::enum_rewind(){
 template <class V, class N>
 const typename LocalHolder<V, N>::node_t* LocalHolder<V, N>::enum_next(const bool with_dummy){
 	const node_t* p = nullptr;
-	while(with_dummy && enum_it != cont.cend() && opt->is_dummy_node(enum_it->first)){
+	while(!with_dummy && enum_it != cont.cend() && opt->is_dummy_node(enum_it->first)){
 		++enum_it;
 	}
 	if(enum_it != cont.cend()){
