@@ -78,6 +78,9 @@ public:
 	bool commit(const id_t& k);
 	// generate outgoing messages
 	std::vector<std::pair<id_t, value_t>> spread(const id_t& k);
+
+	std::vector<std::pair<id_t, value_t>> spread_general(const id_t& k);
+	std::vector<std::pair<id_t, value_t>> spread_acf(const id_t& k);
 	
 	// -------- others --------
 	ProgressReport get_progress() const {
@@ -130,6 +133,7 @@ private:
 	std::function<void(const id_t&, node_t&, const value_t&)> f_update_incremental;
 	//f_update_incremental_t f_update_incremental;
 	//sender_req_t f_send_req;
+	std::function<std::vector<std::pair<id_t, value_t>>(const id_t&)> f_spread;
 
 	double progress_value; // summation of the non-infinity value
 	size_t progress_inf; // # of the infinity
@@ -172,6 +176,15 @@ void LocalHolder<V, N>::setUpdateFunction(bool incremental, bool async, bool cac
 	}else{
 		f_update_incremental = [&](const id_t& from, node_t& n, const value_t& m){
 			plu->s_incremental_update(from, n, m);
+		};
+	}
+	if(cache_free && opt->is_accumulative()){
+		f_spread = [&](const id_t& k){
+			return this->spread_acf(k);
+		};
+	}else{
+		f_spread = [&](const id_t& k){
+			return this->spread_general(k);
 		};
 	}
 	/*
@@ -474,8 +487,23 @@ bool LocalHolder<V, N>::commit(const id_t& k){
 // generate outgoing messages
 template <class V, class N>
 std::vector<std::pair<id_t, V>> LocalHolder<V, N>::spread(const id_t& k){
+	return f_spread(k);
+}
+// general version
+template <class V, class N>
+std::vector<std::pair<id_t, V>> LocalHolder<V, N>::spread_general(const id_t& k){
 	node_t& n=cont[k];
 	return opt->func(n);
+}
+// accumulative operators under cache-free mode
+template <class V, class N>
+std::vector<std::pair<id_t, V>> LocalHolder<V, N>::spread_acf(const id_t& k){
+	node_t& n=cont[k];
+	V t = n.v;
+	n.v = n.u;
+	auto res = opt->func(n);
+	n.v = t;
+	return res;
 }
 
 // -------- others --------
