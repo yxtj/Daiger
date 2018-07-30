@@ -63,6 +63,8 @@ private:
 	void intializedProcessOnDelta();
 
 	void processNode(const id_t id);
+	void processNode_general(const id_t id);
+	void processNode_acf(const id_t id);
 
 private:
 	int get_part(const id_t id){
@@ -74,7 +76,7 @@ private:
 
 	void add_local_node(id_t& id, neighbor_list_t& nl);
 
-	void local_update_cal(const id_t& from, const id_t& to, const value_t& v);
+	void update_cal(const id_t& from, const id_t& to, const value_t& v);
 
 private:
 	operation_t* opt;
@@ -97,6 +99,10 @@ private:
 	int pointer_dump;
 	bool applying;
 	bool sending;
+
+	//std::function<void(const id_t)> pf_processNode;
+	using pf_pn_t = void (GlobalHolder<V, N>::*)(const id_t);
+	pf_pn_t pf_processNode; // do not need to make related functions public
 
  	// used for incremental case, store the source nodes of delta edges
 	std::vector<id_t>* changed_sources; // new at init(), delete at intializedProcessOnDelta()
@@ -133,6 +139,13 @@ void GlobalHolder<V, N>::init(OperationBase* opt, IOHandlerBase* ioh,
 
 	if(incremental)
 		changed_sources = new std::vector<id_t>();
+	if(cache_free && this->opt->is_accumulative()){
+		// std::bind(&GlobalHolder::processNode_acf, this, std::placeholders::_1);
+		pf_processNode = &GlobalHolder<V, N>::processNode_acf;
+	}else{
+		// std::bind(&GlobalHolder::processNode_general, this, std::placeholders::_1);
+		pf_processNode = &GlobalHolder<V, N>::processNode_general;
+	}
 }
 
 template <class V, class N>
@@ -210,7 +223,9 @@ void GlobalHolder<V, N>::intializedProcess(){
 template <class V, class N>
 void GlobalHolder<V, N>::intializedProcessNormal(){
 	local_part.enum_rewind();
-	for(const node_t* p = local_part.enum_next(true); p != nullptr; p = local_part.enum_next(true)){
+	for(const node_t* p = local_part.enum_next(true);
+		p != nullptr; p = local_part.enum_next(true))
+	{
 		if(cache_free){
 			scd->update(p->id, opt->priority(local_part.get(p->id)));
 		}else{
@@ -289,7 +304,9 @@ std::unordered_map<int, std::string> GlobalHolder<V, N>::collectINCache(){
 	std::unordered_map<int, typename msg_t::MsgGINCache_t> msgs;
 	size_t bs = 0;
 	msgs.reserve(nPart);
-	for(const node_t* p = local_part.enum_next(true); bs < send_batch_size && p != nullptr; p = local_part.enum_next(true)){
+	for(const node_t* p = local_part.enum_next(true);
+		bs < send_batch_size && p != nullptr; p = local_part.enum_next(true))
+	{
 		for(auto& nb : p->onb){
 			id_t dst = get_key(nb);
 			int pid = get_part(dst);
@@ -316,7 +333,7 @@ template <class V, class N>
 void GlobalHolder<V, N>::msgUpdate(const std::string& line){
 	auto ms = deserialize<typename msg_t::MsgVUpdate_t>(line);
 	for(typename msg_t::VUpdate_t& m : ms) {
-		local_update_cal(std::get<0>(m), std::get<1>(m), std::get<2>(m));
+		local_part.cal_incremental(std::get<0>(m), std::get<1>(m), std::get<2>(m));
 	}
 }
 template <class V, class N>
@@ -332,9 +349,15 @@ void GlobalHolder<V, N>::msgReply(const std::string& line){
 }
 
 template <class V, class N>
-void GlobalHolder<V, N>::local_update_cal(const id_t& from, const id_t& to, const value_t& v){
-	local_part.cal_incremental(from, to, v);
+void GlobalHolder<V, N>::update_cal(const id_t& from, const id_t& to, const value_t& v){
+	int pid = get_part(to);
+	if(is_local_part(pid)){
+		local_part.cal_incremental(from, to, v);
+	}else{
+		remote_parts[pid].update(from, to, v);
+	}
 }
+
 template <class V, class N>
 void GlobalHolder<V, N>::processNode(const id_t id){
 	#ifndef NDEBUG
@@ -343,18 +366,31 @@ void GlobalHolder<V, N>::processNode(const id_t id){
 	auto pgs = local_part.get_progress();
 	DVLOG(3)<<"progress=("<<pgs.sum<<","<<pgs.n_inf<<","<<pgs.n_change<<") update="<<local_part.get_n_uncommitted();
 	#endif
+	//pf_processNode(id);
+	(this->*pf_processNode)(id);
+}
+template <class V, class N>
+void GlobalHolder<V, N>::processNode_general(const id_t id){
+	// (need_commit -> commit -> spread)
 	if(!local_part.commit(id))
 		return;
 	std::vector<std::pair<id_t, value_t>> data = local_part.spread(id);
 	DVLOG(3)<<data;
 	for(auto& p : data){
-		int pid = get_part(p.first);
-		if(is_local_part(pid)){
-			local_update_cal(id, p.first, p.second);
-		}else{
-			remote_parts[pid].update(id, p.first, p.second);
-		}
+		update_cal(id, p.first, p.second);
 	}
+}
+template <class V, class N>
+void GlobalHolder<V, N>::processNode_acf(const id_t id){
+	// (need_commit -> spread -> commit)
+	if(!local_part.need_commit(id))
+		return;
+	std::vector<std::pair<id_t, value_t>> data = local_part.spread(id);
+	DVLOG(3)<<data;
+	for(auto& p : data){
+		update_cal(id, p.first, p.second);
+	}
+	local_part.commit(id);
 }
 template <class V, class N>
 bool GlobalHolder<V, N>::needApply(){
