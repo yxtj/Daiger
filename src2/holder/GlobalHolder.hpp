@@ -383,14 +383,22 @@ void GlobalHolder<V, N>::processNode_general(const id_t id){
 template <class V, class N>
 void GlobalHolder<V, N>::processNode_acf(const id_t id){
 	// (need_commit -> spread -> commit)
+	// prevent to merge self-loop
 	if(!local_part.need_commit(id))
 		return;
 	std::vector<std::pair<id_t, value_t>> data = local_part.spread(id);
 	DVLOG(3)<<data;
+	V left = opt->identity_element();
 	for(auto& p : data){
-		update_cal(id, p.first, p.second);
+		if(p.first == id){
+			left = p.second;
+		}else{
+			update_cal(id, p.first, p.second);
+		}
 	}
 	local_part.commit(id);
+	if(left != opt->identity_element())
+		update_cal(id, id, left);
 }
 template <class V, class N>
 bool GlobalHolder<V, N>::needApply(){
@@ -403,6 +411,10 @@ void GlobalHolder<V, N>::doApply(){
 	std::vector<id_t> nodes = scd->pick();
 	for(const id_t id : nodes){
 		processNode(id);
+	}
+	for(const id_t id: nodes){
+		const node_t& n = local_part.get(id);
+		DVLOG(3)<<"k="<<n.id<<" v="<<n.v<<" u="<<n.u;
 	}
 	applying = false;
 }
