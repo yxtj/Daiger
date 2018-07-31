@@ -70,7 +70,9 @@ vector<float> cal_pr_dlt(const vector<vector<int> >& g, const float damp,
 				dlt_new[dst]+=out;
 			}
 		}
+		//cout<<"iteration: "<<iter<<"\n";
 		for(size_t i=0;i<n;++i){
+			//cout<<" "<<i<<": "<<res[i]<<"\t"<<dlt_old[i]<<"\n";
 			res[i] += dlt_old[i];
 			sum += dlt_new[i] * dlt_new[i];
 		}
