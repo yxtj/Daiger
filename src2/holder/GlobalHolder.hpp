@@ -6,6 +6,7 @@
 #include "msg/messages.h"
 #include "serial/serialization.h"
 #include <vector>
+#include <unordered_map>
 #include <string>
 #include <functional>
 #ifndef NDEBUG
@@ -104,8 +105,9 @@ private:
 	using pf_pn_t = void (GlobalHolder<V, N>::*)(const id_t);
 	pf_pn_t pf_processNode; // do not need to make related functions public
 
- 	// used for incremental case, store the source nodes of delta edges
-	std::vector<id_t>* changed_sources; // new at init(), delete at intializedProcessOnDelta()
+ 	// used for incremental case of accumulative operators, store the source delta nodes
+	std::unordered_map<id_t, std::vector<std::pair<id_t, value_t>>> changed_cache;
+	std::unordered_set<id_t> changed_source;
 };
 
 template <class V, class N>
@@ -137,8 +139,6 @@ void GlobalHolder<V, N>::init(OperationBase* opt, IOHandlerBase* ioh,
 	}
 	applying = false;
 
-	if(incremental)
-		changed_sources = new std::vector<id_t>();
 	if(cache_free && this->opt->is_accumulative()){
 		// std::bind(&GlobalHolder::processNode_acf, this, std::placeholders::_1);
 		pf_processNode = &GlobalHolder<V, N>::processNode_acf;
@@ -168,6 +168,10 @@ void GlobalHolder<V, N>::addDummyNodes(){
 	std::vector<typename operation_t::DummyNode> dummies = opt->dummy_nodes();
 	for(auto& p : dummies){
 		id_t id = p.node.id;
+		if(cache_free && opt->is_accumulative()){
+			p.node.v = p.node.u;
+			p.node.u = opt->identity_element();
+		}
 		if(p.type == DummyNodeType::NORMAL){
 			// only add to its owner worker
 			if(is_local_id(id)){
@@ -207,12 +211,15 @@ int GlobalHolder<V, N>::loadDelta(const std::string& line){
 	}else{
 		local_part.modify_onb_val(d.src, d.dst);
 	}
-	changed_sources->push_back(d.src);
+	changed_source.insert(d.src);
+	// TODO: add a process called after loading all delta-message
 	return pid;
 }
 
 template <class V, class N>
 void GlobalHolder<V, N>::intializedProcess(){
+	intializedProcessNormal();
+	return;
 	if(!incremental){
 		intializedProcessNormal();
 	}else{
@@ -227,15 +234,25 @@ void GlobalHolder<V, N>::intializedProcessNormal(){
 		p != nullptr; p = local_part.enum_next(true))
 	{
 		if(cache_free){
-			scd->update(p->id, opt->priority(local_part.get(p->id)));
+			// scd->update(p->id, opt->priority(local_part.get(p->id)));
+			if(opt->is_accumulative()){
+				processNode_acf(p->id);
+			}else{
+				processNode_general(p->id);
+			}
 		}else{
-			processNode(p->id);
+			// processNode(p->id);
+			local_part.cal_general(p->id); // batch update
 		}
 	}
 }
 
 template <class V, class N>
 void GlobalHolder<V, N>::intializedProcessOnDelta(){
+	for(const id_t id : changed_source){
+		//TODO: generate delta messages using stored changed_cache
+
+	}
 	std::sort(changed_sources->begin(), changed_sources->end());
 	bool is_first = true;
 	id_t last = 0;
@@ -245,7 +262,9 @@ void GlobalHolder<V, N>::intializedProcessOnDelta(){
 			if(cache_free){
 				scd->update(id, opt->priority(local_part.get(id)));
 			}else{
-				processNode(id);
+				local_part.cal_general(id);
+				// since the cache is build on new graph, incremental_update does not work here
+				//processNode(id);
 			}
 		}
 		is_first = false;
@@ -366,14 +385,14 @@ void GlobalHolder<V, N>::processNode(const id_t id){
 	auto pgs = local_part.get_progress();
 	DVLOG(3)<<"progress=("<<pgs.sum<<","<<pgs.n_inf<<","<<pgs.n_change<<") update="<<local_part.get_n_uncommitted();
 	#endif
+	if(!local_part.commit(id))
+		return;
 	//pf_processNode(id);
 	(this->*pf_processNode)(id);
 }
 template <class V, class N>
 void GlobalHolder<V, N>::processNode_general(const id_t id){
-	// (need_commit -> commit -> spread)
-	if(!local_part.commit(id))
-		return;
+	// (commit -> spread)
 	std::vector<std::pair<id_t, value_t>> data = local_part.spread(id);
 	DVLOG(3)<<data;
 	for(auto& p : data){
@@ -382,10 +401,8 @@ void GlobalHolder<V, N>::processNode_general(const id_t id){
 }
 template <class V, class N>
 void GlobalHolder<V, N>::processNode_acf(const id_t id){
-	// (need_commit -> spread -> commit)
+	// (spread -> commit)
 	// prevent to merge self-loop
-	if(!local_part.need_commit(id))
-		return;
 	std::vector<std::pair<id_t, value_t>> data = local_part.spread(id);
 	DVLOG(3)<<data;
 	V left = opt->identity_element();

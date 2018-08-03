@@ -236,20 +236,18 @@ void LocalHolder<V, N>::registerRequestCallback(sender_req_t f){
 template <class V, class N>
 void LocalHolder<V, N>::init_value(const id_t& k, const value_t& v){
 	node_t& n = get(k);
-	if(n.v != v){
-		double oldp = tmt->progress(n);
-		n.v = v;
-		update_progress(oldp, tmt->progress(n));
-	}
+	//double oldp = tmt->progress(n);
 	if(!cache_free){
 		n.u = v;
 	}else{
-		if(opt->is_selective()){
+		if(opt->is_accumulative()){
+			//n.u = opt->identity_element();
 			n.u = v;
-		}else if(opt->is_accumulative()){
-			n.u = opt->identity_element();
+		}else{
+			n.u = v;
 		}
 	}
+	//update_progress(oldp, tmt->progress(n));
 	update_priority(n);
 }
 
