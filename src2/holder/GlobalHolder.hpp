@@ -60,8 +60,9 @@ public:
 	virtual std::string collectLocalProgress();
 
 private:
-	void intializedProcessNormal();
-	void intializedProcessOnDelta();
+	void intializedProcessCB(); // cache-based
+	void intializedProcessACF(); // cache-free accumulative
+	void intializedProcessSCF(); // cache-free selective
 
 	void processNode(const id_t id);
 	void processNode_general(const id_t id);
@@ -78,6 +79,9 @@ private:
 	void add_local_node(id_t& id, neighbor_list_t& nl);
 
 	void update_cal(const id_t& from, const id_t& to, const value_t& v);
+	bool is_acf(){
+		return cache_free && opt->is_accumulative();
+	}
 
 private:
 	operation_t* opt;
@@ -106,8 +110,8 @@ private:
 	pf_pn_t pf_processNode; // do not need to make related functions public
 
  	// used for incremental case of accumulative operators, store the source delta nodes
-	std::unordered_map<id_t, std::vector<std::pair<id_t, value_t>>> changed_cache;
-	std::unordered_set<id_t> changed_source;
+	// write at loadDelta(), clear at intializedProcess()
+	std::unordered_map<id_t, node_t> unchanged_node;
 };
 
 template <class V, class N>
@@ -139,7 +143,7 @@ void GlobalHolder<V, N>::init(OperationBase* opt, IOHandlerBase* ioh,
 	}
 	applying = false;
 
-	if(cache_free && this->opt->is_accumulative()){
+	if(is_acf()){
 		// std::bind(&GlobalHolder::processNode_acf, this, std::placeholders::_1);
 		pf_processNode = &GlobalHolder<V, N>::processNode_acf;
 	}else{
@@ -168,7 +172,7 @@ void GlobalHolder<V, N>::addDummyNodes(){
 	std::vector<typename operation_t::DummyNode> dummies = opt->dummy_nodes();
 	for(auto& p : dummies){
 		id_t id = p.node.id;
-		if(cache_free && opt->is_accumulative()){
+		if(is_acf()){
 			p.node.v = p.node.u;
 			p.node.u = opt->identity_element();
 		}
@@ -204,6 +208,11 @@ int GlobalHolder<V, N>::loadDelta(const std::string& line){
 	int pid = get_part(d.src);
 	if(!is_local_part(pid))
 		return pid;
+	if(is_acf()){
+		if(unchanged_node.find(d.src) == unchanged_node.end()){
+			unchanged_node[d.src] = local_part.get(d.src);
+		}
+	}
 	if(d.type == ChangeEdgeType::ADD){
 		local_part.modify_onb_add(d.src, d.dst);
 	}else if(d.type == ChangeEdgeType::REMOVE){
@@ -211,66 +220,66 @@ int GlobalHolder<V, N>::loadDelta(const std::string& line){
 	}else{
 		local_part.modify_onb_val(d.src, d.dst);
 	}
-	changed_source.insert(d.src);
-	// TODO: add a process called after loading all delta-message
 	return pid;
 }
 
 template <class V, class N>
 void GlobalHolder<V, N>::intializedProcess(){
-	intializedProcessNormal();
-	return;
-	if(!incremental){
-		intializedProcessNormal();
+	if(!cache_free){
+		intializedProcessCB();
 	}else{
-		intializedProcessOnDelta();
+		if(opt->is_accumulative()){
+			intializedProcessACF();
+		}else if(opt->is_selective()){
+			intializedProcessSCF();
+		}
 	}
+	unchanged_node.clear();
 }
 
 template <class V, class N>
-void GlobalHolder<V, N>::intializedProcessNormal(){
+void GlobalHolder<V, N>::intializedProcessCB(){
 	local_part.enum_rewind();
 	for(const node_t* p = local_part.enum_next(true);
 		p != nullptr; p = local_part.enum_next(true))
 	{
-		if(cache_free){
-			// scd->update(p->id, opt->priority(local_part.get(p->id)));
-			if(opt->is_accumulative()){
-				processNode_acf(p->id);
-			}else{
-				processNode_general(p->id);
-			}
-		}else{
-			// processNode(p->id);
+		local_part.commit(p->id);
+		if(incremental)
 			local_part.cal_general(p->id); // batch update
+	}
+}
+template <class V, class N>
+void GlobalHolder<V, N>::intializedProcessACF(){
+	for(const std::pair<id_t, node_t>& n : unchanged_node){
+		std::vector<std::pair<id_t, value_t>> old_d = opt->func(n.second);
+		std::map<id_t, value_t> old_dm(old_d.begin(), old_d.end());
+		old_d.clear();
+		std::vector<std::pair<id_t, value_t>> new_d = local_part.spread_acf(n.first);
+		// update n.u of the changed values.
+		for(const auto& p : new_d){
+			auto it = old_dm.find(p.first);
+			if(it == old_dm.end()){ // add an edge
+				update_cal(n.first, p.first, p.second);
+			}else{ // modify an edge
+				if(p.second != it->second)
+					update_cal(n.first, p.first, opt->ominus(p.second, it->second));
+				old_dm.erase(it);
+			}
+		}
+		for(const auto& p : old_dm){ // delete an edge
+			update_cal(n.first, p.first, opt->ominus(opt->identity_element(), p.second));
 		}
 	}
 }
-
 template <class V, class N>
-void GlobalHolder<V, N>::intializedProcessOnDelta(){
-	for(const id_t id : changed_source){
-		//TODO: generate delta messages using stored changed_cache
-
+void GlobalHolder<V, N>::intializedProcessSCF(){
+	local_part.enum_rewind();
+	for(const node_t* p = local_part.enum_next(true);
+		p != nullptr; p = local_part.enum_next(true))
+	{
+		//local_part.cal_general(p->id); // batch update
+		processNode(p->id);
 	}
-	std::sort(changed_sources->begin(), changed_sources->end());
-	bool is_first = true;
-	id_t last = 0;
-	for(const id_t& id : *changed_sources){
-		if(is_first || last != id){
-			last = id;
-			if(cache_free){
-				scd->update(id, opt->priority(local_part.get(id)));
-			}else{
-				local_part.cal_general(id);
-				// since the cache is build on new graph, incremental_update does not work here
-				//processNode(id);
-			}
-		}
-		is_first = false;
-	}
-	delete changed_sources;
-	changed_sources = nullptr;
 }
 
 template <class V, class N>
