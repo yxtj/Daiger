@@ -243,9 +243,9 @@ void GlobalHolder<V, N>::intializedProcessCB(){
 	for(const node_t* p = local_part.enum_next(true);
 		p != nullptr; p = local_part.enum_next(true))
 	{
-		local_part.commit(p->id);
 		if(incremental)
 			local_part.cal_general(p->id); // batch update
+		processNode(p->id);
 	}
 }
 template <class V, class N>
@@ -394,7 +394,7 @@ void GlobalHolder<V, N>::processNode(const id_t id){
 	auto pgs = local_part.get_progress();
 	DVLOG(3)<<"progress=("<<pgs.sum<<","<<pgs.n_inf<<","<<pgs.n_change<<") update="<<local_part.get_n_uncommitted();
 	#endif
-	if(!local_part.commit(id))
+	if(!local_part.need_commit(id))
 		return;
 	//pf_processNode(id);
 	(this->*pf_processNode)(id);
@@ -402,6 +402,8 @@ void GlobalHolder<V, N>::processNode(const id_t id){
 template <class V, class N>
 void GlobalHolder<V, N>::processNode_general(const id_t id){
 	// (commit -> spread)
+	if(!local_part.commit(id))
+		return;
 	std::vector<std::pair<id_t, value_t>> data = local_part.spread(id);
 	DVLOG(3)<<data;
 	for(auto& p : data){
