@@ -240,7 +240,10 @@ void LocalHolder<V, N>::init_value(const id_t& k, const value_t& v){
 	n.v = v;
 	update_progress(oldp, tmt->progress(n));
 	if(cache_free && opt->is_accumulative()){
-		// left n.u to opt->identity_element();
+		// if(n.u != opt->identity_element()){
+		// 	n.u = opt->identity_element();
+		// 	update_priority(n);
+		// }
 	}else{
 		n.u = v;
 		update_priority(n);

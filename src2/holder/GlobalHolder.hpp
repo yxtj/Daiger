@@ -172,10 +172,6 @@ void GlobalHolder<V, N>::addDummyNodes(){
 	std::vector<typename operation_t::DummyNode> dummies = opt->dummy_nodes();
 	for(auto& p : dummies){
 		id_t id = p.node.id;
-		if(is_acf()){
-			p.node.v = p.node.u;
-			p.node.u = opt->identity_element();
-		}
 		if(p.type == DummyNodeType::NORMAL){
 			// only add to its owner worker
 			if(is_local_id(id)){
@@ -250,11 +246,22 @@ void GlobalHolder<V, N>::intializedProcessCB(){
 }
 template <class V, class N>
 void GlobalHolder<V, N>::intializedProcessACF(){
+	// step 1: if loaded from existed result, move the value of dummy nodes from <u> to <v>
+	if(incremental){
+		std::vector<typename operation_t::DummyNode> dummies = opt->dummy_nodes();
+		for(auto& p : dummies){
+			id_t id = p.node.id;
+			node_t& n = local_part.get(id);
+			n.v = n.u;
+			n.u = opt->identity_element();
+		}
+	}
+	// step 2: generated initial messsages for changed nodes (incremental only)
 	for(const std::pair<id_t, node_t>& n : unchanged_node){
 		std::vector<std::pair<id_t, value_t>> old_d = opt->func(n.second);
 		std::map<id_t, value_t> old_dm(old_d.begin(), old_d.end());
 		old_d.clear();
-		std::vector<std::pair<id_t, value_t>> new_d = opt->func(local_part.get(n.first));//local_part.spread_acf(n.first);
+		std::vector<std::pair<id_t, value_t>> new_d = opt->func(local_part.get(n.first));
 		// update n.u of the changed values.
 		for(const auto& p : new_d){
 			auto it = old_dm.find(p.first);
@@ -476,5 +483,3 @@ std::string GlobalHolder<V, N>::collectLocalProgress(){
 	local_part.reset_progress_count();
 	return serialize(progress);
 }
-
-
