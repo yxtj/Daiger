@@ -254,7 +254,7 @@ void GlobalHolder<V, N>::intializedProcessACF(){
 		std::vector<std::pair<id_t, value_t>> old_d = opt->func(n.second);
 		std::map<id_t, value_t> old_dm(old_d.begin(), old_d.end());
 		old_d.clear();
-		std::vector<std::pair<id_t, value_t>> new_d = local_part.spread_acf(n.first);
+		std::vector<std::pair<id_t, value_t>> new_d = opt->func(local_part.get(n.first));//local_part.spread_acf(n.first);
 		// update n.u of the changed values.
 		for(const auto& p : new_d){
 			auto it = old_dm.find(p.first);
