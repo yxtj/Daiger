@@ -204,7 +204,7 @@ int GlobalHolder<V, N>::loadDelta(const std::string& line){
 	int pid = get_part(d.src);
 	if(!is_local_part(pid))
 		return pid;
-	if(is_acf()){
+	if(incremental){
 		if(unchanged_node.find(d.src) == unchanged_node.end()){
 			unchanged_node[d.src] = local_part.get(d.src);
 		}
@@ -284,8 +284,10 @@ void GlobalHolder<V, N>::intializedProcessSCF(){
 	for(const node_t* p = local_part.enum_next(true);
 		p != nullptr; p = local_part.enum_next(true))
 	{
-		//local_part.cal_general(p->id); // batch update
-		processNode(p->id);
+		std::vector<std::pair<id_t, value_t>> data = local_part.spread(p->id);
+		for(auto& d : data){
+			update_cal(p->id, d.first, d.second);
+		}
 	}
 }
 
