@@ -64,14 +64,14 @@ public:
 	bool modify_cache_val(const id_t& from, const id_t& to, const value_t& m);
 
 	// -------- key functions (assume every key exists) --------
+	// process the initialization messages
+	void cal_initialization(const id_t& from, const id_t& to, const value_t& m);
 	// update cache with received message
 	void update_cache(const id_t& from, const id_t& to, const value_t& m);
 	// merge all caches, the result is stored in <u>
 	void cal_general(const id_t& k);
-		//{ (this->*f_update_general)(k); }
 	// update <u> incrementally with <m> from <from> (assume every key exists)
 	void cal_incremental(const id_t& from, const id_t& to, const value_t& m);
-		//{ (this->*f_update_incremental)(from, to, m); }
 	// whether <u> is different from <v>
 	bool need_commit(const id_t& k) const;
 	// update <v> to <u>, update progress, PRECONDITION: the priority of corresponding node is reset before calling commit()
@@ -379,6 +379,12 @@ bool LocalHolder<V, N>::modify_cache_val(const id_t& from, const id_t& to, const
 
 // -------- key functions (assume every key exists) --------
 
+template <class V, class N>
+void LocalHolder<V, N>::cal_initialization(const id_t& from, const id_t& to, const value_t& m){
+	node_t& n=cont[to];
+	plu->s_incremental_update(from, n, m);
+	update_priority(n);
+}
 // update cache with received message
 template <class V, class N>
 void LocalHolder<V, N>::update_cache(const id_t& from, const id_t& to, const value_t& m){
