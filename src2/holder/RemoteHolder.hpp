@@ -1,6 +1,7 @@
 #pragma once
 #include "common/Node.h"
 #include "application/Operation.h"
+#include <algorithm>
 #include <vector>
 #include <unordered_map>
 #include <utility>
@@ -20,7 +21,7 @@ public:
 	using neighbor_list_t = typename node_t::neighbor_list_t;
 
 	RemoteHolder() = default;
-	void init(operation_t* opt);
+	void init(operation_t* opt, const bool cache_free);
 
 	bool empty() const;
 	size_t size() const;
@@ -32,6 +33,10 @@ public:
 	bool remove(const id_t& from, const id_t& to);
 	std::pair<bool, std::vector<std::pair<id_t, value_t>>> get(const id_t& k) const;
 	std::pair<bool, value_t> get(const id_t& from, const id_t& to) const;
+
+	bool prepare(const id_t& from, const id_t& to, const value_t& v){
+		return f_prepare(from, to, v);
+	}
 
 	// corresponding to update_cache of LocalTable, return whether a new entry is inserted
 	bool update(const id_t& from, const id_t& to, const value_t& v){
@@ -53,33 +58,44 @@ private:
 
 	bool update_general(const id_t& from, const id_t& to, const value_t& v);
 	bool update_accumulative(const id_t& from, const id_t& to, const value_t& v);
-	bool update_selective(const id_t& from, const id_t& to, const value_t& v);
+	bool update_selective_cb(const id_t& from, const id_t& to, const value_t& v);
+	bool update_selective_cf(const id_t& from, const id_t& to, const value_t& v);
 
 private:
 	operation_t* opt;
-	// TODO: consider merge the <from>s
+	// buffer for other nodes. vector for general case; otherwise only the first element is used
 	std::unordered_map<id_t, std::vector<std::pair<id_t, value_t>>> cont; // to -> [ <from, v> ]*n
 
 	std::function<std::vector<std::pair<id_t, std::pair<id_t, value_t>>>(const size_t)> f_collect;
+	std::function<bool(const id_t&, const id_t&, const value_t&)> f_prepare;
 	std::function<bool(const id_t&, const id_t&, const value_t&)> f_update;
 };
 
 template <class V, class N>
-void RemoteHolder<V, N>::init(operation_t* opt)
+void RemoteHolder<V, N>::init(operation_t* opt, const bool cache_free)
 {
 	this->opt = opt;
 	if(opt->is_accumulative()){
 		f_collect = std::bind(&RemoteHolder<V, N>::collect_accumulative, this, std::placeholders::_1);
 		f_update = std::bind(&RemoteHolder<V, N>::update_accumulative,
 			this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+		f_prepare = f_update;
 	}else if(opt->is_selective()){
 		f_collect = std::bind(&RemoteHolder<V, N>::collect_selective, this, std::placeholders::_1);
-		f_update = std::bind(&RemoteHolder<V, N>::update_selective,
+		if(cache_free){
+			f_update = std::bind(&RemoteHolder<V, N>::update_selective_cf,
+				this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+		}else{
+			f_update = std::bind(&RemoteHolder<V, N>::update_selective_cb,
+				this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+		}
+		f_prepare = std::bind(&RemoteHolder<V, N>::update_selective_cb,
 			this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
 	}else{
 		f_collect = std::bind(&RemoteHolder<V, N>::collect_general, this, std::placeholders::_1);
 		f_update = std::bind(&RemoteHolder<V, N>::update_general,
 			this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+		f_prepare = f_update;
 	}
 }
 
@@ -159,28 +175,46 @@ bool RemoteHolder<V, N>::update_general(const id_t& from, const id_t& to, const 
 template <class V, class N>
 bool RemoteHolder<V, N>::update_accumulative(const id_t& from, const id_t& to, const value_t& v){
 	auto& vec=cont[to];
-	auto jt=std::find_if(vec.begin(), vec.end(), [&](const std::pair<id_t, value_t>& p){
-		return p.first == from;
-	});
-	if(jt==vec.end()){
+	if(vec.empty()){
 		vec.emplace_back(from, v);
 		return true;
 	}else{
-		jt->second = opt->oplus(jt->second, v);
+		// vec.front().first does not matter
+		vec.front().second = opt->oplus(vec.front().second, v);
 		return false;
 	}
 }
 template <class V, class N>
-bool RemoteHolder<V, N>::update_selective(const id_t& from, const id_t& to, const value_t& v){
+bool RemoteHolder<V, N>::update_selective_cb(const id_t& from, const id_t& to, const value_t& v){
 	auto& vec=cont[to];
-	auto jt=std::find_if(vec.begin(), vec.end(), [&](const std::pair<id_t, value_t>& p){
-		return p.first == from;
-	});
-	if(jt==vec.end()){
+	if(vec.empty()){
 		vec.emplace_back(from, v);
 		return true;
 	}else{
-		jt->second = v;
+		auto& p = vec.front();
+		if(opt->better(v, p.second)){
+			// vec.front().first does not matter
+			p.first = from;
+			p.second = v;
+		}
+		return false;
+	}
+}
+template <class V, class N>
+bool RemoteHolder<V, N>::update_selective_cf(const id_t& from, const id_t& to, const value_t& v){
+	auto& vec=cont[to];
+	if(vec.empty()){
+		vec.emplace_back(from, v);
+		return true;
+	}else{
+		auto& p = vec.front();
+		// this is DIFFERENT from that from LocalUpdater
+		if(from == p.first){
+			p.second = v;
+		}else if(opt->better(v, p.second)){
+			p.first = from;
+			p.second = v;
+		}
 		return false;
 	}
 }
@@ -207,11 +241,12 @@ std::vector<std::pair<id_t, std::pair<id_t, V>>> RemoteHolder<V, N>::collect_acc
 	std::vector<std::pair<id_t, std::pair<id_t, V>>> res;
 	auto it=cont.begin();
 	for(size_t i=0; i<num && it!=cont.end(); ++i, ++it){
-		value_t v = opt->identity_element();
-		auto jt_end = it->second.end();
-		for(auto jt = it->second.begin(); jt != jt_end; ++jt){
-			v = opt->oplus(v, jt->second);
-		}
+		// value_t v = opt->identity_element();
+		// auto jt_end = it->second.end();
+		// for(auto jt = it->second.begin(); jt != jt_end; ++jt){
+		// 	v = opt->oplus(v, jt->second);
+		// }
+		value_t v = it->second.front().second;
 		res.emplace_back(it->first, std::make_pair(it->second.begin()->first, v));
 	}
 	if(it == cont.end())
@@ -225,16 +260,18 @@ std::vector<std::pair<id_t, std::pair<id_t, V>>> RemoteHolder<V, N>::collect_sel
 	std::vector<std::pair<id_t, std::pair<id_t, V>>> res;
 	auto it=cont.begin();
 	for(size_t i=0; i<num && it!=cont.end(); ++i, ++it){
-		value_t b = opt->identity_element();
-		id_t p;
-		auto jt_end = it->second.end();
-		for(auto jt = it->second.begin(); jt != jt_end; ++jt){
-			if(opt->better(jt->second, b)){
-				b = jt->second;
-				p = jt->first;
-			}
-		}
-		res.emplace_back(it->first, std::make_pair(p, b));
+		// value_t t = opt->identity_element();
+		// id_t b;
+		// auto jt_end = it->second.end();
+		// for(auto jt = it->second.begin(); jt != jt_end; ++jt){
+		// 	if(opt->better(jt->second, t)){
+		// 		t = jt->second;
+		// 		b = jt->first;
+		// 	}
+		// }
+		id_t b = it->second.front().first;
+		value_t t = it->second.front().second;
+		res.emplace_back(it->first, std::make_pair(b, t));
 	}
 	if(it == cont.end())
 		cont.clear();

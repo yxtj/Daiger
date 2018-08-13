@@ -65,7 +65,7 @@ public:
 
 	// -------- key functions (assume every key exists) --------
 	// process the initialization messages
-	void cal_initialization(const id_t& from, const id_t& to, const value_t& m);
+	void cal_prepare(const id_t& from, const id_t& to, const value_t& m);
 	// update cache with received message
 	void update_cache(const id_t& from, const id_t& to, const value_t& m);
 	// merge all caches, the result is stored in <u>
@@ -380,7 +380,7 @@ bool LocalHolder<V, N>::modify_cache_val(const id_t& from, const id_t& to, const
 // -------- key functions (assume every key exists) --------
 
 template <class V, class N>
-void LocalHolder<V, N>::cal_initialization(const id_t& from, const id_t& to, const value_t& m){
+void LocalHolder<V, N>::cal_prepare(const id_t& from, const id_t& to, const value_t& m){
 	node_t& n=cont[to];
 	plu->s_incremental_update(from, n, m);
 	update_priority(n);

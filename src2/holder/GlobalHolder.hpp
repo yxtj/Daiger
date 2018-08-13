@@ -79,6 +79,7 @@ private:
 	void add_local_node(id_t& id, neighbor_list_t& nl);
 
 	void update_cal(const id_t& from, const id_t& to, const value_t& v);
+	void prepare_cal(const id_t& from, const id_t& to, const value_t& v);
 	bool is_acf(){
 		return cache_free && opt->is_accumulative();
 	}
@@ -139,7 +140,7 @@ void GlobalHolder<V, N>::init(OperationBase* opt, IOHandlerBase* ioh,
 	local_part.init(this->opt, this->scd, this->tmt, nPart, incremental, async, cache_free);
 	remote_parts.resize(nPart);
 	for(size_t i = 1; i<nPart; ++i){
-		remote_parts[i].init(this->opt);
+		remote_parts[i].init(this->opt, cache_free);
 	}
 	applying = false;
 
@@ -286,7 +287,7 @@ void GlobalHolder<V, N>::intializedProcessSCF(){
 	{
 		std::vector<std::pair<id_t, value_t>> data = local_part.spread(p->id);
 		for(auto& d : data){
-			update_cal(p->id, d.first, d.second);
+			prepare_cal(p->id, d.first, d.second);
 		}
 	}
 }
@@ -392,6 +393,15 @@ void GlobalHolder<V, N>::update_cal(const id_t& from, const id_t& to, const valu
 		local_part.cal_incremental(from, to, v);
 	}else{
 		remote_parts[pid].update(from, to, v);
+	}
+}
+template <class V, class N>
+void GlobalHolder<V, N>::prepare_cal(const id_t& from, const id_t& to, const value_t& v){
+	int pid = get_part(to);
+	if(is_local_part(pid)){
+		local_part.cal_prepare(from, to, v);
+	}else{
+		remote_parts[pid].prepare(from, to, v);
 	}
 }
 
