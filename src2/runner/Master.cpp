@@ -23,11 +23,17 @@ void Master::run() {
 
 	procedureInit();
     procedureLoadGraph();
-    if (opt.do_incremental) {
+    if(opt.do_incremental) {
         procedureLoadValue();
-        procedureLoadDelta();
-		if(!opt.conf.cache_free){
-			procedureBuildINCache();
+		if(app.opt->is_selective()){
+			procedureBuildINCache(); // necessary for both cache-base and cache-free cases
+			procedureRebuildStructure(); // clear in-neighbor cache if cache-free
+			procedureLoadDelta();
+		}else{
+			procedureLoadDelta();
+			if(!opt.conf.cache_free){
+				procedureBuildINCache();
+			}
 		}
 	}
 	procedureGenInitMsg();
@@ -161,6 +167,14 @@ void Master::procedureBuildINCache(){
 	startProcedure(cpid);
 	finishProcedure(cpid);
 	LOG(INFO)<<"Finish building in-neighbor cache.";
+}
+
+void Master::procedureRebuildStructure(){
+	cpid = ProcedureType::RebuildStructure;
+	LOG(INFO)<<"Starting reconstructing source structure.";
+	startProcedure(cpid);
+	finishProcedure(cpid);
+	LOG(INFO)<<"Finish reconstructing source structure.";
 }
 
 void Master::procedureGenInitMsg(){

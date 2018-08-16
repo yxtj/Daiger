@@ -25,6 +25,7 @@ public:
 	virtual int loadDelta(const std::string& line) = 0;
 	virtual void prepareUpdate(sender_t f_req) = 0;
 	virtual void prepareCollectINCache() = 0;
+	virtual void rebuildSource() = 0; // for selective operators
 	virtual void intializedProcess() = 0;
 	virtual void prepareDump() = 0;
 	// return whether this call is success and the line to write
@@ -33,6 +34,7 @@ public:
 	virtual void addDummyNodes() = 0;
 
 	// in-neighbor cache
+	virtual void clearINCache() = 0;
 	virtual void takeINCache(const std::string& line) = 0;
 	virtual std::unordered_map<int, std::string> collectINCache() = 0;
 

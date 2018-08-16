@@ -99,6 +99,14 @@ void GraphContainer::buildINCache(sender_t sender){
 	}
 }
 
+void GraphContainer::rebuildSource(){
+	holder->rebuildSource();
+}
+
+void GraphContainer::clearINCache(){
+	holder->clearINCache();
+}
+
 void GraphContainer::genInitMsg(){
 	holder->intializedProcess();
 }

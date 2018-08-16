@@ -39,12 +39,14 @@ public:
 	virtual int loadDelta(const std::string& line);
 	virtual void prepareUpdate(sender_t f_req);
 	virtual void prepareCollectINCache();
+	virtual void rebuildSource(); // for selective operators
 	virtual void intializedProcess(); // update <u> and put nodes into the scheduler
 	virtual void prepareDump();
 	virtual std::pair<bool, std::string> dumpResult();
 
 	virtual void addDummyNodes();
 
+	virtual void clearINCache();
 	virtual void takeINCache(const std::string& line);
 	virtual std::unordered_map<int, std::string> collectINCache();
 
@@ -281,13 +283,24 @@ void GlobalHolder<V, N>::intializedProcessACF(){
 }
 template <class V, class N>
 void GlobalHolder<V, N>::intializedProcessSCF(){
-	local_part.enum_rewind();
-	for(const node_t* p = local_part.enum_next(true);
-		p != nullptr; p = local_part.enum_next(true))
-	{
-		std::vector<std::pair<id_t, value_t>> data = local_part.spread(p->id);
-		for(auto& d : data){
-			prepare_cal(p->id, d.first, d.second);
+	for(const std::pair<id_t, node_t>& n : unchanged_node){
+		std::vector<std::pair<id_t, value_t>> old_d = opt->func(n.second);
+		std::map<id_t, value_t> old_dm(old_d.begin(), old_d.end());
+		old_d.clear();
+		std::vector<std::pair<id_t, value_t>> new_d = opt->func(local_part.get(n.first));
+		// update n.u of the changed values.
+		for(const auto& p : new_d){
+			auto it = old_dm.find(p.first);
+			if(it == old_dm.end()){ // add an edge
+				update_cal(n.first, p.first, p.second);
+			}else{ // modify an edge
+				if(p.second != it->second)
+					update_cal(n.first, p.first, p.second);
+				old_dm.erase(it);
+			}
+		}
+		for(const auto& p : old_dm){ // delete an edge
+			update_cal(n.first, p.first, opt->identity_element());
 		}
 	}
 }
@@ -305,6 +318,15 @@ void GlobalHolder<V, N>::prepareUpdate(sender_t f_req){
 template <class V, class N>
 void GlobalHolder<V, N>::prepareCollectINCache(){
 	local_part.enum_rewind();
+}
+template <class V, class N>
+void GlobalHolder<V, N>::rebuildSource(){
+	local_part.enum_rewind();
+	for(const node_t* p = local_part.enum_next(true);
+		p != nullptr; p = local_part.enum_next(true))
+	{
+		local_part.cal_general(p->id);
+	}
 }
 template <class V, class N>
 void GlobalHolder<V, N>::prepareDump(){
@@ -327,6 +349,18 @@ std::pair<bool, std::string> GlobalHolder<V, N>::dumpResult(){
 		return std::make_pair(true, ioh->dump_value(p->id, v));
 	}else{
 		return std::make_pair(false, std::string());
+	}
+}
+
+
+template <class V, class N>
+void GlobalHolder<V, N>::clearINCache(){
+	local_part.enum_rewind();
+	for(const node_t* p = local_part.enum_next(true);
+		p != nullptr; p = local_part.enum_next(true))
+	{
+		node_t* pp = const_cast<node_t*>(p);
+		pp->cs.clear();
 	}
 }
 template <class V, class N>

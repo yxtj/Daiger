@@ -12,9 +12,10 @@ enum ProcedureType : int {
 	LoadValue = 2,
 	LoadDelta = 3,
 	BuildINCache = 4,
-	GenInitMsg = 5,
-	Update = 6,
-	DumpResult = 7
+	RebuildStructure = 5,
+	GenInitMsg = 6,
+	Update = 7,
+	DumpResult = 8
 };
 
 template <typename V>
