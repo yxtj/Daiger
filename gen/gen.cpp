@@ -48,9 +48,9 @@ int dump_uw(const vector<vector<int> >& g, const int nPart, const string& outDir
 	mkdir(outDir.c_str(),0755);
 	vector<ofstream*> fout;
 	for(int i=0;i<nPart;++i){
-		fout.push_back(new ofstream(outDir+"/part"+to_string(i)));
+		fout.push_back(new ofstream(outDir+"/part-"+to_string(i)));
 		if(!fout.back()->is_open()){
-			cerr<<"failed in opening file: "<<outDir+"/part"+to_string(i)<<endl;
+			cerr<<"failed in opening file: "<<outDir+"/part-"+to_string(i)<<endl;
 			return i;
 		}
 	}
@@ -105,9 +105,9 @@ int dump_w(const vector<vector<pair<int,double>> >& g, const int nPart, const st
 	mkdir(outDir.c_str(),0755);
 	vector<ofstream*> fout;
 	for(int i=0;i<nPart;++i){
-		fout.push_back(new ofstream(outDir+"/part"+to_string(i)));
+		fout.push_back(new ofstream(outDir+"/part-"+to_string(i)));
 		if(!fout.back()->is_open()){
-			cerr<<"failed in opening file: "<<outDir+"/part"+to_string(i)<<endl;
+			cerr<<"failed in opening file: "<<outDir+"/part-"+to_string(i)<<endl;
 			return i;
 		}
 	}

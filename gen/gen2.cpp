@@ -44,7 +44,7 @@ vector<vector<int> > gen_one_uw(const int nPart, const int id, const int nNode,
 }
 
 bool dump_one_uw(const vector<vector<int> >& g, const int nPart, const int id, const string& outDir){
-	ofstream fout(outDir+"/part"+to_string(id));
+	ofstream fout(outDir+"/part-"+to_string(id));
 	if(!fout.is_open())
 		return false;
 	size_t idx=id;
@@ -92,7 +92,7 @@ vector<vector<pair<int,double>> > gen_one_w(const int nPart, const int id, const
 }
 
 bool dump_one_w(const vector<vector<pair<int,double>> >& g, const int nPart, const int id, const string& outDir){
-	ofstream fout(outDir+"/part"+to_string(id));
+	ofstream fout(outDir+"/part-"+to_string(id));
 	if(!fout.is_open())
 		return false;
 	size_t idx=id;

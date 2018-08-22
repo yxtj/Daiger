@@ -127,10 +127,10 @@ int changeGraph(const string& dir, const string& deltaPrefix,
 	vector<ifstream*> fin;
 	vector<ofstream*> fout;
 	for(int i = 0; i < nPart; ++i){
-		fin.push_back(new ifstream(dir + "/part" + to_string(i)));
+		fin.push_back(new ifstream(dir + "/part-" + to_string(i)));
 		fout.push_back(new ofstream(deltaPrefix + "-" + to_string(i)));
 		if(!fin.back()->is_open()){
-			cerr << "failed in opening input file: " << dir + "/part" + to_string(i) << endl;
+			cerr << "failed in opening input file: " << dir + "/part-" + to_string(i) << endl;
 			return 0;
 		}
 		if(!fout.back()->is_open()){
