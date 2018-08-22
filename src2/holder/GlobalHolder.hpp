@@ -141,7 +141,9 @@ void GlobalHolder<V, N>::init(OperationBase* opt, IOHandlerBase* ioh,
 
 	local_part.init(this->opt, this->scd, this->tmt, nPart, incremental, async, cache_free);
 	remote_parts.resize(nPart);
-	for(size_t i = 1; i<nPart; ++i){
+	for(size_t i = 0; i<nPart; ++i){
+		if(i == local_id)
+			continue;
 		remote_parts[i].init(this->opt, cache_free);
 	}
 	applying = false;
