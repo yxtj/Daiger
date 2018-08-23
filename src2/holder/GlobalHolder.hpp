@@ -31,8 +31,9 @@ public:
 
 	virtual void init(OperationBase* opt, IOHandlerBase* ioh,
 		SchedulerBase* scd, PartitionerBase* ptn, TerminatorBase* tmt,
-		const size_t nPart, const int localId, const size_t send_batch_size,
-		const bool incremental, const bool async, const bool cache_free, const bool sort_result);
+		const size_t nPart, const int localId,
+		const bool incremental, const bool async, const bool cache_free, const bool sort_result,
+		const size_t send_min_size, const size_t send_max_size);
 
 	virtual int loadGraph(const std::string& line);
 	virtual int loadValue(const std::string& line);
@@ -93,7 +94,8 @@ private:
 	PartitionerBase* ptn;
 	terminator_t* tmt;
 	size_t nPart;
-	size_t send_batch_size;
+	size_t send_max_size;
+	size_t send_min_size;
 
 	bool incremental;
 	bool async;
@@ -120,8 +122,9 @@ private:
 template <class V, class N>
 void GlobalHolder<V, N>::init(OperationBase* opt, IOHandlerBase* ioh,
 		SchedulerBase* scd, PartitionerBase* ptn, TerminatorBase* tmt,
-		const size_t nPart, const int localId, const size_t send_batch_size,
-		const bool incremental, const bool async, const bool cache_free, const bool sort_result)
+		const size_t nPart, const int localId,
+		const bool incremental, const bool async, const bool cache_free, const bool sort_result,
+		const size_t send_min_size, const size_t send_max_size)
 {
 	this->opt = dynamic_cast<operation_t*>(opt);
 	this->ioh = dynamic_cast<iohandler_t*>(ioh);
@@ -130,11 +133,14 @@ void GlobalHolder<V, N>::init(OperationBase* opt, IOHandlerBase* ioh,
 	this->tmt = dynamic_cast<terminator_t*>(tmt);
 	this->nPart = nPart;
 	this->local_id = localId;
-	this->send_batch_size = send_batch_size;
 	this->incremental = incremental;
 	this->async = async;
 	this->cache_free = cache_free;
 	this->sort_result = sort_result;
+	this->send_min_size = send_min_size;
+	if(this->send_min_size != 0)
+		--this->send_min_size; // ">" is used instead of ">=", so "send_min_size-1" is necessary
+	this->send_max_size = send_max_size;
 
 	this->ptn->setParts(nPart);
 	pointer_dump = 0;
@@ -147,6 +153,7 @@ void GlobalHolder<V, N>::init(OperationBase* opt, IOHandlerBase* ioh,
 		remote_parts[i].init(this->opt, cache_free);
 	}
 	applying = false;
+	sending = false;
 
 	if(is_acf()){
 		// std::bind(&GlobalHolder::processNode_acf, this, std::placeholders::_1);
@@ -379,7 +386,7 @@ std::unordered_map<int, std::string> GlobalHolder<V, N>::collectINCache(){
 	size_t bs = 0;
 	msgs.reserve(nPart);
 	for(const node_t* p = local_part.enum_next(true);
-		bs < send_batch_size && p != nullptr; p = local_part.enum_next(true))
+		bs < send_max_size && p != nullptr; p = local_part.enum_next(true))
 	{
 		for(auto& nb : p->onb){
 			id_t dst = get_key(nb);
@@ -506,7 +513,7 @@ template <class V, class N>
 bool GlobalHolder<V, N>::needSend(bool force){
 	if(sending)
 		return false;
-	size_t th = force ? 0 : send_batch_size;
+	size_t th = force ? 0 : send_min_size - 1;
 	size_t sum = 0;
 	for(auto& t : remote_parts){
 		sum += t.size();
@@ -519,7 +526,8 @@ bool GlobalHolder<V, N>::needSend(bool force){
 template <class V, class N>
 std::string GlobalHolder<V, N>::collectMsg(const int pid){
 	sending = true;
-	std::vector<std::pair<id_t, std::pair<id_t, value_t>>> data = remote_parts[pid].collect();
+	std::vector<std::pair<id_t, std::pair<id_t, value_t>>> data =
+		remote_parts[pid].collect(send_max_size);
 	std::string res = serialize(data);
 	sending = false;
 	return res;

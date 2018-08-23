@@ -2,6 +2,7 @@
 #include "common/ConfData.h"
 #include "application/AppBase.h"
 #include "GlobalHolderBase.h"
+#include "util/Timer.h"
 #include <functional>
 #include <unordered_map>
 #include <string>
@@ -57,7 +58,10 @@ private:
 	sender_t sender_val;
 	sender_t sender_req;
 	sender0_t sender_pro;
+	
 	bool applying;
 	bool sending;
+
+	Timer tmr_send;
 };
 

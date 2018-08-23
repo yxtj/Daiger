@@ -77,7 +77,7 @@ void Master::registerWorker(){
 	net->broadcast(MType::COnline, my_net_id);
 	// notified by handleRegister
 	if(!su_regw.wait_for(timeout)){
-		LOG(ERROR)<<"Timeout in registering workers";
+		LOG(FATAL)<<"Timeout in registering workers";
 		exit(1);
 	}
 	LOG(INFO)<<"All workers are registered";

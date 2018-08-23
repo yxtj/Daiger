@@ -47,8 +47,10 @@ Option::Option()
 		("send_interval", value<float>(&send_interval)->default_value(0.5f), "[float] the maximum interval (second) of performing send.")
 		("term_interval", value<float>(&term_interval)->default_value(0.5f),
 			"[float] the minimum interval (second) of reporting progress and do termination check.")
-		("send_batch_size", value<int>(&conf.send_batch_size)->default_value(1024),
-			"[integer] the maximum size (# of target nodes) of each sending message.")
+		("send_max_size", value<int>(&conf.send_max_size)->default_value(4096),
+			"[integer] the maximum size (# of nodes) of each sending message.")
+		("send_min_size", value<int>(&conf.send_min_size)->default_value(1),
+			"[integer] the minimum size (# of nodes) of each sending message, before reaching <send_interval>.")
 		;
 }
 
@@ -108,9 +110,10 @@ bool Option::parseInput(int argc, char* argv[]) {
 		if(conf.path_result.empty())
 			do_output=false;
 
-		sortUpInterval(apply_interval, 0.001, 10.0);
-		sortUpInterval(send_interval, 0.001, 10.0);
+		sortUpInterval(apply_interval, 0.0001, 10.0);
+		sortUpInterval(send_interval, 0.0001, 10.0);
 		sortUpInterval(term_interval, 2*apply_interval, 600.0);
+		conf.send_max_interval = send_interval;
 
 		break;
 	}; // technique for condition checking
