@@ -22,7 +22,7 @@ public:
 	using neighbor_list_t = typename node_t::neighbor_list_t;
 
 	RemoteHolder() = default;
-	void init(operation_t* opt, const bool cache_free);
+	void init(operation_t* opt, const bool incremental, const bool cache_free);
 
 	bool empty() const;
 	size_t size() const;
@@ -59,14 +59,15 @@ private:
 	typename MessageDef<V>::MsgVUpdate_t collect_selective(const size_t num);
 
 	bool update_general(const id_t& from, const id_t& to, const value_t& v);
-	bool update_accumulative(const id_t& from, const id_t& to, const value_t& v);
+	bool update_accumulative_cb(const id_t& from, const id_t& to, const value_t& v);
+	bool update_accumulative_cf(const id_t& from, const id_t& to, const value_t& v);
 	bool update_selective_cb(const id_t& from, const id_t& to, const value_t& v);
 	bool update_selective_cf(const id_t& from, const id_t& to, const value_t& v);
 
 private:
 	operation_t* opt;
 	// buffer for remote nodes.
-	// vector in general case; optimized to only one element for the accumulative and the selective
+	// vector in general case; optimized to only one element for some cases
 	std::unordered_map<id_t, std::vector<std::pair<id_t, value_t>>> cont; // to -> [ <from, v> ]*n
 
 	std::function<typename MessageDef<V>::MsgVUpdate_t(const size_t)> f_collect;
@@ -75,13 +76,18 @@ private:
 };
 
 template <class V, class N>
-void RemoteHolder<V, N>::init(operation_t* opt, const bool cache_free)
+void RemoteHolder<V, N>::init(operation_t* opt, const bool incremental, const bool cache_free)
 {
 	this->opt = opt;
 	if(opt->is_accumulative()){
 		f_collect = std::bind(&RemoteHolder<V, N>::collect_accumulative, this, std::placeholders::_1);
-		f_update = std::bind(&RemoteHolder<V, N>::update_accumulative,
-			this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+		if(cache_free){
+			f_update = std::bind(&RemoteHolder<V, N>::update_accumulative_cb,
+				this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+		}else{
+			f_update = std::bind(&RemoteHolder<V, N>::update_accumulative_cf,
+				this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+		}
 		f_prepare = f_update;
 	}else if(opt->is_selective()){
 		f_collect = std::bind(&RemoteHolder<V, N>::collect_selective, this, std::placeholders::_1);
@@ -176,14 +182,30 @@ bool RemoteHolder<V, N>::update_general(const id_t& from, const id_t& to, const 
 	return true;
 }
 template <class V, class N>
-bool RemoteHolder<V, N>::update_accumulative(const id_t& from, const id_t& to, const value_t& v){
+bool RemoteHolder<V, N>::update_accumulative_cb(const id_t& from, const id_t& to, const value_t& v){
 	auto& vec=cont[to];
-	if(vec.empty()){
+	auto it = std::find_if(vec.begin(), vec.end(), [&](const std::pair<id_t, value_t>& p){
+		return p.first == from;
+	});
+	if(it == vec.end()){
 		vec.emplace_back(from, v);
 		return true;
 	}else{
-		// vec.front().first does not matter
-		vec.front().second = opt->oplus(vec.front().second, v);
+		it->second = v;
+		return false;
+	}
+}
+template <class V, class N>
+bool RemoteHolder<V, N>::update_accumulative_cf(const id_t& from, const id_t& to, const value_t& v){
+	auto& vec=cont[to];
+	auto it = std::find_if(vec.begin(), vec.end(), [&](const std::pair<id_t, value_t>& p){
+		return p.first == from;
+	});
+	if(it == vec.end()){
+		vec.emplace_back(from, v);
+		return true;
+	}else{
+		it->second = opt->oplus(it->second, v);
 		return false;
 	}
 }
@@ -247,6 +269,14 @@ typename MessageDef<V>::MsgVUpdate_t RemoteHolder<V, N>::collect_accumulative(co
 		id_t to = it->first;
 		id_t from = it->second.front().first;
 		value_t v = it->second.front().second;
+		// for most cases, there is only one entry for each node
+		if(it->second.size() > 1){
+			auto jt = it->second.begin();
+			auto jt_end = it->second.end();
+			for(++jt; jt != jt_end; ++jt){
+				v = opt->oplus(v, jt->second);
+			}
+		}
 		res.emplace_back(from, to, v);
 	}
 	if(it == cont.end())

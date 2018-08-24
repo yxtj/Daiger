@@ -148,7 +148,7 @@ void GlobalHolder<V, N>::init(OperationBase* opt, IOHandlerBase* ioh,
 	for(size_t i = 0; i<nPart; ++i){
 		if(i == local_id)
 			continue;
-		remote_parts[i].init(this->opt, cache_free);
+		remote_parts[i].init(this->opt, incremental, cache_free);
 	}
 	applying = false;
 	sending = false;
@@ -411,6 +411,7 @@ std::unordered_map<int, std::string> GlobalHolder<V, N>::collectINCache(){
 template <class V, class N>
 void GlobalHolder<V, N>::msgUpdate(const std::string& line){
 	auto ms = deserialize<typename msg_t::MsgVUpdate_t>(line);
+	DVLOG(3)<<"receive: "<<ms;
 	for(typename msg_t::VUpdate_t& m : ms) {
 		local_part.cal_incremental(std::get<0>(m), std::get<1>(m), std::get<2>(m));
 	}
@@ -418,12 +419,14 @@ void GlobalHolder<V, N>::msgUpdate(const std::string& line){
 template <class V, class N>
 std::string GlobalHolder<V, N>::msgRequest(const std::string& line){
 	auto m = deserialize<typename msg_t::VRequest_t>(line);
+	DVLOG(3)<<"receive request: "<<m;
 	value_t v = local_part.get(m.second).v;
 	return serialize(typename msg_t::VReply_t{m.first, m.second, v});
 }
 template <class V, class N>
 void GlobalHolder<V, N>::msgReply(const std::string& line){
 	auto m = deserialize<typename msg_t::VReply_t>(line);
+	DVLOG(3)<<"receive reply: "<<m;
 	local_part.cal_incremental(std::get<1>(m), std::get<0>(m), std::get<2>(m));
 }
 
@@ -530,6 +533,7 @@ std::string GlobalHolder<V, N>::collectMsg(const int pid){
 	typename msg_t::MsgVUpdate_t data =
 	// std::vector<std::pair<id_t, std::pair<id_t, value_t>>> data =
 		remote_parts[pid].collect(send_max_size);
+	DVLOG(3)<<"send: "<<data;
 	std::string res = serialize(data);
 	sending = false;
 	return res;
