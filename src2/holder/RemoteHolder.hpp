@@ -1,6 +1,7 @@
 #pragma once
 #include "common/Node.h"
 #include "application/Operation.h"
+#include "msg/messages.h"
 #include <algorithm>
 #include <vector>
 #include <unordered_map>
@@ -44,17 +45,18 @@ public:
 	}
 
 	// collect and remove from the table, format: to, from, v
-	std::vector<std::pair<id_t, std::pair<id_t, value_t>>> collect(){
+	//std::vector<std::pair<id_t, std::pair<id_t, value_t>>> collect(){
+	typename MessageDef<V>::MsgVUpdate_t collect(){
 		return collect(size());
 	}
-	std::vector<std::pair<id_t, std::pair<id_t, value_t>>> collect(const size_t num){
+	typename MessageDef<V>::MsgVUpdate_t collect(const size_t num){
 		return f_collect(num);
 	}
 
 private:
-	std::vector<std::pair<id_t, std::pair<id_t, value_t>>> collect_general(const size_t num);
-	std::vector<std::pair<id_t, std::pair<id_t, value_t>>> collect_accumulative(const size_t num);
-	std::vector<std::pair<id_t, std::pair<id_t, value_t>>> collect_selective(const size_t num);
+	typename MessageDef<V>::MsgVUpdate_t collect_general(const size_t num);
+	typename MessageDef<V>::MsgVUpdate_t collect_accumulative(const size_t num);
+	typename MessageDef<V>::MsgVUpdate_t collect_selective(const size_t num);
 
 	bool update_general(const id_t& from, const id_t& to, const value_t& v);
 	bool update_accumulative(const id_t& from, const id_t& to, const value_t& v);
@@ -63,10 +65,11 @@ private:
 
 private:
 	operation_t* opt;
-	// buffer for other nodes. vector for general case; otherwise only the first element is used
+	// buffer for remote nodes.
+	// vector in general case; optimized to only one element for the accumulative and the selective
 	std::unordered_map<id_t, std::vector<std::pair<id_t, value_t>>> cont; // to -> [ <from, v> ]*n
 
-	std::function<std::vector<std::pair<id_t, std::pair<id_t, value_t>>>(const size_t)> f_collect;
+	std::function<typename MessageDef<V>::MsgVUpdate_t(const size_t)> f_collect;
 	std::function<bool(const id_t&, const id_t&, const value_t&)> f_prepare;
 	std::function<bool(const id_t&, const id_t&, const value_t&)> f_update;
 };
@@ -221,13 +224,13 @@ bool RemoteHolder<V, N>::update_selective_cf(const id_t& from, const id_t& to, c
 
 
 template <class V, class N>
-std::vector<std::pair<id_t, std::pair<id_t, V>>> RemoteHolder<V, N>::collect_general(const size_t num){
-	std::vector<std::pair<id_t, std::pair<id_t, V>>> res;
+typename MessageDef<V>::MsgVUpdate_t RemoteHolder<V, N>::collect_general(const size_t num){
+	typename MessageDef<V>::MsgVUpdate_t res;
 	auto it=cont.begin();
 	for(size_t i=0; i<num && it!=cont.end(); ++i, ++it){
 		auto jt_end = it->second.end();
 		for(auto jt = it->second.begin(); jt != jt_end; ++jt){
-			res.emplace_back(it->first, std::move(*jt));
+			res.emplace_back(jt->first, it->first, jt->second);
 		}
 	}
 	if(it == cont.end())
@@ -237,17 +240,14 @@ std::vector<std::pair<id_t, std::pair<id_t, V>>> RemoteHolder<V, N>::collect_gen
 	return res;
 }
 template <class V, class N>
-std::vector<std::pair<id_t, std::pair<id_t, V>>> RemoteHolder<V, N>::collect_accumulative(const size_t num){
-	std::vector<std::pair<id_t, std::pair<id_t, V>>> res;
+typename MessageDef<V>::MsgVUpdate_t RemoteHolder<V, N>::collect_accumulative(const size_t num){
+	typename MessageDef<V>::MsgVUpdate_t res;
 	auto it=cont.begin();
 	for(size_t i=0; i<num && it!=cont.end(); ++i, ++it){
-		// value_t v = opt->identity_element();
-		// auto jt_end = it->second.end();
-		// for(auto jt = it->second.begin(); jt != jt_end; ++jt){
-		// 	v = opt->oplus(v, jt->second);
-		// }
+		id_t to = it->first;
+		id_t from = it->second.front().first;
 		value_t v = it->second.front().second;
-		res.emplace_back(it->first, std::make_pair(it->second.begin()->first, v));
+		res.emplace_back(from, to, v);
 	}
 	if(it == cont.end())
 		cont.clear();
@@ -256,8 +256,8 @@ std::vector<std::pair<id_t, std::pair<id_t, V>>> RemoteHolder<V, N>::collect_acc
 	return res;
 }
 template <class V, class N>
-std::vector<std::pair<id_t, std::pair<id_t, V>>> RemoteHolder<V, N>::collect_selective(const size_t num){
-	std::vector<std::pair<id_t, std::pair<id_t, V>>> res;
+typename MessageDef<V>::MsgVUpdate_t RemoteHolder<V, N>::collect_selective(const size_t num){
+	typename MessageDef<V>::MsgVUpdate_t res;
 	auto it=cont.begin();
 	for(size_t i=0; i<num && it!=cont.end(); ++i, ++it){
 		// value_t t = opt->identity_element();
@@ -269,9 +269,10 @@ std::vector<std::pair<id_t, std::pair<id_t, V>>> RemoteHolder<V, N>::collect_sel
 		// 		b = jt->first;
 		// 	}
 		// }
-		id_t b = it->second.front().first;
-		value_t t = it->second.front().second;
-		res.emplace_back(it->first, std::make_pair(b, t));
+		id_t to = it->first;
+		id_t from = it->second.front().first;
+		value_t v = it->second.front().second;
+		res.emplace_back(from, to, v);
 	}
 	if(it == cont.end())
 		cont.clear();

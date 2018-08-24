@@ -106,7 +106,6 @@ private:
 	LocalHolder<V, N> local_part;
 	int local_id;
 
-	int pointer_dump;
 	bool applying;
 	bool sending;
 
@@ -143,7 +142,6 @@ void GlobalHolder<V, N>::init(OperationBase* opt, IOHandlerBase* ioh,
 	this->send_max_size = send_max_size;
 
 	this->ptn->setParts(nPart);
-	pointer_dump = 0;
 
 	local_part.init(this->opt, this->scd, this->tmt, nPart, incremental, async, cache_free);
 	remote_parts.resize(nPart);
@@ -502,10 +500,12 @@ void GlobalHolder<V, N>::doApply(){
 	for(const id_t id : nodes){
 		processNode(id);
 	}
+	#ifndef NDEBUG
 	for(const id_t id: nodes){
 		const node_t& n = local_part.get(id);
 		DVLOG(3)<<"k="<<n.id<<" v="<<n.v<<" u="<<n.u;
 	}
+	#endif
 	applying = false;
 }
 
@@ -513,7 +513,7 @@ template <class V, class N>
 bool GlobalHolder<V, N>::needSend(bool force){
 	if(sending)
 		return false;
-	size_t th = force ? 0 : send_min_size - 1;
+	size_t th = force ? 0 : send_min_size;
 	size_t sum = 0;
 	for(auto& t : remote_parts){
 		sum += t.size();
@@ -526,7 +526,9 @@ bool GlobalHolder<V, N>::needSend(bool force){
 template <class V, class N>
 std::string GlobalHolder<V, N>::collectMsg(const int pid){
 	sending = true;
-	std::vector<std::pair<id_t, std::pair<id_t, value_t>>> data =
+	// msg_t::MsgVUpdate_t = std::vector<typename msg_t::VUpdate_t>
+	typename msg_t::MsgVUpdate_t data =
+	// std::vector<std::pair<id_t, std::pair<id_t, value_t>>> data =
 		remote_parts[pid].collect(send_max_size);
 	std::string res = serialize(data);
 	sending = false;

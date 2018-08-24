@@ -19,12 +19,12 @@ Master::Master(AppBase& app, Option& opt)
 void Master::run() {
 	registerHandlers();
 	startMsgLoop("M"+to_string(my_net_id)+"-MSG");
-    registerWorker();
+	registerWorker();
 
 	procedureInit();
-    procedureLoadGraph();
-    if(opt.do_incremental) {
-        procedureLoadValue();
+	procedureLoadGraph();
+	if(opt.do_incremental) {
+		procedureLoadValue();
 		if(app.opt->is_selective()){
 			procedureBuildINCache(); // necessary for both cache-base and cache-free cases
 			procedureRebuildStructure(); // clear in-neighbor cache if cache-free
@@ -37,13 +37,13 @@ void Master::run() {
 		}
 	}
 	procedureGenInitMsg();
-    procedureUpdate();
-    if (opt.do_output) {
-        procedureDumpResult();
-    }
+	procedureUpdate();
+	if (opt.do_output) {
+		procedureDumpResult();
+	}
 
 	// finish
-    shutdownWorker();
+	shutdownWorker();
 	clearMessages();
 	stopMsgLoop();
 	LOG(INFO)<<"master stops";
