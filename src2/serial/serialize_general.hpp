@@ -1,6 +1,7 @@
 #pragma once
 #include "serializer_basic.hpp"
 #include "serializer_iter.hpp"
+#include "serializer_tuple34.hpp"
 
 /***********************************
 Part I, single item

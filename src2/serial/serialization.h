@@ -1,16 +1,15 @@
 #pragma once
 #include <cstdint>
 #include "serialize_general.hpp"
-#include "tuple3_ps.h"
 
 /*
 Two ways to support customize type:
-1, (recommanded) add partial specialization struct for _Serializer.
+1, (recommended) add partial specialization struct for _Serializer.
 	Put it in a separated .hpp file and include it here.
 	A reference can be found at "serializer_basic.hpp" and you should include it.
 2, (using existing functions) use existing methods together with partial specialization functions.
 	Put existing methods' declarations in a .h file and include it here.
-	Then write parial specilization version for estimateSize, serial, deserial functions in this header file.
+	Then write partial specialization version for estimateSize, serial, deserial functions in this header file.
 	The partial spec. versions should directly call the existing function.
 	A reference can be found in Part III.
 */
@@ -81,7 +80,7 @@ template <class Cont>
 inline std::string serializeCont(typename Cont::const_iterator first, typename Cont::const_iterator last);
 
 /***********************************
-Part III, partial specialaizations
+Part III, partial specializations for customized data type
 ************************************/
 
 // for Motif
