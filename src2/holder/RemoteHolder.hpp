@@ -82,10 +82,10 @@ void RemoteHolder<V, N>::init(operation_t* opt, const bool incremental, const bo
 	if(opt->is_accumulative()){
 		f_collect = std::bind(&RemoteHolder<V, N>::collect_accumulative, this, std::placeholders::_1);
 		if(cache_free){
-			f_update = std::bind(&RemoteHolder<V, N>::update_accumulative_cb,
+			f_update = std::bind(&RemoteHolder<V, N>::update_accumulative_cf,
 				this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
 		}else{
-			f_update = std::bind(&RemoteHolder<V, N>::update_accumulative_cf,
+			f_update = std::bind(&RemoteHolder<V, N>::update_accumulative_cb,
 				this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
 		}
 		f_prepare = f_update;
