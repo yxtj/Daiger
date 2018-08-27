@@ -195,7 +195,7 @@ bool Option::setWeight(string& method){
 
 int main(int argc, char* argv[]){
 	if(argc<3 || argc>8){
-		cerr<<"Wrong usage.\n"
+		cerr<<"Generate graph. Graphs with same size and seed are guaranteed to be identical"
 			"Usage: <#parts> <#nodes> [out-dir] [self-loop] [weight:<min>,<max>] [deg-dist:<param>] [random-seed]"<<endl;
 		cerr<<"  [self-loop]: (=true) whether to allow self-loop edge.\n"
 			"  [out-dir]: (=./) the folder to store the output fieles\n"
