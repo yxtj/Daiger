@@ -5,6 +5,39 @@
 
 using namespace std;
 
+bool beTrueOption(const std::string& str){
+	static vector<string> true_options({"1", "t", "T", "true", "True", "TRUE", "y", "Y", "yes", "Yes", "YES"});
+	return find(true_options.begin(), true_options.end(), str) != true_options.end();
+}
+
+std::vector<std::vector<Link>> general_load_weight(const int npart,
+	const std::string& gfolder, const std::string& gprefix)
+{
+	vector<vector<Link>> g;
+	for(int i=0;i<npart;++i){
+		string fn=gfolder+"/"+gprefix+to_string(i);
+		cout<<"  loading "<<fn<<endl;
+		if(!load_graph_weight(g, fn)){
+			throw invalid_argument("Error: cannot open input file: "+fn);
+		}
+	}
+	return g;
+}
+
+std::vector<std::vector<int>> general_load_unweight(const int npart,
+	const std::string& gfolder, const std::string& gprefix)
+{
+	vector<vector<int>> g;
+	for(int i=0;i<npart;++i){
+		string fn=gfolder+"/"+gprefix+to_string(i);
+		cout<<"  loading "<<fn<<endl;
+		if(!load_graph_unweight(g, fn)){
+			throw invalid_argument("Error: cannot open input file: "+fn);
+		}
+	}
+	return g;
+}
+
 bool load_graph_weight(std::vector<std::vector<Link>>& res, const std::string& fn){
 	ifstream fin(fn);
 	if(!fin){
@@ -127,7 +160,29 @@ std::vector<std::pair<int,int>> load_critical_edges(std::ifstream& fin){
 	return res;
 }
 
-bool dump(const std::vector<std::string>& fnouts, const std::vector<float>& res){
+bool dump(const std::vector<std::string>& fnouts, const std::vector<float>& res, const bool fix_point){
+	size_t parts=fnouts.size();
+	vector<ofstream*> fouts;
+	for(size_t i=0;i<parts;++i){
+		ofstream* pf=new ofstream(fnouts[i]);
+		if(!pf || !pf->is_open())
+			return false;
+		if(fix_point){
+			pf->setf(ios::fixed, ios::floatfield);
+			pf->precision(6);
+		}
+		fouts.push_back(pf);
+	}
+	size_t size=res.size();
+	for(size_t i=0;i<size;++i){
+		(*fouts[i%parts])<<i<<"\t"<<res[i]<<"\n";
+	}
+	for(size_t i=0;i<parts;++i)
+		delete fouts[i];
+	return true;
+}
+
+bool dump(const std::vector<std::string>& fnouts, const std::vector<int>& res, const bool){
 	size_t parts=fnouts.size();
 	vector<ofstream*> fouts;
 	for(size_t i=0;i<parts;++i){
@@ -138,7 +193,27 @@ bool dump(const std::vector<std::string>& fnouts, const std::vector<float>& res)
 	}
 	size_t size=res.size();
 	for(size_t i=0;i<size;++i){
-		(*fouts[i%parts])<<i<<"\t0:"<<res[i]<<"\n";
+		(*fouts[i%parts])<<i<<"\t"<<res[i]<<"\n";
+	}
+	for(size_t i=0;i<parts;++i)
+		delete fouts[i];
+	return true;
+}
+
+bool dump(const std::vector<std::string>& fnouts, const std::vector<std::pair<int, int>>& cedges, const bool){
+	size_t parts=fnouts.size();
+	vector<ofstream*> fouts;
+	for(size_t i=0;i<parts;++i){
+		ofstream* pf=new ofstream(fnouts[i]);
+		if(!pf || !pf->is_open())
+			return false;
+		fouts.push_back(pf);
+	}
+	size_t size=cedges.size();
+	for(size_t i=0;i<size;++i){
+		int src, dst;
+		tie(src, dst)=cedges[i];
+		(*fouts[src%parts])<<src<<" "<<dst<<"\n";
 	}
 	for(size_t i=0;i<parts;++i)
 		delete fouts[i];
