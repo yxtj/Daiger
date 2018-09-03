@@ -16,6 +16,8 @@
 #include <random>
 #include <functional>
 #include <unordered_set>
+#include <chrono>
+#include "common.h"
 
 using namespace std;
 
@@ -35,6 +37,8 @@ struct ModifyEdges{
 	vector<Edge> addSet;
 	vector<Edge> rmvSet;
 };
+
+// ------ online ------
 
 pair<int, vector<Edge>> parseFromLine(const string& line){
 	int key;
@@ -120,21 +124,22 @@ void dumpChangeOneSet(ofstream& fout, const vector<Edge>& edgeSet, char type, bo
 	}
 }
 
-int changeGraph(const string& dir, const string& deltaPrefix,
+int changeGraphOnline(const string& graphFolder, const string& deltaFolder,
 		const int nPart, const int seed, const double rate,
 		const double addRate, const double rmvRate, const bool bidir)
 {
 	vector<ifstream*> fin;
 	vector<ofstream*> fout;
+	cout << "Loading " << nPart << " parts, from folder: " << graphFolder << endl;
 	for(int i = 0; i < nPart; ++i){
-		fin.push_back(new ifstream(dir + "/part-" + to_string(i)));
-		fout.push_back(new ofstream(deltaPrefix + "-" + to_string(i)));
+		fin.push_back(new ifstream(graphFolder + "/part-" + to_string(i)));
+		fout.push_back(new ofstream(deltaFolder + "/delta-" + to_string(i)));
 		if(!fin.back()->is_open()){
-			cerr << "failed in opening input file: " << dir + "/part-" + to_string(i) << endl;
+			cerr << "failed in opening input file: " << graphFolder + "/part-" + to_string(i) << endl;
 			return 0;
 		}
 		if(!fout.back()->is_open()){
-			cerr << "failed in opening output file: " << deltaPrefix + "-" + to_string(i) << endl;
+			cerr << "failed in opening output file: " << deltaFolder + "/delta-" + to_string(i) << endl;
 			return 0;
 		}
 	}
@@ -183,12 +188,177 @@ int changeGraph(const string& dir, const string& deltaPrefix,
 	return nPart;
 }
 
+// ------ offline ------
+
+// normal return: totalE
+// return by reference: resultSet = {addSet, rmvSet}
+int changeAll(const vector<vector<Link>>& g, const ModifyThreshold& threshold,
+		uniform_real_distribution<double>& rnd_prob, uniform_int_distribution<int>& rnd_node,
+		mt19937& gen, ModifyEdges& resultSet)
+{
+	vector<Edge>& addSet = resultSet.addSet;
+	vector<Edge>& rmvSet = resultSet.rmvSet;
+
+	int totalV = g.size();
+	int totalE = 0;
+	
+	for(size_t i = 0; i < g.size(); ++i){
+		int addCnt = 0;
+		const auto& vec = g[i];
+		for(const Link& e : vec){
+			double r = rnd_prob(gen);
+			if(r < threshold.trivial){
+				continue;
+			}else if(r < threshold.add){
+				++addCnt;
+			}else if(r < threshold.rmv){
+				rmvSet.push_back(Edge{i, e.node});
+			}
+		}
+		totalE += vec.size();
+		// add
+		while(addCnt--){
+			int rpt = 0;
+			int newV;
+			do{
+				newV = rnd_node(gen);
+			}while(find_if(vec.begin(), vec.end(), [&](const Link& e){ return e.node == newV; }) != vec.end() && rpt++ < 10);
+			if(rpt < 10){
+				Edge e{ i, newV};
+				addSet.push_back(e);
+			}else{
+				// ++failAdd;
+			}
+		}
+	}
+	return totalE;
+}
+
+void addReverseEdge(vector<Edge>& es){
+	vector<pair<int, int>> tmp;
+	tmp.reserve(es.size());
+	for(Edge& e : es){
+		if(e.u < e.v)
+			tmp.emplace_back(e.u, e.v);
+		else
+			tmp.emplace_back(e.v, e.u);
+	}
+	sort(tmp.begin(), tmp.end());
+	vector<pair<int, int>> ext; // those already have a reverse edge in es
+	auto it = adjacent_find(tmp.begin(), tmp.end());
+	while(it != tmp.end()){
+		ext.push_back(*it);
+		++it;
+		it = adjacent_find(it, tmp.end());
+	}
+	// add reverse edges
+	size_t n = es.size();
+	es.reserve(2*n);
+	if(ext.empty()){
+		for(size_t i = 0; i<n; ++i){
+			const auto& e = es[i];
+			es.push_back(Edge{e.v, e.u});
+		}
+	}else{
+		for(size_t i = 0; i<n; ++i){
+			const auto& e = es[i];
+			pair<int, int> t = e.u < e.v ? make_pair(e.u, e.v) : make_pair(e.v, e.u);
+			if(find(tmp.begin(), tmp.end(), t) == tmp.end())
+				es.push_back(Edge{e.v, e.u});
+		}
+	}
+	sort(es.begin(), es.end(), [](const Edge& l, const Edge& r){
+		return l.u < r.u ? true : l.u == r.u && l.v < r.v;
+	});
+}
+
+void dumpChangeAllSet(vector<ofstream*>& fouts, const int n, const vector<Edge>& es, char type){
+	for(const Edge& e : es){
+		(*fouts[e.u % n]) << type << " " << e.u << "," << e.v << "\n";
+	}
+}
+
+int changeGraphOffline(const string& graphFolder, const string& deltaFolder,
+		const int nPart, const int seed, const double rate,
+		const double addRate, const double rmvRate, const bool bidir)
+{
+	vector<ofstream*> fout;
+	for(int i = 0; i < nPart; ++i){
+		fout.push_back(new ofstream(deltaFolder + "/delta-" + to_string(i)));
+		if(!fout.back()->is_open()){
+			cerr << "failed in opening output file: " << deltaFolder + "/delta-" + to_string(i) << endl;
+			return 0;
+		}
+	}
+	
+	chrono::time_point<std::chrono::system_clock> start_t;
+	chrono::duration<double> elapsed;
+	// load
+	cout << "Loading " << nPart << " parts, from folder: " << graphFolder << endl;
+    start_t = chrono::system_clock::now();
+	vector<vector<Link>> g;
+	try{
+		g = general_load_weight(nPart, graphFolder, "part-");
+	}catch(exception& e){
+		cerr<<e.what()<<endl;
+		return 3;
+	}
+    elapsed = chrono::system_clock::now()-start_t;
+	cout<<"  load "<<g.size()<<" nodes in "<<elapsed.count()<<" seconds"<<endl;
+	
+	// generate delta information
+	mt19937 gen(seed);
+	uniform_real_distribution<double> rnd_prob(0.0, 1.0);
+	uniform_int_distribution<int> rnd_node(0, g.size());
+
+	double addProb = rate * addRate, rmvProb = rate * rmvRate;
+
+	ModifyThreshold threshold; //{ addTh, rmvTh };
+	threshold.trivial = (1 - rate);
+	threshold.add = threshold.trivial + addProb;
+	threshold.rmv = threshold.add + rmvProb;
+
+	
+	cout<<"Generating delta information"<<endl;
+    start_t = chrono::system_clock::now();
+	ModifyEdges modifiedSet;
+	int totalE = changeAll(g, threshold, rnd_prob, rnd_node, gen, modifiedSet);
+	if(bidir){
+		addReverseEdge(modifiedSet.addSet);
+		addReverseEdge(modifiedSet.rmvSet);
+	}
+    elapsed = chrono::system_clock::now()-start_t;
+    
+	const int addCnt = modifiedSet.addSet.size();
+	const int rmvCnt = modifiedSet.rmvSet.size();
+	const int totalV = g.size();
+	const double te = totalE;
+	cout << "Total vertex/edge: " << totalV << "/" << totalE << "\n";
+	cout << "  add e: " << addCnt << "\t: " << addCnt / te << "\n";
+	cout << "  rmv e: " << rmvCnt << "\t: " << rmvCnt / te << "\n";
+	cout << "  finished in "<<elapsed.count()<<" seconds"<<endl;
+
+	// dump delta information
+	cout << "Dumping delta information"<<endl;
+    start_t = chrono::system_clock::now();
+	dumpChangeAllSet(fout, nPart, modifiedSet.addSet, 'A');
+	dumpChangeAllSet(fout, nPart, modifiedSet.rmvSet, 'R');
+    elapsed = chrono::system_clock::now()-start_t;
+    cout<<"  finished in "<<elapsed.count()<<" seconds"<<endl;
+	
+	for(int i = 0; i < nPart; i++){
+		delete fout[i];
+	}
+
+	return nPart;
+}
+
 // ------ main ------
 
 struct Option{
 	string graphFolder;
 	int nPart;
-	string deltaPrefix;
+	string deltaFolder;
 	
 	double alpha; // for power-law distribution
 	
@@ -197,6 +367,7 @@ struct Option{
 	double rate;	// rate of changed edges
 	double addRate, rmvRate;
 
+	bool online;
 	bool dir;
 	unsigned long seed;
 	
@@ -212,16 +383,19 @@ void Option::parse(int argc, char* argv[]){
 	nPart = stoi(string(argv[1]));
 	graphFolder = argv[2];
 //	nNode=stoi(string(argv[2]));
-	deltaPrefix = argv[3];
+	deltaFolder = argv[3];
 	rate = stod(string(argv[4]));
 	addRate = stod(string(argv[5]));
 	rmvRate = stod(string(argv[6]));
-	dir = true;
+	online = false;
 	if(argc > 7)
-		dir = stoi(string(argv[7]))==1;
-	seed = 1535345;
+		online = beTrueOption(string(argv[7]));
+	dir = true;
 	if(argc > 8)
-		seed = stoul(string(argv[8]));
+		dir = beTrueOption(string(argv[8]));
+	seed = 1535345;
+	if(argc > 9)
+		seed = stoul(string(argv[9]));
 	if(!normalizeRates())
 		throw invalid_argument("Given rates do not make sense.");
 }
@@ -247,8 +421,8 @@ bool Option::normalizeRates(){
 
 int main(int argc, char* argv[]){
 	if(argc < 7 || argc > 9){
-		cerr << "Wrong usage.\n"
-				"Usage: <#parts> <graph-folder> <delta-prefix> <deltaRate> <addRate> <rmvRate> [dir] [random-seed]"
+		cerr << "Generate delta information for unweighted graph.\n"
+				"Usage: <#parts> <graph-folder> <delta-prefix> <deltaRate> <addRate> <rmvRate> [online] [dir] [random-seed]"
 				<< endl;
 		cerr <<	"  <#parts>: number of parts the graphs are separated (the number of files to operate).\n"
 				"  <graph-folder>: the folder of graphs.\n"
@@ -257,10 +431,13 @@ int main(int argc, char* argv[]){
 				"  <addRate>, <rmvRate>: "
 				"among the changed edges the rates for edge-addition and edge-removal. "
 				"They are automatically normalized.\n"
+				"  [online]: (=0) whether to perform online generation. "
+				"Offline version guarantees equivalent output for same graph and seed."
+				"Online version guarantees that ONLY then <#part> is also identical.\n"
 				"  [dir]: (=1) whether it is a directional graph\n"
 				"  [random-seed]: (=1535345) seed for random numbers\n"
-				"i.e.: ./delta-gen-uw.exe 1 graphDir delta-rd 0.05 0 1 1 123456\n"
-				"i.e.: ./delta-gen-uw.exe 2 input ../delta/d2 0.01 0.2 0.8 0\n"
+				"i.e.: ./delta-gen-uw.exe 1 graphDir delta-rd 0.05 0 1 0 1 123456\n"
+				"i.e.: ./delta-gen-uw.exe 2 input ../delta/d2 0.01 0.2 0.8 1 0\n"
 				<< endl;
 		return 1;
 	}
@@ -272,10 +449,15 @@ int main(int argc, char* argv[]){
 		return 2;
 	}
 	ios_base::sync_with_stdio(false);
-	cout << "Loading " << opt.nPart << " parts, from folder: " << opt.graphFolder << endl;
 
-	int n = changeGraph(opt.graphFolder, opt.deltaPrefix, opt.nPart, opt.seed, opt.rate,
+	int n = 0;
+	if(opt.online){
+		n = changeGraphOnline(opt.graphFolder, opt.deltaFolder, opt.nPart, opt.seed, opt.rate,
 			opt.addRate, opt.rmvRate, !opt.dir);
+	}else{
+		n = changeGraphOffline(opt.graphFolder, opt.deltaFolder, opt.nPart, opt.seed, opt.rate,
+			opt.addRate, opt.rmvRate, !opt.dir);
+	}
 
 	cout << "success " << n << " files. fail " << opt.nPart - n << " files." << endl;
 	return n > 0 ? 0 : 3;
