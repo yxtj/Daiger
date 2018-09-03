@@ -44,7 +44,7 @@ struct ModifyEdges{
 
 // normal return: totalE
 // return by reference: resultSet = {addSet, rmvSet, incSet, decSet}
-int changeOne(const vector<vector<Link>>& g, const ModifyThreshold& threshold,
+int changeAll(const vector<vector<Link>>& g, const ModifyThreshold& threshold,
 		uniform_real_distribution<double>& rnd_prob, uniform_int_distribution<int>& rnd_node,
 		uniform_real_distribution<float>& rnd_weight, mt19937& gen,
 		ModifyEdges& resultSet)
@@ -56,7 +56,6 @@ int changeOne(const vector<vector<Link>>& g, const ModifyThreshold& threshold,
 
 	int totalV = g.size();
 	int totalE = 0;
-	const int maxV = g.size() - 1;
 	
 	for(size_t i = 0; i < g.size(); ++i){
 		int addCnt = 0;
@@ -83,7 +82,7 @@ int changeOne(const vector<vector<Link>>& g, const ModifyThreshold& threshold,
 			int rpt = 0;
 			int newV;
 			do{
-				newV = rnd_node(gen) % maxV;
+				newV = rnd_node(gen);
 			}while(find_if(vec.begin(), vec.end(), [&](const Link& e){ return e.node == newV; }) != vec.end() && rpt++ < 10);
 			if(rpt < 10){
 				Edge e{ i, newV, rnd_weight(gen) };
@@ -134,7 +133,7 @@ void addReverseEdge(vector<Edge>& es){
 	});
 }
 
-void dumpChangeOneSet(vector<ofstream*>& fouts, const int n, const vector<Edge>& es, char type){
+void dumpChangeAllSet(vector<ofstream*>& fouts, const int n, const vector<Edge>& es, char type){
 	for(const Edge& e : es){
 		(*fouts[e.u % n]) << type << " " << e.u << "," << e.v << "," << e.w << "\n";
 	}
@@ -171,7 +170,7 @@ int changeGraph(const string& graphFolder, const string& deltaFolder,
 	// generate delta information
 	mt19937 gen(seed);
 	uniform_real_distribution<double> rnd_prob(0.0, 1.0);
-	uniform_int_distribution<int> rnd_node; // 0 to numeric_limits<int>::max()
+	uniform_int_distribution<int> rnd_node(0, g.size());
 	uniform_real_distribution<float> rnd_weight(0, 1);
 
 	//double modProb=rate*(1-addRate);
@@ -188,7 +187,7 @@ int changeGraph(const string& graphFolder, const string& deltaFolder,
 	cout<<"Generating delta information"<<endl;
     start_t = chrono::system_clock::now();
 	ModifyEdges modifiedSet;
-	int totalE = changeOne(g, threshold, rnd_prob, rnd_node, rnd_weight, gen, modifiedSet);
+	int totalE = changeAll(g, threshold, rnd_prob, rnd_node, rnd_weight, gen, modifiedSet);
 	if(bidir){
 		addReverseEdge(modifiedSet.addSet);
 		addReverseEdge(modifiedSet.rmvSet);
@@ -213,10 +212,10 @@ int changeGraph(const string& graphFolder, const string& deltaFolder,
 	// dump delta information
 	cout << "Dumping delta information"<<endl;
     start_t = chrono::system_clock::now();
-	dumpChangeOneSet(fout, nPart, modifiedSet.addSet, 'A');
-	dumpChangeOneSet(fout, nPart, modifiedSet.rmvSet, 'R');
-	dumpChangeOneSet(fout, nPart, modifiedSet.incSet, 'I');
-	dumpChangeOneSet(fout, nPart, modifiedSet.decSet, 'D');
+	dumpChangeAllSet(fout, nPart, modifiedSet.addSet, 'A');
+	dumpChangeAllSet(fout, nPart, modifiedSet.rmvSet, 'R');
+	dumpChangeAllSet(fout, nPart, modifiedSet.incSet, 'I');
+	dumpChangeAllSet(fout, nPart, modifiedSet.decSet, 'D');
     elapsed = chrono::system_clock::now()-start_t;
     cout<<"  finished in "<<elapsed.count()<<" seconds"<<endl;
 	
