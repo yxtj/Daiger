@@ -38,6 +38,54 @@ struct ModifyEdges{
 	vector<Edge> rmvSet;
 };
 
+size_t addReverseEdge(vector<Edge>& es, const bool doSort){
+	vector<pair<int, int>> tmp;
+	tmp.reserve(es.size());
+	// find those already have a reverse edge in es
+	for(Edge& e : es){
+		if(e.u < e.v)
+			tmp.emplace_back(e.u, e.v);
+		else
+			tmp.emplace_back(e.v, e.u);
+	}
+	sort(tmp.begin(), tmp.end());
+	vector<pair<int, int>> ext;
+	auto it = adjacent_find(tmp.begin(), tmp.end());
+	while(it != tmp.end()){
+		ext.push_back(*it);
+		++it;
+		it = adjacent_find(it, tmp.end());
+	}
+	// add reverse edges
+	size_t n = es.size();
+	es.reserve(2*n);
+	if(ext.empty()){
+		for(size_t i = 0; i<n; ++i){
+			const auto& e = es[i];
+			es.push_back(Edge{e.v, e.u});
+		}
+	}else{
+		for(size_t i = 0; i<n; ++i){
+			const auto& e = es[i];
+			pair<int, int> t = e.u < e.v ? make_pair(e.u, e.v) : make_pair(e.v, e.u);
+			if(find(ext.begin(), ext.end(), t) == ext.end())
+				es.push_back(Edge{e.v, e.u});
+		}
+	}
+	if(doSort){
+		sort(es.begin(), es.end(), [](const Edge& l, const Edge& r){
+			return l.u < r.u ? true : l.u == r.u && l.v < r.v;
+		});
+	}
+	return (es.size() + ext.size()) / 2;
+}
+
+void dumpChangeOneSet(vector<ofstream*>& fouts, const int n, const vector<Edge>& es, char type){
+	for(const Edge& e : es){
+		(*fouts[e.u % n]) << type << " " << e.u << "," << e.v << "\n";
+	}
+}
+
 // ------ online ------
 
 pair<int, vector<Edge>> parseFromLine(const string& line){
@@ -111,19 +159,6 @@ tuple<int, int, int> changeOne(ifstream& fin, int maxV, const ModifyThreshold& t
 	return make_tuple(totalV, totalE, maxV);
 }
 
-void dumpChangeOneSet(ofstream& fout, const vector<Edge>& edgeSet, char type, bool bidir){
-	if(!bidir){
-		for(const Edge& e : edgeSet){
-			fout << type << " " << e.u << "," << e.v << "\n";
-		}
-	}else{
-		for(const Edge& e : edgeSet){
-			fout << type << " " << e.u << "," << e.v << "\n";
-			fout << type << " " << e.v << "," << e.u << "\n";
-		}
-	}
-}
-
 int changeGraphOnline(const string& graphFolder, const string& deltaFolder,
 		const int nPart, const int seed, const double rate,
 		const double addRate, const double rmvRate, const bool bidir)
@@ -144,47 +179,64 @@ int changeGraphOnline(const string& graphFolder, const string& deltaFolder,
 		}
 	}
 
+	chrono::time_point<std::chrono::system_clock> start_t;
+	chrono::duration<double> elapsed;
+	
 	mt19937 gen(seed);
 	uniform_real_distribution<double> rnd_prob(0.0, 1.0);
 	uniform_int_distribution<int> rnd_node; // 0 to numeric_limits<int>::max()
 
-	//double modProb=rate*(1-addRate);
 	double addProb = rate * addRate, rmvProb = rate * rmvRate;
-
 	ModifyThreshold threshold; //{ addTh, rmvTh, incTh, decTh };
 	threshold.trivial = (1 - rate);
 	threshold.add = threshold.trivial + addProb;
 	threshold.rmv = threshold.add + rmvProb;
 
 	int totalV = 0, totalE = 0;
-	// int failAdd = 0;
-	int addCnt = 0, rmvCnt = 0;
 
+	cout<<"Loading and generating delta information"<<endl;
+    start_t = chrono::system_clock::now();
 	int maxV = 0;
-	string line;
+	ModifyEdges modifiedSet;
 	for(int i = 0; i < nPart; i++){
+		cout<<"  Processing "<<graphFolder + "/part-" + to_string(i)<<endl;
 		// generate
-		ModifyEdges modifiedSet;
 		tuple<int, int, int> ret = changeOne(
 				*fin[i], maxV, threshold, rnd_prob, rnd_node, gen, modifiedSet);
 		totalV += get<0>(ret);
 		totalE += get<1>(ret);
 		maxV = max(maxV, get<2>(ret));
 		delete fin[i];
-
-		// dump
-		addCnt += modifiedSet.addSet.size();
-		dumpChangeOneSet(*fout[i], modifiedSet.addSet, 'A', bidir);
-		rmvCnt += modifiedSet.rmvSet.size();
-		dumpChangeOneSet(*fout[i], modifiedSet.rmvSet, 'R', bidir);
-
-		delete fout[i];
 	} // file
-
+	
+	if(bidir){
+		cout<<"  Adding reverse edges"<<endl;
+		size_t t = modifiedSet.addSet.size();
+		cout<<"    RE for add: "<<addReverseEdge(modifiedSet.addSet, true)<<" / "<<t<<" \n";
+		t = modifiedSet.rmvSet.size();
+		cout<<"    RE for rmv: "<<addReverseEdge(modifiedSet.rmvSet, true)<<" / "<<t<<" \n";
+	}
+    elapsed = chrono::system_clock::now()-start_t;
+    
+	const int addCnt = modifiedSet.addSet.size();
+	const int rmvCnt = modifiedSet.rmvSet.size();
 	double te = totalE;
 	cout << "Total vertex/edge: " << totalV << "/" << totalE << "\n";
 	cout << "  add e: " << addCnt << "\t: " << addCnt / te << "\n";
-	cout << "  rmv e: " << rmvCnt << "\t: " << rmvCnt / te << endl;
+	cout << "  rmv e: " << rmvCnt << "\t: " << rmvCnt / te << "\n";
+	cout << "  finished in "<<elapsed.count()<<" seconds"<<endl;
+	
+	// dump
+	cout << "Dumping delta information"<<endl;
+    start_t = chrono::system_clock::now();
+	dumpChangeOneSet(fout, nPart, modifiedSet.addSet, 'A');
+	dumpChangeOneSet(fout, nPart, modifiedSet.rmvSet, 'R');
+    elapsed = chrono::system_clock::now()-start_t;
+    cout<<"  finished in "<<elapsed.count()<<" seconds"<<endl;
+	
+	for(int i = 0; i < nPart; i++){
+		delete fout[i];
+	}
 	return nPart;
 }
 
@@ -234,50 +286,6 @@ int changeAll(const vector<vector<Link>>& g, const ModifyThreshold& threshold,
 	return totalE;
 }
 
-void addReverseEdge(vector<Edge>& es){
-	vector<pair<int, int>> tmp;
-	tmp.reserve(es.size());
-	for(Edge& e : es){
-		if(e.u < e.v)
-			tmp.emplace_back(e.u, e.v);
-		else
-			tmp.emplace_back(e.v, e.u);
-	}
-	sort(tmp.begin(), tmp.end());
-	vector<pair<int, int>> ext; // those already have a reverse edge in es
-	auto it = adjacent_find(tmp.begin(), tmp.end());
-	while(it != tmp.end()){
-		ext.push_back(*it);
-		++it;
-		it = adjacent_find(it, tmp.end());
-	}
-	// add reverse edges
-	size_t n = es.size();
-	es.reserve(2*n);
-	if(ext.empty()){
-		for(size_t i = 0; i<n; ++i){
-			const auto& e = es[i];
-			es.push_back(Edge{e.v, e.u});
-		}
-	}else{
-		for(size_t i = 0; i<n; ++i){
-			const auto& e = es[i];
-			pair<int, int> t = e.u < e.v ? make_pair(e.u, e.v) : make_pair(e.v, e.u);
-			if(find(tmp.begin(), tmp.end(), t) == tmp.end())
-				es.push_back(Edge{e.v, e.u});
-		}
-	}
-	sort(es.begin(), es.end(), [](const Edge& l, const Edge& r){
-		return l.u < r.u ? true : l.u == r.u && l.v < r.v;
-	});
-}
-
-void dumpChangeAllSet(vector<ofstream*>& fouts, const int n, const vector<Edge>& es, char type){
-	for(const Edge& e : es){
-		(*fouts[e.u % n]) << type << " " << e.u << "," << e.v << "\n";
-	}
-}
-
 int changeGraphOffline(const string& graphFolder, const string& deltaFolder,
 		const int nPart, const int seed, const double rate,
 		const double addRate, const double rmvRate, const bool bidir)
@@ -324,8 +332,11 @@ int changeGraphOffline(const string& graphFolder, const string& deltaFolder,
 	ModifyEdges modifiedSet;
 	int totalE = changeAll(g, threshold, rnd_prob, rnd_node, gen, modifiedSet);
 	if(bidir){
-		addReverseEdge(modifiedSet.addSet);
-		addReverseEdge(modifiedSet.rmvSet);
+		cout<<"  Adding reverse edges"<<endl;
+		size_t t = modifiedSet.addSet.size();
+		cout<<"    RE for add: "<<addReverseEdge(modifiedSet.addSet, true)<<" / "<<t<<" \n";
+		t = modifiedSet.rmvSet.size();
+		cout<<"    RE for rmv: "<<addReverseEdge(modifiedSet.rmvSet, true)<<" / "<<t<<" \n";
 	}
     elapsed = chrono::system_clock::now()-start_t;
     
@@ -341,8 +352,8 @@ int changeGraphOffline(const string& graphFolder, const string& deltaFolder,
 	// dump delta information
 	cout << "Dumping delta information"<<endl;
     start_t = chrono::system_clock::now();
-	dumpChangeAllSet(fout, nPart, modifiedSet.addSet, 'A');
-	dumpChangeAllSet(fout, nPart, modifiedSet.rmvSet, 'R');
+	dumpChangeOneSet(fout, nPart, modifiedSet.addSet, 'A');
+	dumpChangeOneSet(fout, nPart, modifiedSet.rmvSet, 'R');
     elapsed = chrono::system_clock::now()-start_t;
     cout<<"  finished in "<<elapsed.count()<<" seconds"<<endl;
 	
@@ -420,7 +431,7 @@ bool Option::normalizeRates(){
 }
 
 int main(int argc, char* argv[]){
-	if(argc < 7 || argc > 9){
+	if(argc < 7 || argc > 10){
 		cerr << "Generate delta information for unweighted graph.\n"
 				"Usage: <#parts> <graph-folder> <delta-prefix> <deltaRate> <addRate> <rmvRate> [online] [dir] [random-seed]"
 				<< endl;
@@ -433,11 +444,11 @@ int main(int argc, char* argv[]){
 				"They are automatically normalized.\n"
 				"  [online]: (=0) whether to perform online generation. "
 				"Offline version guarantees equivalent output for same graph and seed."
-				"Online version guarantees that ONLY then <#part> is also identical.\n"
+				"Online version guarantees that ONLY when <#part> is also identical (optimized for huge graph).\n"
 				"  [dir]: (=1) whether it is a directional graph\n"
 				"  [random-seed]: (=1535345) seed for random numbers\n"
 				"i.e.: ./delta-gen-uw.exe 1 graphDir delta-rd 0.05 0 1 0 1 123456\n"
-				"i.e.: ./delta-gen-uw.exe 2 input ../delta/d2 0.01 0.2 0.8 1 0\n"
+				"i.e.: ./delta-gen-uw.exe 2 input ../delta/ 0.01 0.2 0.8 1 0\n"
 				<< endl;
 		return 1;
 	}
