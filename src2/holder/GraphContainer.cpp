@@ -15,7 +15,8 @@ void GraphContainer::init(int wid, GlobalHolderBase* holder, bool incremental){
 	this->wid = wid;
 	this->holder = holder;
 	holder->init(app.opt, app.ioh, app.scd, app.ptn, app.tmt,
-		conf.nPart, wid, incremental, conf.async, conf.cache_free, conf.sort_result,
+		conf.nPart, wid, conf.aggregate_message,
+		incremental, conf.async, conf.cache_free, conf.sort_result,
 		conf.send_min_size, conf.send_max_size);
 	applying = false;
 	sending = false;

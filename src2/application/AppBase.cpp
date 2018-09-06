@@ -36,7 +36,8 @@ void AppBase::clear() {
 }
 
 AppBase makeApplication(const std::string& app_name, const std::vector<std::string>& arg_app, 
-	const std::vector<std::string>& arg_partitioner, const std::vector<std::string>& arg_scheduler)
+	const std::vector<std::string>& arg_partitioner, const std::vector<std::string>& arg_scheduler,
+	const size_t nInstance)
 {
 	AppBase app;
 	AppKernel* apk = AppKernelFactory::generate(app_name);
@@ -44,7 +45,7 @@ AppBase makeApplication(const std::string& app_name, const std::vector<std::stri
 	AppArguments aa = sep->separate(arg_app);
 	delete sep;
 	app.opt = apk->generateOperation();
-	app.opt->init(aa.operation_arg);
+	app.opt->init(aa.operation_arg, nInstance);
 	app.ioh = apk->generateIOHandler();
 	app.ioh->init(aa.iohandler_arg);
 	app.tmt = apk->generateTerminator();

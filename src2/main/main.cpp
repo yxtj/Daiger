@@ -34,19 +34,6 @@ int main(int argc, char* argv[]){
 	registerExamples();
 	registerFactories();
 	initLogger(argc, argv);
-	// init App
-	AppBase app;
-	try{
-		app = makeApplication(opt.app_name, opt.app_args,
-			opt.partitioner_args, opt.scheduler_args);
-	}catch(exception& e){
-		LOG(ERROR)<<"Error in generating App via parameter: "<<e.what();
-		return 2;
-	}
-	if(!app.check()){
-		LOG(ERROR)<<"The application is not correctly setup.";
-		return 2;
-	}
 	// init network
 	NetworkThread::Init(argc, argv);
 	NetworkThread* net = NetworkThread::GetInstance();
@@ -55,6 +42,19 @@ int main(int argc, char* argv[]){
 		LOG(ERROR)<<"The number of network instances ("<<net->size()
 			<<") does not match required ("<<1 + opt.conf.nPart<<").";
 		return 3;
+	}
+	// init App
+	AppBase app;
+	try{
+		app = makeApplication(opt.app_name, opt.app_args,
+			opt.partitioner_args, opt.scheduler_args, net->size());
+	}catch(exception& e){
+		LOG(ERROR)<<"Error in generating App via parameter: "<<e.what();
+		return 2;
+	}
+	if(!app.check()){
+		LOG(ERROR)<<"The application is not correctly setup.";
+		return 2;
 	}
 	app.ptn->setParts(net->size());
 

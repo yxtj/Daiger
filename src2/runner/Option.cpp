@@ -18,6 +18,7 @@ Option::Option()
 	pimpl->desc.add_options()
 		("help", "Print help messages")
 		("show_info", value<bool>(&show)->default_value(1), "Print the initializing information.")
+		("agg_message", value<bool>(&conf.aggregate_message)->default_value(1), "Aggregate messages to save bandwidth.")
 		("load_balance", value<bool>(&conf.balance_load)->default_value(1), "Support loading from arbitrary number of files.")
 		("part", value<size_t>(&conf.nPart)->default_value(0), 
 			"[integer] # of workers, used check whether a correct number of instance is started.")

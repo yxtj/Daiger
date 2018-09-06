@@ -6,6 +6,7 @@ struct ConfData {
 	size_t nNode; // optional, used to preactively allocate space
 
 	bool balance_load; // used to support data loading from arbitrary number of input files
+	bool aggregate_message; // used to save network bandwidth
 
 	std::string path_graph;
 	std::string path_delta;

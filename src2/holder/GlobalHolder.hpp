@@ -31,7 +31,7 @@ public:
 
 	virtual void init(OperationBase* opt, IOHandlerBase* ioh,
 		SchedulerBase* scd, PartitionerBase* ptn, TerminatorBase* tmt,
-		const size_t nPart, const int localId,
+		const size_t nPart, const int localId, const bool aggregate_message,
 		const bool incremental, const bool async, const bool cache_free, const bool sort_result,
 		const size_t send_min_size, const size_t send_max_size);
 
@@ -97,6 +97,7 @@ private:
 	size_t send_max_size;
 	size_t send_min_size;
 
+	bool aggregate_message;
 	bool incremental;
 	bool async;
 	bool cache_free;
@@ -121,7 +122,7 @@ private:
 template <class V, class N>
 void GlobalHolder<V, N>::init(OperationBase* opt, IOHandlerBase* ioh,
 		SchedulerBase* scd, PartitionerBase* ptn, TerminatorBase* tmt,
-		const size_t nPart, const int localId,
+		const size_t nPart, const int localId, const bool aggregate_message,
 		const bool incremental, const bool async, const bool cache_free, const bool sort_result,
 		const size_t send_min_size, const size_t send_max_size)
 {
@@ -132,6 +133,7 @@ void GlobalHolder<V, N>::init(OperationBase* opt, IOHandlerBase* ioh,
 	this->tmt = dynamic_cast<terminator_t*>(tmt);
 	this->nPart = nPart;
 	this->local_id = localId;
+	this->aggregate_message = aggregate_message;
 	this->incremental = incremental;
 	this->async = async;
 	this->cache_free = cache_free;
@@ -148,7 +150,7 @@ void GlobalHolder<V, N>::init(OperationBase* opt, IOHandlerBase* ioh,
 	for(size_t i = 0; i<nPart; ++i){
 		if(i == local_id)
 			continue;
-		remote_parts[i].init(this->opt, incremental, cache_free);
+		remote_parts[i].init(this->opt, local_id, aggregate_message, incremental, cache_free);
 	}
 	applying = false;
 	sending = false;

@@ -16,7 +16,7 @@ public:
 
 	virtual void init(OperationBase* opt, IOHandlerBase* ioh,
 		SchedulerBase* scd, PartitionerBase* ptn, TerminatorBase* tmt,
-		const size_t nPart, const int localId,
+		const size_t nPart, const int localId, const bool aggregate_message,
 		const bool incremental, const bool async, const bool cache_free, const bool sort_result,
 		const size_t send_min_size, const size_t send_max_size) = 0;
 
