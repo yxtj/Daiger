@@ -9,3 +9,7 @@ id_t stoid(const std::string& str){
 priority_t stop(const std::string& str){
 	return std::stof(str);
 }
+
+id_t gen_dummy_id(const size_t id){
+	return -1 - id;
+}

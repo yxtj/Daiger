@@ -1,5 +1,6 @@
 #include "pr.h"
 #include "util/Util.h"
+#include "common/def_func.h"
 #include <vector>
 #include <algorithm>
 
@@ -33,13 +34,13 @@ GlobalHolderBase* PageRank::generateGraph(){
 
 // -------- Components --------
 
-void PageRank::MyOperation::init(const std::vector<std::string>& arg_line){
+void PageRank::MyOperation::init(const std::vector<std::string>& arg_line, const size_t nInstance){
 	damp = stod(arg_line[0]);
 	if(damp < 0.0 || damp > 1.0){
 		throw invalid_argument("Invalid damping factor: "+arg_line[0]);
 	}
 	use_degree = beTrueOption(arg_line[1]);
-	dummy_id = -1;
+	dummy_id = gen_dummy_id(10 + nInstance);
 }
 PageRank::MyOperation::node_t PageRank::MyOperation::preprocess_node(
 	const id_t& k, neighbor_list_t& neighbors)

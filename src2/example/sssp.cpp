@@ -35,7 +35,7 @@ GlobalHolderBase* ShortestPath::generateGraph(){
 
 // -------- Components --------
 
-void ShortestPath::MyOperation::init(const std::vector<std::string>& arg_line){
+void ShortestPath::MyOperation::init(const std::vector<std::string>& arg_line, const size_t nInstance){
 	source = stoid(arg_line[0]);
 	use_degree = beTrueOption(arg_line[1]);
 }
