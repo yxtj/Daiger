@@ -80,7 +80,8 @@ void RemoteHolder<V, N>::init(operation_t* opt, const bool incremental, const bo
 {
 	this->opt = opt;
 	if(opt->is_accumulative()){
-		f_collect = std::bind(&RemoteHolder<V, N>::collect_accumulative, this, std::placeholders::_1);
+		// f_collect = std::bind(&RemoteHolder<V, N>::collect_accumulative, this, std::placeholders::_1);
+		f_collect = std::bind(&RemoteHolder<V, N>::collect_general, this, std::placeholders::_1);
 		if(cache_free){
 			f_update = std::bind(&RemoteHolder<V, N>::update_accumulative_cf,
 				this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
@@ -265,6 +266,7 @@ template <class V, class N>
 typename MessageDef<V>::MsgVUpdate_t RemoteHolder<V, N>::collect_accumulative(const size_t num){
 	typename MessageDef<V>::MsgVUpdate_t res;
 	auto it=cont.begin();
+	// TODO: use dummy id
 	for(size_t i=0; i<num && it!=cont.end(); ++i, ++it){
 		id_t to = it->first;
 		id_t from = it->second.front().first;
@@ -290,15 +292,6 @@ typename MessageDef<V>::MsgVUpdate_t RemoteHolder<V, N>::collect_selective(const
 	typename MessageDef<V>::MsgVUpdate_t res;
 	auto it=cont.begin();
 	for(size_t i=0; i<num && it!=cont.end(); ++i, ++it){
-		// value_t t = opt->identity_element();
-		// id_t b;
-		// auto jt_end = it->second.end();
-		// for(auto jt = it->second.begin(); jt != jt_end; ++jt){
-		// 	if(opt->better(jt->second, t)){
-		// 		t = jt->second;
-		// 		b = jt->first;
-		// 	}
-		// }
 		id_t to = it->first;
 		id_t from = it->second.front().first;
 		value_t v = it->second.front().second;
