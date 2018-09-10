@@ -169,6 +169,8 @@ void GraphContainer::loadDeltaFile(const std::string& fn, sender_t sender){
 	ifstream fin(fn);
 	string line;
 	while(getline(fin, line)){
+		if(line.size() < 3)
+			continue;
 		int pid = holder->loadDelta(line);
 		if(pid != wid)
 			sender(pid, line);
