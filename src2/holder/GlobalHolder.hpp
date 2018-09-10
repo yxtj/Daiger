@@ -116,7 +116,7 @@ private:
 
  	// used for incremental case of accumulative operators, store the source delta nodes
 	// write at loadDelta(), clear at intializedProcess()
-	std::unordered_map<id_t, node_t> unchanged_node;
+	std::unordered_map<id_t, node_t> touched_node;
 };
 
 template <class V, class N>
@@ -217,8 +217,8 @@ int GlobalHolder<V, N>::loadDelta(const std::string& line){
 	if(!is_local_part(pid))
 		return pid;
 	if(incremental){
-		if(unchanged_node.find(d.src) == unchanged_node.end()){
-			unchanged_node[d.src] = local_part.get(d.src);
+		if(touched_node.find(d.src) == touched_node.end()){
+			touched_node[d.src] = local_part.get(d.src);
 		}
 	}
 	if(d.type == ChangeEdgeType::ADD){
@@ -242,7 +242,7 @@ void GlobalHolder<V, N>::intializedProcess(){
 			intializedProcessSCF();
 		}
 	}
-	unchanged_node.clear();
+	touched_node.clear();
 }
 
 template <class V, class N>
@@ -269,7 +269,7 @@ void GlobalHolder<V, N>::intializedProcessACF(){
 		}
 	}
 	// step 2: generated initial messsages for changed nodes (incremental only)
-	for(const std::pair<id_t, node_t>& n : unchanged_node){
+	for(const std::pair<id_t, node_t>& n : touched_node){
 		std::vector<std::pair<id_t, value_t>> old_d = opt->func(n.second);
 		std::map<id_t, value_t> old_dm(old_d.begin(), old_d.end());
 		old_d.clear();
@@ -292,7 +292,7 @@ void GlobalHolder<V, N>::intializedProcessACF(){
 }
 template <class V, class N>
 void GlobalHolder<V, N>::intializedProcessSCF(){
-	for(const std::pair<id_t, node_t>& n : unchanged_node){
+	for(const std::pair<id_t, node_t>& n : touched_node){
 		std::vector<std::pair<id_t, value_t>> old_d = opt->func(n.second);
 		std::map<id_t, value_t> old_dm(old_d.begin(), old_d.end());
 		old_d.clear();

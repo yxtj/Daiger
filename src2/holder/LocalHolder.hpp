@@ -334,8 +334,9 @@ bool LocalHolder<V, N>::modify_onb_val(const id_t& k, const neighbor_t& n){
 	auto it=cont.find(k);
 	if(it==cont.end())
 		return false;
+	id_t nk = get_key(n);
 	auto jt = std::find_if(it->second.onb.begin(), it->second.onb.end(), [&](const N& nb){
-		return get_key(nb) == get_key(n);
+		return get_key(nb) == nk;
 	});
 	if(jt==it->second.onb.end())
 		return false;
