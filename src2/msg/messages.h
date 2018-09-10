@@ -10,9 +10,9 @@ enum ProcedureType : int {
 	ShareWorkers = 0,
 	LoadGraph = 1,
 	LoadValue = 2,
-	LoadDelta = 3,
-	BuildINCache = 4,
-	RebuildStructure = 5,
+	BuildINCache = 3,
+	RebuildStructure = 4,
+	LoadDelta = 5,
 	GenInitMsg = 6,
 	Update = 7,
 	DumpResult = 8
