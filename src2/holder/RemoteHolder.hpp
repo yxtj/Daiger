@@ -37,10 +37,6 @@ public:
 	std::pair<bool, std::vector<std::pair<id_t, value_t>>> get(const id_t& k) const;
 	std::pair<bool, value_t> get(const id_t& from, const id_t& to) const;
 
-	bool prepare(const id_t& from, const id_t& to, const value_t& v){
-		return f_prepare(from, to, v);
-	}
-
 	// corresponding to update_cache of LocalTable, return whether a new entry is inserted
 	bool update(const id_t& from, const id_t& to, const value_t& v){
 		return f_update(from, to, v);
@@ -56,15 +52,16 @@ public:
 	}
 
 private:
-	typename MessageDef<V>::MsgVUpdate_t collect_general(const size_t num);
-	typename MessageDef<V>::MsgVUpdate_t collect_accumulative(const size_t num); // aggregated
-	typename MessageDef<V>::MsgVUpdate_t collect_selective(const size_t num); // aggregated
-
+	// TODO: move time consuming logic from update_xx to collect_xx
 	bool update_general(const id_t& from, const id_t& to, const value_t& v);
 	bool update_accumulative_cb(const id_t& from, const id_t& to, const value_t& v);
 	bool update_accumulative_cf(const id_t& from, const id_t& to, const value_t& v);
 	bool update_selective_cb(const id_t& from, const id_t& to, const value_t& v);
 	bool update_selective_cf(const id_t& from, const id_t& to, const value_t& v);
+
+	typename MessageDef<V>::MsgVUpdate_t collect_general(const size_t num);
+	typename MessageDef<V>::MsgVUpdate_t collect_accumulative(const size_t num); // aggregated
+	typename MessageDef<V>::MsgVUpdate_t collect_selective(const size_t num); // aggregated
 
 private:
 	operation_t* opt;
@@ -74,7 +71,6 @@ private:
 	id_t dummy_worker_id; // used for aggregated message
 
 	std::function<typename MessageDef<V>::MsgVUpdate_t(const size_t)> f_collect;
-	std::function<bool(const id_t&, const id_t&, const value_t&)> f_prepare;
 	std::function<bool(const id_t&, const id_t&, const value_t&)> f_update;
 };
 
@@ -87,11 +83,6 @@ void RemoteHolder<V, N>::init(operation_t* opt, const size_t id,
 		dummy_worker_id = gen_dummy_id(id);
 	}
 	if(opt->is_accumulative()){
-		if(aggregate_message){
-			f_collect = std::bind(&RemoteHolder<V, N>::collect_accumulative, this, std::placeholders::_1);
-		}else{
-			f_collect = std::bind(&RemoteHolder<V, N>::collect_general, this, std::placeholders::_1);
-		}
 		if(cache_free){
 			f_update = std::bind(&RemoteHolder<V, N>::update_accumulative_cf,
 				this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
@@ -99,13 +90,12 @@ void RemoteHolder<V, N>::init(operation_t* opt, const size_t id,
 			f_update = std::bind(&RemoteHolder<V, N>::update_accumulative_cb,
 				this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
 		}
-		f_prepare = f_update;
-	}else if(opt->is_selective()){
 		if(aggregate_message){
-			f_collect = std::bind(&RemoteHolder<V, N>::collect_selective, this, std::placeholders::_1);
+			f_collect = std::bind(&RemoteHolder<V, N>::collect_accumulative, this, std::placeholders::_1);
 		}else{
 			f_collect = std::bind(&RemoteHolder<V, N>::collect_general, this, std::placeholders::_1);
 		}
+	}else if(opt->is_selective()){
 		if(cache_free){
 			f_update = std::bind(&RemoteHolder<V, N>::update_selective_cf,
 				this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
@@ -113,13 +103,15 @@ void RemoteHolder<V, N>::init(operation_t* opt, const size_t id,
 			f_update = std::bind(&RemoteHolder<V, N>::update_selective_cb,
 				this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
 		}
-		f_prepare = std::bind(&RemoteHolder<V, N>::update_selective_cb,
-			this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+		if(aggregate_message){
+			f_collect = std::bind(&RemoteHolder<V, N>::collect_selective, this, std::placeholders::_1);
+		}else{
+			f_collect = std::bind(&RemoteHolder<V, N>::collect_general, this, std::placeholders::_1);
+		}
 	}else{
-		f_collect = std::bind(&RemoteHolder<V, N>::collect_general, this, std::placeholders::_1);
 		f_update = std::bind(&RemoteHolder<V, N>::update_general,
 			this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
-		f_prepare = f_update;
+		f_collect = std::bind(&RemoteHolder<V, N>::collect_general, this, std::placeholders::_1);
 	}
 }
 
@@ -217,7 +209,8 @@ bool RemoteHolder<V, N>::update_accumulative_cf(const id_t& from, const id_t& to
 		vec.emplace_back(from, v);
 		return true;
 	}else{
-		vec.front().second = opt->oplus(vec.front().second, v);
+		auto& p = vec.front();
+		p.second = opt->oplus(p.second, v);
 		return false;
 	}
 	//
@@ -273,7 +266,7 @@ typename MessageDef<V>::MsgVUpdate_t RemoteHolder<V, N>::collect_general(const s
 	typename MessageDef<V>::MsgVUpdate_t res;
 	auto it=cont.begin();
 	for(size_t i=0; i<num && it!=cont.end(); ++i, ++it){
-		sort(it->second.begin(), it->second.end(),
+		std::sort(it->second.begin(), it->second.end(),
 			[](const std::pair<id_t, value_t>& l, const std::pair<id_t, value_t>& r){
 				return l.first < r.first;
 			});
