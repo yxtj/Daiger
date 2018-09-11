@@ -19,9 +19,9 @@ struct IOHelper {
 
 	// load graph changes
 	// format: <type> is one of A, R, I, D
-	// for A and R:
+	// for R:
 	// line: "<type>\t<src>,<dst>"
-	// for I and D:
+	// for A, I and D:
 	// line: "<type>\t<src>,<dst>,<weight>"
 	static ChangeEdge<id_t> load_change_unweighted(const std::string& line);
 	template <typename W>
@@ -60,9 +60,9 @@ std::pair<id_t, std::vector<std::pair<id_t, W>> > IOHelper::load_graph_weighted(
 template <typename W>
 ChangeEdge<std::pair<id_t, W>> IOHelper::load_change_weighted(const std::string& line){
 	// <type> is one of A, R, I, D
-	// for A and R:
+	// for R:
 	// line: "<type>\t<src>,<dst>"
-	// for I and D:
+	// for A, I and D:
 	// line: "<type>\t<src>,<dst>,<weight>"
 	ChangeEdge<std::pair<id_t, W>> res;
 	switch(line[0]){
@@ -77,7 +77,7 @@ ChangeEdge<std::pair<id_t, W>> IOHelper::load_change_weighted(const std::string&
 	size_t p2=line.find(',', p1+1);
 	id_t dst=stoid(line.substr(p1+1, p2-p1-1));
 	W w;
-	if(res.type == ChangeEdgeType::INCREASE || res.type == ChangeEdgeType::DECREASE)
+	if(res.type != ChangeEdgeType::REMOVE)
 		w=boost::lexical_cast<W>(line.substr(p2+1));
 	res.dst=std::make_pair(dst, w);
 	return res;
