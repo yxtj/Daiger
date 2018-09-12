@@ -67,7 +67,8 @@ private:
 	void intializedProcessACF(); // cache-free accumulative
 	void intializedProcessSCF(); // cache-free selective
 
-	void processNode(const id_t id);
+	void processNode(const id_t id); // need_commit() check before spread
+	void processNodeForced(const id_t id); // no need_commit() check, directly spread
 	void processNode_general(const id_t id);
 	void processNode_acf(const id_t id);
 
@@ -224,11 +225,15 @@ int GlobalHolder<V, N>::loadDelta(const std::string& line){
 	if(d.type == ChangeEdgeType::ADD){
 		local_part.modify_onb_add(d.src, d.dst);
 	}else if(d.type == ChangeEdgeType::REMOVE){
+		// two steps: remove out-neighbor on source (local), remove cache on destination (may be remote)
 		local_part.modify_onb_rmv(d.src, d.dst);
-		if(!cache_free){
-			id_t kd = get_key(d.dst);
+		id_t kd = get_key(d.dst);
+		// reuse pid
+		pid = get_part(kd);
+		if(is_local_part(pid))
 			local_part.modify_cache_rmv(d.src, kd);
-		}
+		else
+			return pid;
 	}else{
 		local_part.modify_onb_val(d.src, d.dst);
 	}
@@ -251,6 +256,11 @@ void GlobalHolder<V, N>::intializedProcess(){
 
 template <class V, class N>
 void GlobalHolder<V, N>::intializedProcessCB(){
+	if(incremental){
+		for(const std::pair<id_t, node_t>& n : touched_node){
+			processNodeForced(n.first);
+		}
+	}
 	local_part.enum_rewind();
 	for(const node_t* p = local_part.enum_next(true);
 		p != nullptr; p = local_part.enum_next(true))
@@ -456,6 +466,16 @@ void GlobalHolder<V, N>::prepare_cal(const id_t& from, const id_t& to, const val
 }
 
 template <class V, class N>
+void GlobalHolder<V, N>::processNodeForced(const id_t id){
+	#ifndef NDEBUG
+	const node_t& n = local_part.get(id);
+	DVLOG(3)<<"k="<<n.id<<" v="<<n.v<<" u="<<n.u<<" cache="<<n.cs;
+	auto pgs = local_part.get_progress();
+	DVLOG(3)<<"progress=("<<pgs.sum<<","<<pgs.n_inf<<","<<pgs.n_change<<") update="<<local_part.get_n_uncommitted();
+	#endif
+	(this->*pf_processNode)(id);
+}
+template <class V, class N>
 void GlobalHolder<V, N>::processNode(const id_t id){
 	#ifndef NDEBUG
 	const node_t& n = local_part.get(id);
@@ -471,8 +491,7 @@ void GlobalHolder<V, N>::processNode(const id_t id){
 template <class V, class N>
 void GlobalHolder<V, N>::processNode_general(const id_t id){
 	// (commit -> spread)
-	if(!local_part.commit(id))
-		return;
+	local_part.commit(id);
 	std::vector<std::pair<id_t, value_t>> data = local_part.spread(id);
 	DVLOG(3)<<data;
 	for(auto& p : data){
