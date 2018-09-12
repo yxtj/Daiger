@@ -113,12 +113,12 @@ void Worker::handleProcedure(const std::string& d, const RPCInfo& info){
 			fun = bind(&Worker::procedureLoadGraph, this); break;
 		case ProcedureType::LoadValue:
 			fun = bind(&Worker::procedureLoadValue, this); break;
-		case ProcedureType::LoadDelta:
-			fun = bind(&Worker::procedureLoadDelta, this); break;
 		case ProcedureType::BuildINCache:
 			fun = bind(&Worker::procedureBuildINCache, this); break;
 		case ProcedureType::RebuildStructure:
 			fun = bind(&Worker::procedureRebuildStructure, this); break;
+		case ProcedureType::LoadDelta:
+			fun = bind(&Worker::procedureLoadDelta, this); break;
 		case ProcedureType::GenInitMsg:
 			fun = bind(&Worker::procedureGenInitMsg, this); break;
 		case ProcedureType::Update:
