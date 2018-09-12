@@ -321,8 +321,9 @@ bool LocalHolder<V, N>::modify_onb_rmv(const id_t& k, const neighbor_t& n){
 	auto it=cont.find(k);
 	if(it==cont.end())
 		return false;
+	const id_t nk = get_key(n);
 	auto jt = std::find_if(it->second.onb.begin(), it->second.onb.end(), [&](const N& nb){
-		return get_key(nb) == get_key(n);
+		return get_key(nb) == nk;
 	});
 	if(jt==it->second.onb.end())
 		return false;
@@ -334,7 +335,7 @@ bool LocalHolder<V, N>::modify_onb_val(const id_t& k, const neighbor_t& n){
 	auto it=cont.find(k);
 	if(it==cont.end())
 		return false;
-	id_t nk = get_key(n);
+	const id_t nk = get_key(n);
 	auto jt = std::find_if(it->second.onb.begin(), it->second.onb.end(), [&](const N& nb){
 		return get_key(nb) == nk;
 	});
@@ -357,12 +358,14 @@ bool LocalHolder<V, N>::modify_onb_via_fun_all(const id_t& k, std::function<std:
 	return true;
 }
 template <class V, class N>
-bool LocalHolder<V, N>::modify_cache_add(const id_t& k, const id_t& src, const value_t& v){
-	MODIFY_TEMPLATE( it->second.cs[src]=v; )
+bool LocalHolder<V, N>::modify_cache_add(const id_t& from, const id_t& to, const value_t& v){
+	const id_t& k = to;
+	MODIFY_TEMPLATE( it->second.cs[from]=v; )
 }
 template <class V, class N>
-bool LocalHolder<V, N>::modify_cache_rmv(const id_t& k, const id_t& src){
-	MODIFY_TEMPLATE( return it->second.cs.erase(src) != 0; )
+bool LocalHolder<V, N>::modify_cache_rmv(const id_t& from, const id_t& to){
+	const id_t& k = to;
+	MODIFY_TEMPLATE( { return it->second.cs.erase(from) != 0; } )
 }
 template <class V, class N>
 bool LocalHolder<V, N>::modify_cache_val(const id_t& from, const id_t& to, const value_t& m){

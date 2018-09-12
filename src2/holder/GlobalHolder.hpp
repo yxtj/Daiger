@@ -225,6 +225,10 @@ int GlobalHolder<V, N>::loadDelta(const std::string& line){
 		local_part.modify_onb_add(d.src, d.dst);
 	}else if(d.type == ChangeEdgeType::REMOVE){
 		local_part.modify_onb_rmv(d.src, d.dst);
+		if(!cache_free){
+			id_t kd = get_key(d.dst);
+			local_part.modify_cache_rmv(d.src, kd);
+		}
 	}else{
 		local_part.modify_onb_val(d.src, d.dst);
 	}

@@ -52,12 +52,11 @@ public:
 	}
 
 private:
-	// TODO: move time consuming logic from update_xx to collect_xx
 	bool update_general(const id_t& from, const id_t& to, const value_t& v);
-	bool update_accumulative_cb(const id_t& from, const id_t& to, const value_t& v);
-	bool update_accumulative_cf(const id_t& from, const id_t& to, const value_t& v);
-	bool update_selective_cb(const id_t& from, const id_t& to, const value_t& v);
-	bool update_selective_cf(const id_t& from, const id_t& to, const value_t& v);
+	bool update_accumulative_cb(const id_t& from, const id_t& to, const value_t& v); // cache-based
+	bool update_accumulative_cf(const id_t& from, const id_t& to, const value_t& v); // cache-free
+	bool update_selective_s(const id_t& from, const id_t& to, const value_t& v); // static-graph
+	bool update_selective_d(const id_t& from, const id_t& to, const value_t& v); // dynamic-graph
 
 	typename MessageDef<V>::MsgVUpdate_t collect_general(const size_t num);
 	typename MessageDef<V>::MsgVUpdate_t collect_accumulative(const size_t num); // aggregated
@@ -96,16 +95,18 @@ void RemoteHolder<V, N>::init(operation_t* opt, const size_t id,
 			f_collect = std::bind(&RemoteHolder<V, N>::collect_general, this, std::placeholders::_1);
 		}
 	}else if(opt->is_selective()){
-		if(cache_free){
-			f_update = std::bind(&RemoteHolder<V, N>::update_selective_cf,
-				this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
-		}else{
-			f_update = std::bind(&RemoteHolder<V, N>::update_selective_cb,
-				this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
-		}
 		if(aggregate_message){
+			if(incremental){
+				f_update = std::bind(&RemoteHolder<V, N>::update_selective_d,
+					this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+			}else{
+				f_update = std::bind(&RemoteHolder<V, N>::update_selective_s,
+					this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+			}
 			f_collect = std::bind(&RemoteHolder<V, N>::collect_selective, this, std::placeholders::_1);
 		}else{
+			f_update = std::bind(&RemoteHolder<V, N>::update_general,
+				this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
 			f_collect = std::bind(&RemoteHolder<V, N>::collect_general, this, std::placeholders::_1);
 		}
 	}else{
@@ -226,7 +227,7 @@ bool RemoteHolder<V, N>::update_accumulative_cf(const id_t& from, const id_t& to
 	}
 }
 template <class V, class N>
-bool RemoteHolder<V, N>::update_selective_cb(const id_t& from, const id_t& to, const value_t& v){
+bool RemoteHolder<V, N>::update_selective_s(const id_t& from, const id_t& to, const value_t& v){
 	auto& vec=cont[to];
 	if(vec.empty()){
 		vec.emplace_back(from, v);
@@ -234,7 +235,6 @@ bool RemoteHolder<V, N>::update_selective_cb(const id_t& from, const id_t& to, c
 	}else{
 		auto& p = vec.front();
 		if(opt->better(v, p.second)){
-			// vec.front().first does not matter
 			p.first = from;
 			p.second = v;
 		}
@@ -242,7 +242,7 @@ bool RemoteHolder<V, N>::update_selective_cb(const id_t& from, const id_t& to, c
 	}
 }
 template <class V, class N>
-bool RemoteHolder<V, N>::update_selective_cf(const id_t& from, const id_t& to, const value_t& v){
+bool RemoteHolder<V, N>::update_selective_d(const id_t& from, const id_t& to, const value_t& v){
 	auto& vec=cont[to];
 	if(vec.empty()){
 		vec.emplace_back(from, v);
@@ -265,22 +265,22 @@ template <class V, class N>
 typename MessageDef<V>::MsgVUpdate_t RemoteHolder<V, N>::collect_general(const size_t num){
 	typename MessageDef<V>::MsgVUpdate_t res;
 	auto it=cont.begin();
+	// if a source send more than one message to identical target, only keep the last one
 	for(size_t i=0; i<num && it!=cont.end(); ++i, ++it){
-		std::sort(it->second.begin(), it->second.end(),
-			[](const std::pair<id_t, value_t>& l, const std::pair<id_t, value_t>& r){
-				return l.first < r.first;
-			});
 		auto jt = it->second.begin();
-		auto jt_end = it->second.end();
-		res.emplace_back(jt->first, it->first, jt->second);
-		auto kt = jt;
-		while(++jt != jt_end){
-			if(kt->first != jt->first){
-				res.emplace_back(jt->first, it->first, jt->second);
-				kt = jt;
-			}else{
-				auto& p = std::get<2>(res.back());
-				p = opt->oplus(p, jt->second);
+		if(it->second.size() == 1){
+			res.emplace_back(jt->first, it->first, jt->second);
+		}else{
+			std::unordered_map<id_t, int> idx; // source-id -> offset in res
+			auto jt_end = it->second.end();
+			for(; jt != jt_end; ++jt){
+				auto kt = idx.find(jt->first);
+				if(kt == idx.end()){
+					idx[jt->first] = res.size();
+					res.emplace_back(jt->first, it->first, jt->second);
+				}else{
+					std::get<2>(res[kt->second]) = jt->second;
+				}
 			}
 		}
 	}
@@ -319,8 +319,9 @@ typename MessageDef<V>::MsgVUpdate_t RemoteHolder<V, N>::collect_selective(const
 	auto it=cont.begin();
 	for(size_t i=0; i<num && it!=cont.end(); ++i, ++it){
 		id_t to = it->first;
+		id_t from = it->second.front().first;
 		value_t v = it->second.front().second;
-		res.emplace_back(dummy_worker_id, to, v);
+		res.emplace_back(from, to, v);
 	}
 	if(it == cont.end())
 		cont.clear();
