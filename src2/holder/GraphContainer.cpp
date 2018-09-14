@@ -90,14 +90,11 @@ void GraphContainer::dumpResult(){
 
 void GraphContainer::buildINCache(sender_t sender){
 	holder->prepareCollectINCache();
-	unordered_map<int, string> ic = holder->collectINCache();
-	while(!ic.empty()){
-		for(auto& p : ic){
-			if(!p.second.empty()){
-				sender(p.first, p.second);
-			}
+	unordered_map<int, string> tmp = holder->collectINCache();
+	for(auto& p : tmp){
+		if(!p.second.empty()){
+			sender(p.first, p.second);
 		}
-		ic = holder->collectINCache();
 	}
 }
 

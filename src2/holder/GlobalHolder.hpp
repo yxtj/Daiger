@@ -50,6 +50,7 @@ public:
 	virtual void clearINCache();
 	virtual void takeINCache(const std::string& line);
 	virtual std::unordered_map<int, std::string> collectINCache();
+	virtual std::string collectINCache(const size_t pid);
 
 	virtual void msgUpdate(const std::string& line);
 	virtual std::string msgRequest(const std::string& line);
@@ -341,6 +342,21 @@ void GlobalHolder<V, N>::prepareUpdate(sender_t f_req){
 template <class V, class N>
 void GlobalHolder<V, N>::prepareCollectINCache(){
 	local_part.enum_rewind();
+	for(const node_t* p = local_part.enum_next(true);
+		p != nullptr; p = local_part.enum_next(true))
+	{
+		for(auto& nb : p->onb){
+			id_t dst = get_key(nb);
+			int pid = get_part(dst);
+			value_t v = opt->func(*p, nb);
+			if(is_local_part(pid)){
+				local_part.update_cache(p->id, dst, v);
+			}else{
+				// msgs[pid].emplace_back(p->id, dst, v);
+				remote_parts[pid].update(p->id, dst, v);
+			}
+		}
+	}
 }
 template <class V, class N>
 void GlobalHolder<V, N>::rebuildSource(){
@@ -395,33 +411,19 @@ void GlobalHolder<V, N>::takeINCache(const std::string& line){
 }
 template <class V, class N>
 std::unordered_map<int, std::string> GlobalHolder<V, N>::collectINCache(){
-	// vector<vector<Msg>> : for each worker, for each unit
-	std::unordered_map<int, typename msg_t::MsgGINCache_t> msgs;
-	size_t bs = 0;
-	msgs.reserve(nPart);
-	for(const node_t* p = local_part.enum_next(true);
-		bs < send_max_size && p != nullptr; p = local_part.enum_next(true))
-	{
-		for(auto& nb : p->onb){
-			id_t dst = get_key(nb);
-			int pid = get_part(dst);
-			value_t v = opt->func(*p, nb);
-			if(is_local_part(pid)){
-				local_part.update_cache(p->id, dst, v);
-			}else{
-				msgs[pid].emplace_back(p->id, dst, v);
-				++bs;
-			}
-		}
-	}
 	std::unordered_map<int, std::string> res;
 	res.reserve(nPart);
-	for(auto& mp : msgs){
-		if(!mp.second.empty())
-			res[mp.first]=serialize(mp.second);
-		mp.second.clear();
+	for(size_t i = 0; i<nPart; ++i){
+		if(is_local_part(i))
+			continue;
+		res[i] = collectINCache(i);
 	}
 	return res;
+}
+template <class V, class N>
+std::string GlobalHolder<V, N>::collectINCache(const size_t pid){
+	auto temp = remote_parts[pid].collect(send_max_size);
+	return serialize(temp);
 }
 
 template <class V, class N>
