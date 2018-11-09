@@ -24,6 +24,7 @@ use_cxx11()
 # -------- Boost --------
 find_package(Boost REQUIRED COMPONENTS filesystem system program_options)
 include_directories(${Boost_INCLUDE_DIRS}) 
+message(STATUS "Boost: ${Boost_INCLUDE_DIRS} ${Boost_LIBRARY_DIRS}")
 
 # -------- Python interface --------
 #find_package(PythonLibs)
@@ -91,6 +92,7 @@ include_directories( ${CMAKE_CURRENT_SOURCE_DIR}
 include_directories(SYSTEM)
 
 set(CMAKE_CXX_FLAGS "${CXX_DEFAULT} -fPIC -fno-omit-frame-pointer ${CXX_WARN} ${CXX_DEFINE}")
+message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
 
 add_subdirectory (dbg)
 add_subdirectory (logging)
