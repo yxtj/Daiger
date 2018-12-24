@@ -3,7 +3,7 @@
 #include <chrono>
 using namespace std;
 
-double FLAGS_sleep_time = 0.005;
+double FLAGS_sleep_time = 0.001;
 
 static inline void Sleep(){
 	this_thread::sleep_for(chrono::duration<double>(FLAGS_sleep_time));
@@ -18,7 +18,7 @@ NetworkThread::NetworkThread() :
 
 	running = true;
 	t_ = thread(&NetworkThread::Run, this);
-	t_.detach();
+	//pt_->detach();
 }
 
 int NetworkThread::id() const{
@@ -39,9 +39,9 @@ int64_t NetworkThread::pending_bytes() const{
 	int64_t t = net->unconfirmedBytes();
 
 	lock_guard<recursive_mutex> sl(ps_lock);
-	for(const vector<Task*>& vec:ps_buffer_){
-		for(Task* p:vec)
-			t+=p->payload.size();
+	for(const vector<pair<Task*,bool>>& vec:ps_buffer_){
+		for(const pair<Task*,bool>& p:vec)
+			t+=p.first->payload.size();
 	}
 
 	return t;
@@ -80,14 +80,18 @@ void NetworkThread::Run(){
 		/* bunch send: */
 		if(!pause_ && !pending_sends_->empty()){
 			//two-buffers-swapping implementation for better performance
-			vector<Task*>* pv=pending_sends_;
+			vector<pair<Task*,bool>>* pv=pending_sends_;
 			{
 				lock_guard<recursive_mutex> sl(ps_lock);
-				pending_sends_=&ps_buffer_[ps_idx_++%2];
+				pending_sends_=&ps_buffer_[++ps_idx_%2];
 			}
 			auto end_it=pv->end();
-			for(auto it = pv->begin(); it != end_it; ++it)
-				net->send(*it);
+			for(auto it = pv->begin(); it!=end_it; ++it){
+				if(it->second) // broadcast
+					net->broadcast(it->first);
+				else
+					net->send(it->first);
+			}
 			pv->clear();
 		}else{
 			if(idle && ++cnt_idle_loop%SLEEP_CNT==0)
@@ -133,7 +137,7 @@ bool NetworkThread::tryReadAny(string& data, int *srcRet, int *typeRet){
 int NetworkThread::send(Task *req){
 	int size = req->payload.size();
 	lock_guard<recursive_mutex> sl(ps_lock);
-	pending_sends_->push_back(req);
+	pending_sends_->emplace_back(req, false);
 	++stat_send_pkg;
 	stat_send_byte += size;
 	return size;
@@ -151,7 +155,9 @@ int NetworkThread::sendDirect(Task *req){
 
 int NetworkThread::broadcast(Task* req) {
 	int size = req->payload.size();
-	net->broadcast(req);
+	lock_guard<recursive_mutex> sl(ps_lock);
+	pending_sends_->emplace_back(req, true);
+	//net->broadcast(req);
 	++stat_send_pkg;
 	stat_send_byte += size;
 	return size;
@@ -188,6 +194,7 @@ void NetworkThread::Shutdown() {
 			while(!p->done) {
 				Sleep();
 			}
+			p->t_.join();
 			p->net = nullptr;
 			NetworkImplMPI::Shutdown();
 		}
