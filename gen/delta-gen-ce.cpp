@@ -108,9 +108,9 @@ bool changeGraph(const string& graphFolder, const string& cedgeFolder, const str
 	vector<ifstream*> fce;
 	vector<ofstream*> fout;
 	for(int i = 0; i < nPart; ++i){
-		fin.push_back(new ifstream(graphFolder + "/part" + to_string(i)));
+		fin.push_back(new ifstream(graphFolder + "/part-" + to_string(i)));
 		if(!fin.back()->is_open()){
-			cerr << "failed in opening input file: " << graphFolder + "/part" + to_string(i) << endl;
+			cerr << "failed in opening input file: " << graphFolder + "/part-" + to_string(i) << endl;
 			return false;
 		}
 		fce.push_back(new ifstream(cedgeFolder + "/cedge-" + to_string(i)));

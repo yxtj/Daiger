@@ -1,6 +1,7 @@
 #pragma once
 #include <ostream>
 #include <utility>
+#include <tuple>
 #include <vector>
 #include <initializer_list>
 //#include <array>
@@ -16,6 +17,18 @@ template <class T1, class T2>
 inline std::ostream& operator<<(std::ostream& os, const std::pair<T1, T2>& p) {
 	return os << "(" << p.first << "," << p.second << ")";
 }
+
+template <class T1, class T2, class T3>
+inline std::ostream& operator<<(std::ostream& os, const std::tuple<T1, T2, T3>& t) {
+	return os << "(" << std::get<0>(t) << "," << std::get<1>(t) << "," << std::get<2>(t) << ")";
+}
+
+template <class T1, class T2, class T3, class T4>
+inline std::ostream& operator<<(std::ostream& os, const std::tuple<T1, T2, T3, T4>& t) {
+	return os << "(" << std::get<0>(t) << "," << std::get<1>(t)
+		<< "," << std::get<2>(t) << "," << std::get<3>(t) << ")";
+}
+
 
 template <class T>
 inline std::ostream& operator<<(std::ostream& os, const std::vector<T>& cont) {

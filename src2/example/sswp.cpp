@@ -35,7 +35,7 @@ GlobalHolderBase* WidestPath::generateGraph(){
 
 // -------- Components --------
 
-void WidestPath::MyOperation::init(const std::vector<std::string>& arg_line){
+void WidestPath::MyOperation::init(const std::vector<std::string>& arg_line, const size_t nInstance){
 	source = stoid(arg_line[0]);
 	use_degree = beTrueOption(arg_line[1]);
 }

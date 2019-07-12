@@ -109,9 +109,9 @@ bool load_graph_unweight(std::vector<std::vector<int>>& res, const std::string& 
 			temp.push_back(node);
 			pos = spacepos + 1;
 		}
-		if(res.size() < k)	// k starts from 0
-			res.resize(k);	// fill the empty holes
-		res.push_back(move(temp));
+		if(res.size() <= k)	// k starts from 0
+			res.resize(k+1);	// fill the empty holes
+		res[k]=move(temp);
 	}
 	return true;
 }
@@ -210,7 +210,29 @@ bool general_dump(const std::string& folder, const std::string& prefix, const in
 }
 */
 
-bool dump(const std::vector<std::string>& fnouts, const std::vector<float>& res){
+bool dump(const std::vector<std::string>& fnouts, const std::vector<float>& res, const bool fix_point){
+	size_t parts=fnouts.size();
+	vector<ofstream*> fouts;
+	for(size_t i=0;i<parts;++i){
+		ofstream* pf=new ofstream(fnouts[i]);
+		if(!pf || !pf->is_open())
+			return false;
+		if(fix_point){
+			pf->setf(ios::fixed, ios::floatfield);
+			pf->precision(6);
+		}
+		fouts.push_back(pf);
+	}
+	size_t size=res.size();
+	for(size_t i=0;i<size;++i){
+		(*fouts[i%parts])<<i<<"\t"<<res[i]<<"\n";
+	}
+	for(size_t i=0;i<parts;++i)
+		delete fouts[i];
+	return true;
+}
+
+bool dump(const std::vector<std::string>& fnouts, const std::vector<int>& res, const bool){
 	size_t parts=fnouts.size();
 	vector<ofstream*> fouts;
 	for(size_t i=0;i<parts;++i){
@@ -228,25 +250,7 @@ bool dump(const std::vector<std::string>& fnouts, const std::vector<float>& res)
 	return true;
 }
 
-bool dump(const std::vector<std::string>& fnouts, const std::vector<int>& res){
-	size_t parts=fnouts.size();
-	vector<ofstream*> fouts;
-	for(size_t i=0;i<parts;++i){
-		ofstream* pf=new ofstream(fnouts[i]);
-		if(!pf || !pf->is_open())
-			return false;
-		fouts.push_back(pf);
-	}
-	size_t size=res.size();
-	for(size_t i=0;i<size;++i){
-		(*fouts[i%parts])<<i<<"\t"<<res[i]<<"\n";
-	}
-	for(size_t i=0;i<parts;++i)
-		delete fouts[i];
-	return true;
-}
-
-bool dump(const std::vector<std::string>& fnouts, const std::vector<std::pair<int, int>>& cedges){
+bool dump(const std::vector<std::string>& fnouts, const std::vector<std::pair<int, int>>& cedges, const bool){
 	size_t parts=fnouts.size();
 	vector<ofstream*> fouts;
 	for(size_t i=0;i<parts;++i){

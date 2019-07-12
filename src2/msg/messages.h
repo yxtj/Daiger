@@ -10,11 +10,12 @@ enum ProcedureType : int {
 	ShareWorkers = 0,
 	LoadGraph = 1,
 	LoadValue = 2,
-	LoadDelta = 3,
-	BuildINCache = 4,
-	GenIncrInitMsg = 5,
-	Update = 6,
-	DumpResult = 7
+	BuildINCache = 3,
+	RebuildStructure = 4,
+	LoadDelta = 5,
+	GenInitMsg = 6,
+	Update = 7,
+	DumpResult = 8
 };
 
 template <typename V>

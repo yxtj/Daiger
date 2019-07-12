@@ -2,6 +2,7 @@
 #include "common/ConfData.h"
 #include "application/AppBase.h"
 #include "GlobalHolderBase.h"
+#include "util/Timer.h"
 #include <functional>
 #include <unordered_map>
 #include <string>
@@ -19,7 +20,9 @@ public:
 	void loadValue(sender_t sender = {});
 	void loadDelta(sender_t sender = {});
 	void buildINCache(sender_t sender);
-	void genIncrInitMsg();
+	void rebuildSource();
+	void clearINCache();
+	void genInitMsg();
 	void prepareUpdate(sender_t sender_val, sender_t sender_req, sender0_t sender_pro);
 	void dumpResult();
 
@@ -55,7 +58,10 @@ private:
 	sender_t sender_val;
 	sender_t sender_req;
 	sender0_t sender_pro;
+	
 	bool applying;
 	bool sending;
+
+	Timer tmr_send;
 };
 

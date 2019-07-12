@@ -76,7 +76,7 @@ bool MarkovChain::MyOperation::InnerHelper::init(const string& im){
 	return true;
 }
 
-void MarkovChain::MyOperation::init(const std::vector<std::string>& arg_line){
+void MarkovChain::MyOperation::init(const std::vector<std::string>& arg_line, const size_t nInstance){
 	impl = new InnerHelper();
 	if(!impl->init(arg_line[0]))
 		throw invalid_argument("cannot parse the value initialization method. Support: fix:<v> and rand:<s>");

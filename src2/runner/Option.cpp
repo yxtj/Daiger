@@ -18,6 +18,7 @@ Option::Option()
 	pimpl->desc.add_options()
 		("help", "Print help messages")
 		("show_info", value<bool>(&show)->default_value(1), "Print the initializing information.")
+		("agg_message", value<bool>(&conf.aggregate_message)->default_value(1), "Aggregate messages to save bandwidth.")
 		("load_balance", value<bool>(&conf.balance_load)->default_value(1), "Support loading from arbitrary number of files.")
 		("part", value<size_t>(&conf.nPart)->default_value(0), 
 			"[integer] # of workers, used check whether a correct number of instance is started.")
@@ -47,8 +48,10 @@ Option::Option()
 		("send_interval", value<float>(&send_interval)->default_value(0.5f), "[float] the maximum interval (second) of performing send.")
 		("term_interval", value<float>(&term_interval)->default_value(0.5f),
 			"[float] the minimum interval (second) of reporting progress and do termination check.")
-		("send_batch_size", value<int>(&conf.send_batch_size)->default_value(1024),
-			"[integer] the maximum size (# of target nodes) of each sending message.")
+		("send_max_size", value<int>(&conf.send_max_size)->default_value(4096),
+			"[integer] the maximum size (# of nodes) of each sending message.")
+		("send_min_size", value<int>(&conf.send_min_size)->default_value(1),
+			"[integer] the minimum size (# of nodes) of each sending message, before reaching <send_interval>.")
 		;
 }
 
@@ -65,9 +68,6 @@ bool Option::parseInput(int argc, char* argv[]) {
 			.options(pimpl->desc).allow_unregistered().run();
 		boost::program_options::store(p, vm);
 		boost::program_options::notify(vm);
-
-		delete pimpl;
-		pimpl = nullptr;
 
 		if(vm.count("help")) {
 			flag_help = true;
@@ -111,9 +111,10 @@ bool Option::parseInput(int argc, char* argv[]) {
 		if(conf.path_result.empty())
 			do_output=false;
 
-		sortUpInterval(apply_interval, 0.001, 10.0);
-		sortUpInterval(send_interval, 0.001, 10.0);
+		sortUpInterval(apply_interval, 0.0001, 10.0);
+		sortUpInterval(send_interval, 0.0001, 10.0);
 		sortUpInterval(term_interval, 2*apply_interval, 600.0);
+		conf.send_max_interval = send_interval;
 
 		break;
 	}; // technique for condition checking
@@ -122,6 +123,9 @@ bool Option::parseInput(int argc, char* argv[]) {
 		cerr << pimpl->desc << endl;
 		return false;
 	}
+	// clear pimpl to save memory and copy time
+	delete pimpl;
+	pimpl = nullptr;
 	return true;
 }
 

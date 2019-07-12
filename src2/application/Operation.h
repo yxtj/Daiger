@@ -11,7 +11,9 @@ class OperationBase {
 public:
 	virtual ~OperationBase() = default;
 	// parse the given parameters
-	virtual void init(const std::vector<std::string>& args){}
+	virtual void init(const std::vector<std::string>& args, const size_t nInstance){}
+	virtual bool is_accumulative(){ return false; }
+	virtual bool is_selective(){ return false; }
 };
 
 template <typename V, typename N>

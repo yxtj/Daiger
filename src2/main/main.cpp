@@ -6,6 +6,7 @@
 #include "runner/Master.h"
 #include "runner/Worker.h"
 #include "logging/logging.h"
+#include "util/Timer.h"
 #include <iostream>
 #include <string>
 
@@ -24,6 +25,7 @@ ostream& operator<<(ostream& os, const vector<T>& vec){
 //INITIALIZE_EASYLOGGINGPP
 
 int main(int argc, char* argv[]){
+	Timer tmr;
 	// init option
 	Option opt;
 	if(!opt.parseInput(argc, argv)){
@@ -32,19 +34,6 @@ int main(int argc, char* argv[]){
 	registerExamples();
 	registerFactories();
 	initLogger(argc, argv);
-	// init App
-	AppBase app;
-	try{
-		app = makeApplication(opt.app_name, opt.app_args,
-			opt.partitioner_args, opt.scheduler_args);
-	}catch(exception& e){
-		LOG(ERROR)<<"Error in generating App via parameter: "<<e.what();
-		return 2;
-	}
-	if(!app.check()){
-		LOG(ERROR)<<"The application is not correctly setup.";
-		return 2;
-	}
 	// init network
 	NetworkThread::Init(argc, argv);
 	NetworkThread* net = NetworkThread::GetInstance();
@@ -53,6 +42,19 @@ int main(int argc, char* argv[]){
 		LOG(ERROR)<<"The number of network instances ("<<net->size()
 			<<") does not match required ("<<1 + opt.conf.nPart<<").";
 		return 3;
+	}
+	// init App
+	AppBase app;
+	try{
+		app = makeApplication(opt.app_name, opt.app_args,
+			opt.partitioner_args, opt.scheduler_args, net->size());
+	}catch(exception& e){
+		LOG(ERROR)<<"Error in generating App via parameter: "<<e.what();
+		return 2;
+	}
+	if(!app.check()){
+		LOG(ERROR)<<"The application is not correctly setup.";
+		return 2;
 	}
 	app.ptn->setParts(net->size());
 
@@ -103,6 +105,10 @@ int main(int argc, char* argv[]){
 	}
 
 	app.clear();
+	if(net->id()==0){
+		LOG(INFO)<<"Total Time used: "<<tmr.elapseSd();
+	}
+	// this should be the last one, because it invalids the pointer net.
 	NetworkThread::Terminate();
 	return 0;
 }

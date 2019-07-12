@@ -9,21 +9,28 @@ using namespace std;
 
 void TerminatorBase::prepare_global_checker(const size_t n_worker){
 	curr.resize(n_worker);
-	sum_gp = 0.0;
-	sum_gi = 0;
-	sum_gc = 0;
+	sum.sum = 0.0;
+	sum.n_inf = 0;
+	sum.n_change = 0;
 }
+
 void TerminatorBase::update_report(const size_t wid, const ProgressReport& report){
-	sum_gp += report.sum - curr[wid].sum;
-	sum_gi += report.n_inf - curr[wid].n_inf;
-	sum_gc += report.n_change - curr[wid].n_change;
-	curr[wid] = report;
+	auto& item = curr[wid];
+	sum.sum += report.sum - item.sum;
+	sum.n_inf += report.n_inf - item.n_inf;
+	sum.n_change += report.n_change - item.n_change;
+	item = report;
 }
+
+std::pair<double, size_t> TerminatorBase::state(){
+	return make_pair(sum.sum, sum.n_inf);
+}
+
 double TerminatorBase::helper_global_progress_sum(){
-	return sum_gp;
+	return sum.sum;
 }
 double TerminatorBase::helper_global_progress_sqrt(){
-	return sqrt(sum_gp);
+	return sqrt(sum.sum);
 }
 bool TerminatorBase::helper_no_change(const std::vector<ProgressReport>& reports){
 	for(const auto& r : reports){
@@ -38,19 +45,25 @@ bool TerminatorBase::helper_no_change(const std::vector<ProgressReport>& reports
 void TerminatorStopBase::prepare_global_checker(const size_t n_worker){
 	TerminatorBase::prepare_global_checker(n_worker);
 	last.resize(n_worker);
-	sum_gc_last=0;
+	sum_last = sum;
 	untouched = true;
 }
 
 void TerminatorStopBase::update_report(const size_t wid, const ProgressReport& report){
 	untouched = false;
-	sum_gc_last += TerminatorBase::curr[wid].n_change - last[wid];
-	last[wid] = TerminatorBase::curr[wid].n_change;
+	//sum_gc_last += TerminatorBase::curr[wid].n_change - last[wid];
+	last[wid] = TerminatorBase::curr[wid];
+	sum_last = sum;
 	TerminatorBase::update_report(wid, report);
 }
 
 bool TerminatorStopBase::check_term(){
-	return !untouched && TerminatorBase::sum_gc == 0 && sum_gc_last == 0;
+	return !untouched && sum.n_change == 0 && sum_last.n_change == 0;
+}
+
+std::pair<double, size_t> TerminatorStopBase::difference(){
+	return make_pair(sum.sum - sum_last.sum,
+		sum.n_inf - sum_last.n_inf);
 }
 
 // -------- TerminatorDiff --------
@@ -81,6 +94,11 @@ void TerminatorDiffBase::update_report(const size_t wid, const ProgressReport& r
 }
 
 bool TerminatorDiffBase::check_term(){
-	return !untouched && sum_gi_last == TerminatorBase::sum_gi
-		&& fabs(sum_gp_last - TerminatorBase::sum_gp) < epsilon;
+	return !untouched && sum_gi_last == sum.n_inf
+		&& fabs(sum_gp_last - sum.sum) < epsilon;
+}
+
+std::pair<double, size_t> TerminatorDiffBase::difference(){
+	return make_pair(sum.sum - sum_gp_last,
+		sum.n_inf - sum_gi_last);
 }

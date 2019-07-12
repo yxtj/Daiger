@@ -15,7 +15,9 @@ void GraphContainer::init(int wid, GlobalHolderBase* holder, bool incremental){
 	this->wid = wid;
 	this->holder = holder;
 	holder->init(app.opt, app.ioh, app.scd, app.ptn, app.tmt,
-		conf.nPart, wid, conf.send_batch_size, incremental, conf.async, conf.cache_free, conf.sort_result);
+		conf.nPart, wid, conf.aggregate_message,
+		incremental, conf.async, conf.cache_free, conf.sort_result,
+		conf.send_min_size, conf.send_max_size);
 	applying = false;
 	sending = false;
 }
@@ -88,18 +90,23 @@ void GraphContainer::dumpResult(){
 
 void GraphContainer::buildINCache(sender_t sender){
 	holder->prepareCollectINCache();
-	unordered_map<int, string> ic = holder->collectINCache();
-	while(!ic.empty()){
-		for(auto& p : ic){
-			if(!p.second.empty()){
-				sender(p.first, p.second);
-			}
+	unordered_map<int, string> tmp = holder->collectINCache();
+	for(auto& p : tmp){
+		if(!p.second.empty()){
+			sender(p.first, p.second);
 		}
-		ic = holder->collectINCache();
 	}
 }
 
-void GraphContainer::genIncrInitMsg(){
+void GraphContainer::rebuildSource(){
+	holder->rebuildSource();
+}
+
+void GraphContainer::clearINCache(){
+	holder->clearINCache();
+}
+
+void GraphContainer::genInitMsg(){
 	holder->intializedProcess();
 }
 
@@ -118,16 +125,17 @@ void GraphContainer::apply(){
 	}
 }
 void GraphContainer::send(){
-	if(!sending && holder->needSend()){
-		sending = true;
-		for(int i=0; i<conf.nPart; ++i){
-			if(i == wid)
-				continue;
-			string msg = holder->collectMsg(i);
-			sender_val(i, msg);
-		}
-		sending = false;
+	if(sending || !holder->needSend(tmr_send.elapseSd() > conf.send_max_interval))
+		return;
+	tmr_send.restart();
+	sending = true;
+	for(int i=0; i<conf.nPart; ++i){
+		if(i == wid)
+			continue;
+		string msg = holder->collectMsg(i);
+		sender_val(i, msg);
 	}
+	sending = false;
 }
 
 void GraphContainer::reportProgress(){
@@ -158,6 +166,8 @@ void GraphContainer::loadDeltaFile(const std::string& fn, sender_t sender){
 	ifstream fin(fn);
 	string line;
 	while(getline(fin, line)){
+		if(line.size() < 3)
+			continue;
 		int pid = holder->loadDelta(line);
 		if(pid != wid)
 			sender(pid, line);

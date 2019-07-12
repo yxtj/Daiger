@@ -75,8 +75,8 @@ private:
 	mutable std::thread t_;
 
 	//buffer for request to be sent, double buffer design for performance
-	std::vector<Task*> ps_buffer_[2];
-	std::vector<Task*>* pending_sends_=&ps_buffer_[0];
+	std::vector<std::pair<Task*, bool>> ps_buffer_[2]; // pair(task, broadcast)
+	std::vector<std::pair<Task*, bool>>* pending_sends_=&ps_buffer_[0];
 	unsigned ps_idx_=0;
 	mutable std::recursive_mutex ps_lock;
 

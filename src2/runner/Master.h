@@ -2,6 +2,7 @@
 #include "Runner.h"
 #include "driver/tools/SyncUnit.h"
 #include "runner_helpers.h"
+#include "util/Timer.h"
 #include <string>
 
 class NetworkThread;
@@ -23,7 +24,8 @@ protected:
 	virtual void procedureLoadValue();
 	virtual void procedureLoadDelta();
 	virtual void procedureBuildINCache();
-	virtual void procedureGenIncrInitMsg();
+	virtual void procedureRebuildStructure();
+	virtual void procedureGenInitMsg();
 	virtual void procedureUpdate();
 	virtual void procedureDumpResult();
 
@@ -60,4 +62,5 @@ private:
 	SyncUnit su_term;
 	SyncUnit su_clear;
 
+	Timer tmr_procedure;
 };

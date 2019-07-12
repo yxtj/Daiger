@@ -16,8 +16,9 @@ public:
 
 	virtual void init(OperationBase* opt, IOHandlerBase* ioh,
 		SchedulerBase* scd, PartitionerBase* ptn, TerminatorBase* tmt,
-		const size_t nPart, const int localId, const size_t send_batch_size,
-		const bool incremental, const bool async, const bool cache_free, const bool sort_result) = 0;
+		const size_t nPart, const int localId, const bool aggregate_message,
+		const bool incremental, const bool async, const bool cache_free, const bool sort_result,
+		const size_t send_min_size, const size_t send_max_size) = 0;
 
 	// IO (loadXXXX returns the part-id (worker-id) should have the input line)
 	virtual int loadGraph(const std::string& line) = 0;
@@ -25,6 +26,7 @@ public:
 	virtual int loadDelta(const std::string& line) = 0;
 	virtual void prepareUpdate(sender_t f_req) = 0;
 	virtual void prepareCollectINCache() = 0;
+	virtual void rebuildSource() = 0; // for selective operators
 	virtual void intializedProcess() = 0;
 	virtual void prepareDump() = 0;
 	// return whether this call is success and the line to write
@@ -33,6 +35,7 @@ public:
 	virtual void addDummyNodes() = 0;
 
 	// in-neighbor cache
+	virtual void clearINCache() = 0;
 	virtual void takeINCache(const std::string& line) = 0;
 	virtual std::unordered_map<int, std::string> collectINCache() = 0;
 

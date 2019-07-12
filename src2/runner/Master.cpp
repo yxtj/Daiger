@@ -19,25 +19,31 @@ Master::Master(AppBase& app, Option& opt)
 void Master::run() {
 	registerHandlers();
 	startMsgLoop("M"+to_string(my_net_id)+"-MSG");
-    registerWorker();
+	registerWorker();
 
 	procedureInit();
-    procedureLoadGraph();
-    if (opt.do_incremental) {
-        procedureLoadValue();
-        procedureLoadDelta();
-		if(!opt.conf.cache_free){
-			procedureBuildINCache();
-			procedureGenIncrInitMsg();
+	procedureLoadGraph();
+	if(opt.do_incremental) {
+		procedureLoadValue();
+		if(app.opt->is_selective()){
+			procedureBuildINCache(); // necessary for both cache-base and cache-free cases
+			procedureRebuildStructure(); // clear in-neighbor cache if cache-free
+			procedureLoadDelta();
+		}else{
+			procedureLoadDelta();
+			if(!opt.conf.cache_free){
+				procedureBuildINCache();
+			}
 		}
-    }
-    procedureUpdate();
-    if (opt.do_output) {
-        procedureDumpResult();
-    }
+	}
+	procedureGenInitMsg();
+	procedureUpdate();
+	if (opt.do_output) {
+		procedureDumpResult();
+	}
 
 	// finish
-    shutdownWorker();
+	shutdownWorker();
 	clearMessages();
 	stopMsgLoop();
 	LOG(INFO)<<"master stops";
@@ -51,6 +57,12 @@ void Master::terminationCheck(){
 	while(!app.tmt->check_term()){
 		su_term.wait();
 		su_term.reset();
+		if(VLOG_IS_ON(1)){
+			auto s = app.tmt->state();
+			auto d = app.tmt->difference();
+			VLOG(1)<<"current progress: ("<<s.first<<","<<s.second<<") improvement: ("
+				<<d.first<<","<<d.second<<")";
+		}
 	}
 	VLOG(1)<<"update terminates";
 	net->broadcast(MType::PFinish, my_net_id);
@@ -65,7 +77,7 @@ void Master::registerWorker(){
 	net->broadcast(MType::COnline, my_net_id);
 	// notified by handleRegister
 	if(!su_regw.wait_for(timeout)){
-		LOG(ERROR)<<"Timeout in registering workers";
+		LOG(FATAL)<<"Timeout in registering workers";
 		exit(1);
 	}
 	LOG(INFO)<<"All workers are registered";
@@ -89,6 +101,7 @@ void Master::startProcedure(const int pid){
 	// net->broadcast(MType::CClear, my_net_id);
 	// su_procedure.wait();
 
+	tmr_procedure.restart();
 	DLOG(INFO)<<"starting new procedure: "<<pid;
 	rph.resetTypeCondition(MType::CProcedure);
 	su_procedure.reset();
@@ -104,6 +117,7 @@ void Master::finishProcedure(const int pid){
 	net->broadcast(MType::CFinish, my_net_id);
 	su_procedure.wait();
 	DLOG(INFO)<<"finished procedure: "<<pid;
+	LOG(INFO)<<"Time used: "<<tmr_procedure.elapseSd();
 }
 
 void Master::procedureInit(){
@@ -125,48 +139,56 @@ void Master::procedureInit(){
 
 void Master::procedureLoadGraph(){
 	cpid = ProcedureType::LoadGraph;
-	startProcedure(cpid);
 	LOG(INFO)<<"Starting loading graph.";
+	startProcedure(cpid);
 	finishProcedure(cpid);
 	LOG(INFO)<<"Finish loading graph.";
 }
 
 void Master::procedureLoadValue(){
 	cpid = ProcedureType::LoadValue;
-	startProcedure(cpid);
 	LOG(INFO)<<"Starting loading value.";
+	startProcedure(cpid);
 	finishProcedure(cpid);
 	LOG(INFO)<<"Finish loading value.";
 }
 
 void Master::procedureLoadDelta(){
 	cpid = ProcedureType::LoadDelta;
-	startProcedure(cpid);
 	LOG(INFO)<<"Starting loading delta.";
+	startProcedure(cpid);
 	finishProcedure(cpid);
 	LOG(INFO)<<"Finish loading delta.";
 }
 
 void Master::procedureBuildINCache(){
 	cpid = ProcedureType::BuildINCache;
-	startProcedure(cpid);
 	LOG(INFO)<<"Starting building in-neighbor cache.";
+	startProcedure(cpid);
 	finishProcedure(cpid);
 	LOG(INFO)<<"Finish building in-neighbor cache.";
 }
 
-void Master::procedureGenIncrInitMsg(){
-	cpid = ProcedureType::GenIncrInitMsg;
+void Master::procedureRebuildStructure(){
+	cpid = ProcedureType::RebuildStructure;
+	LOG(INFO)<<"Starting reconstructing source structure.";
 	startProcedure(cpid);
-	LOG(INFO)<<"Starting generating initial incremental messages.";
 	finishProcedure(cpid);
-	LOG(INFO)<<"Finish generating initial incremental messages.";
+	LOG(INFO)<<"Finish reconstructing source structure.";
+}
+
+void Master::procedureGenInitMsg(){
+	cpid = ProcedureType::GenInitMsg;
+	LOG(INFO)<<"Starting generating initial messages.";
+	startProcedure(cpid);
+	finishProcedure(cpid);
+	LOG(INFO)<<"Finish generating initial messages.";
 }
 
 void Master::procedureUpdate(){
 	cpid = ProcedureType::Update;
-	startProcedure(cpid);
 	LOG(INFO)<<"Starting updating.";
+	startProcedure(cpid);
 	terminationCheck();
 	finishProcedure(cpid);
 	LOG(INFO)<<"Finish updating.";
@@ -174,8 +196,8 @@ void Master::procedureUpdate(){
 
 void Master::procedureDumpResult(){
 	cpid = ProcedureType::DumpResult;
-	startProcedure(cpid);
 	LOG(INFO)<<"Starting damping.";
+	startProcedure(cpid);
 	finishProcedure(cpid);
 	LOG(INFO)<<"Finish damping.";
 }

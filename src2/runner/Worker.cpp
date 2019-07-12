@@ -105,13 +105,22 @@ void Worker::procedureBuildINCache(){
 	graph.buildINCache(sender);
 }
 
-void Worker::procedureGenIncrInitMsg(){
+void Worker::procedureRebuildStructure(){
+	setLogThreadName(log_name+"-RSS");
+	VLOG(1)<<"Worker start reconstructing source structure";
+	graph.rebuildSource();
+	if(opt.conf.cache_free)
+		graph.clearINCache();
+}
+
+void Worker::procedureGenInitMsg(){
 	setLogThreadName(log_name+"-GIM");
-	VLOG(1)<<"Worker start generating initial incremental messages";
-	graph.genIncrInitMsg();
+	VLOG(1)<<"Worker start generating initial messages";
+	graph.genInitMsg();
 }
 
 void Worker::reportProgress(){
+	VLOG(2)<<"sending progress report";
 	graph.reportProgress();
 }
 

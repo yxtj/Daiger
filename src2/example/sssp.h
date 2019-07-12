@@ -18,7 +18,7 @@ struct ShortestPath
 		using typename Operation<value_t, neighbor_t>::neighbor_list_t;
 		using typename Operation<value_t, neighbor_t>::node_t;
 
-		virtual void init(const std::vector<std::string>& arg_line);
+		virtual void init(const std::vector<std::string>& arg_line, const size_t nInstance);
 
 		virtual node_t preprocess_node(const id_t& k, neighbor_list_t& neighbors);
 		virtual value_t func(const node_t& n, const neighbor_t& neighbor);

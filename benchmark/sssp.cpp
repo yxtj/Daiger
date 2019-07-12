@@ -215,7 +215,7 @@ int main(int argc, char* argv[]){
 	// dump
 	cout<<"dumping SSSP"<<endl;
 	start_t = chrono::system_clock::now();
-	if(!general_dump(outprefix, "value-", parts, sp)){
+	if(!general_dump(outprefix, "value-", parts, sp, true)){
 		cerr<<"Error: cannot write to given file(s)"<<endl;
 		return 4;
 	}

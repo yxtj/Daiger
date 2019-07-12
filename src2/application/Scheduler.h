@@ -46,7 +46,7 @@ protected:
 // -------- predefined round-robin Scheduler --------
 
 /**
- * Round-Robin on all the registed nodes, in their registing order
+ * Round-Robin on all the registered nodes, in their registing order
  */
 class SchedulerRoundRobin
 	: public SchedulerBase
