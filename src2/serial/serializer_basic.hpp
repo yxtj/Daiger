@@ -58,7 +58,7 @@ struct _Serializer<T, typename std::enable_if<std::is_pod<T>::value>::type> {
 template <>
 struct _Serializer<std::string> {
 	int estimateSize(const std::string& item) {
-		return sizeof(uint32_t) + item.size();
+		return static_cast<int>(sizeof(uint32_t) + item.size());
 	}
 	char* serial(char* res, int bufSize, const std::string& item) {
 		if(estimateSize(item) > bufSize)
@@ -66,7 +66,7 @@ struct _Serializer<std::string> {
 		return serial(res, item);
 	}
 	char* serial(char* res, const std::string& item) {
-		uint32_t size = item.size();
+		uint32_t size = static_cast<uint32_t>(item.size());
 		*reinterpret_cast<uint32_t*>(res) = size;
 		std::memcpy(res + sizeof(uint32_t), item.data(), item.size());
 		return res + sizeof(uint32_t) + item.size();
@@ -115,7 +115,7 @@ struct _Serializer<T, typename std::enable_if<is_container<T>::value>::type> {
 	int estimateSize(const T& item) {
 		int c = sizeof(uint32_t);
 		if(std::is_pod<value_type>::value) {
-			c += item.size() * sizeof(value_type);
+			c += static_cast<int>(item.size() * sizeof(value_type));
 		} else {
 			for(auto& v : item)
 				c += sv.estimateSize(v);

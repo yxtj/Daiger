@@ -7,7 +7,8 @@
 #include <limits>
 #include <functional>
 
-struct OperationBase {
+class OperationBase {
+public:
 	virtual ~OperationBase() = default;
 	// parse the given parameters
 	virtual void init(const std::vector<std::string>& args){}

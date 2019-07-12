@@ -11,4 +11,4 @@ set(SOURCES
 # SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${LOGGING_DEFINE}")
 add_library(logging
 	${HEADERS} ${SOURCES})
-target_link_libraries(logging pthread)
+target_link_libraries(logging ${CMAKE_THREAD_LIBS_INIT} )

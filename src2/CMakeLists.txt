@@ -24,6 +24,7 @@ use_cxx11()
 # -------- Boost --------
 find_package(Boost REQUIRED COMPONENTS filesystem system program_options)
 include_directories(${Boost_INCLUDE_DIRS}) 
+message(STATUS "Boost_INCLUDE_DIRS: ${Boost_INCLUDE_DIRS}")
 
 # -------- Python interface --------
 #find_package(PythonLibs)
@@ -41,13 +42,14 @@ include_directories(${Boost_INCLUDE_DIRS})
 # -------- MPI --------
 
 find_package(MPI REQUIRED)
-
-#find_program(HAVE_MPICC "mpic++")
-#if (NOT HAVE_MPICC) 
-if (NOT MPI_CXX_FOUND)
-  #message(FATAL_ERROR "Required OpenMPI development libraries and compiler not found")
-  message(FATAL_ERROR "Required MPI development libraries and compiler not found")
-endif()
+message(STATUS "MPI: ${MPI_CXX_FOUND} ${MPIEXEC}")
+#include_directories(SYSTEM ${MPI_CXX_INCLUDE_PATH})
+# ${MPI_CXX_LINK_FLAGS}     Linking flags for MPI programs
+# ${MPI_CXX_LIBRARIES}      All libraries to link MPI programs against
+message(STATUS "mpi-include-path ${MPI_CXX_INCLUDE_PATH}")
+message(STATUS "mpi-compile-flags ${MPI_CXX_COMPILE_FLAGS}")
+message(STATUS "mpi-link-flags ${MPI_CXX_LINK_FLAGS}")
+message(STATUS "mpi-libs ${MPI_CXX_LIBRARIES}")
 
 #exec_program("mpic++ -showme:compile" OUTPUT_VARIABLE MPI_CXX_COMPILE_FLAGS)
 #exec_program("mpic++ -showme:incdirs" OUTPUT_VARIABLE MPI_CXX_INCLUDE_PATH)
@@ -55,31 +57,24 @@ endif()
 #exec_program("mpic++ -showme:libdirs" OUTPUT_VARIABLE MPI_LIBDIRS)
 #exec_program("mpic++ -showme:libs" OUTPUT_VARIABLE MPI_CXX_LIBRARIES)
 
-#string(REPLACE " " ";" MPI_INCDIRS "${MPI_INCDIRS}")
-#string(REPLACE " " ";" MPI_LINK_FLAGS "${MPI_LINK_FLAGS}")
-#string(REPLACE " " ";" MPI_LIBDIRS "${MPI_LIBDIRS}")
-#string(REPLACE " " ";" MPI_LIBS "${MPI_LIBS}")
-
 # -------- compress (LZO) --------
 #check_include_file("/usr/include/lzo/lzo1x.h" HAVE_LZO1X_H)
 #if (NOT HAVE_LZO1X_H)
 #  message(FATAL_ERROR "Required lzo header file not found.")
 #endif()
 
- 
-set(CXX_DEFAULT "${CMAKE_CXX_FLAGS}")
-set(CXX_DEFINE "-DELPP_THREAD_SAFE")
-set(CXX_WARN "-Wall -Wno-sign-compare -Wno-unused-function -Wno-unused-variable -Wno-unused-result")
+# -------- thread --------
 
-if ("$ENV{OPROFILE}")
-  message(STATUS "Enabling OProfile")
-endif()
+find_package (Threads)
+message(STATUS "Thread lib: ${CMAKE_THREAD_LIBS_INIT}")
+# use ${CMAKE_THREAD_LISBS_INIT} for targets need thread support.
 
-if( CMAKE_SIZEOF_VOID_P EQUAL 8 )
-	set( ARCH_BITS 64 )
-else()
-	set( ARCH_BITS 32 )
-endif()
+# -------- main --------
+
+message(STATUS "We are on a ${CMAKE_SYSTEM_NAME} system")
+message(STATUS "The host processor is ${CMAKE_HOST_SYSTEM_PROCESSOR}")
+message(STATUS "Source dir: ${PROJECT_SOURCE_DIR}")
+message(STATUS "Binary dir: ${PROJECT_BINARY_DIR}")
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
@@ -90,9 +85,12 @@ include_directories( ${CMAKE_CURRENT_SOURCE_DIR}
                    )
 include_directories(SYSTEM)
 
-set(CMAKE_CXX_FLAGS "${CXX_DEFAULT} -fPIC -fno-omit-frame-pointer ${CXX_WARN} ${CXX_DEFINE}")
+set(CXX_DEFAULT "${CMAKE_CXX_FLAGS}")
+set(CXX_DEFINE "-DELPP_THREAD_SAFE -DELPP_STL_LOGGING -DELPP_LOG_UNORDERED_MAP")
+#set(CXX_WARN "-Wall -Wno-sign-compare -Wno-unused-function -Wno-unused-variable -Wno-unused-result")
+set(CMAKE_CXX_FLAGS "${CXX_DEFAULT} ${CXX_WARN} ${CXX_DEFINE} ${CMAKE_THREAD_LIBS_INIT}")
 
-add_subdirectory (dbg)
+#add_subdirectory (dbg)
 add_subdirectory (logging)
 add_subdirectory (util)
 add_subdirectory (common)

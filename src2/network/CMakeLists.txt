@@ -9,10 +9,11 @@ set(SOURCES
 	NetworkThread.cpp
 	NetworkImplMPI.cpp
 )
-set(_TEMPORTARY_CXX_FLAGS, ${CMAKE_CXX_FLAGS})
-set(CMAKE_CXX_FLAGS "${_TEMPORTARY_CXX_FLAGS} ${MPI_CXX_COMPILE_FLAGS}")
 add_library(network
 	${HEADERS} ${SOURCES})
-target_link_libraries(network ${MPI_CXX_LIBRARIES})
-set(CMAKE_CXX_FLAGS, ${_TEMPORTARY_CXX_FLAGS})
+target_include_directories(network PRIVATE ${MPI_CXX_INCLUDE_PATH})
+
+set_target_properties(network PROPERTIES
+    LINK_FLAGS "${MPI_CXX_LINK_FLAGS}")
+target_link_libraries(network ${MPI_CXX_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 
