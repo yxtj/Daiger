@@ -13,6 +13,8 @@ struct AppKernel {
 	virtual std::string getName() const = 0;
 
 	virtual void reg() = 0;
+	virtual bool needOutNeighbor(){ return true; }
+	virtual bool needInNeighbor(){ return false; }
 
 	virtual ArgumentSeparator* generateSeparator() = 0;
 	virtual OperationBase* generateOperation() = 0;

@@ -11,5 +11,5 @@ priority_t stop(const std::string& str){
 }
 
 id_t gen_dummy_id(const size_t id){
-	return -1 - id;
+	return static_cast<id_t>(-1 - id);
 }

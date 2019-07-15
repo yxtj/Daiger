@@ -429,7 +429,7 @@ std::string GlobalHolder<V, N>::collectINCache(const size_t pid){
 template <class V, class N>
 void GlobalHolder<V, N>::msgUpdate(const std::string& line){
 	auto ms = deserialize<typename msg_t::MsgVUpdate_t>(line);
-	DVLOG(3)<<"receive: "<<ms;
+//	DVLOG(3)<<"receive: "<<ms;
 	for(typename msg_t::VUpdate_t& m : ms) {
 		local_part.cal_incremental(std::get<0>(m), std::get<1>(m), std::get<2>(m));
 	}
@@ -444,7 +444,7 @@ std::string GlobalHolder<V, N>::msgRequest(const std::string& line){
 template <class V, class N>
 void GlobalHolder<V, N>::msgReply(const std::string& line){
 	auto m = deserialize<typename msg_t::VReply_t>(line);
-	DVLOG(3)<<"receive reply: "<<m;
+	//DVLOG(3)<<"receive reply: "<<m;
 	local_part.cal_incremental(std::get<1>(m), std::get<0>(m), std::get<2>(m));
 }
 
@@ -560,7 +560,7 @@ std::string GlobalHolder<V, N>::collectMsg(const int pid){
 	typename msg_t::MsgVUpdate_t data =
 	// std::vector<std::pair<id_t, std::pair<id_t, value_t>>> data =
 		remote_parts[pid].collect(send_max_size);
-	DVLOG(3)<<"send: "<<data;
+	//DVLOG(3)<<"send: "<<data;
 	std::string res = serialize(data);
 	sending = false;
 	return res;

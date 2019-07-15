@@ -4,6 +4,8 @@ set(HEADERS
     mc.h
     sssp.h
     sswp.h
+	adsorption.h
+	katz.h
     example_reg.h
 )
 set(SOURCES
@@ -12,6 +14,8 @@ set(SOURCES
     mc.cpp
     sssp.cpp
     sswp.cpp
+	adsorption.cpp
+	katz.cpp
     example_reg.cpp
 )
 add_library(example
