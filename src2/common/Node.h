@@ -15,7 +15,7 @@ struct Node{
 	V v; // value
 	V u; // uncommitted value
 	// priority_t pri; // priority
-	priority_t pf = 1.0; // factor for priority
+	//priority_t pf; // factor for priority
 	neighbor_list_t onb; // out-neighbors
 	neighbor_list_t inb; // in-neighbors
 	std::unordered_map<id_t, V> cs; // caches for in-neighbors

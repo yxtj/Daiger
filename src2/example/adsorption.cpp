@@ -47,7 +47,7 @@ Adsorption::value_t Adsorption::MyOperation::func(
 }
 // scheduling - priority
 priority_t Adsorption::MyOperation::priority(const node_t& n) {
-    double p = n.pf * abs(n.u - n.v);
+    double p = abs(n.u - n.v);
     return static_cast<priority_t>(p * (use_degree ? n.onb.size() : 1));
 }
 
