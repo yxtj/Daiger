@@ -560,7 +560,7 @@ std::string GlobalHolder<V, N>::collectMsg(const int pid){
 	typename msg_t::MsgVUpdate_t data =
 	// std::vector<std::pair<id_t, std::pair<id_t, value_t>>> data =
 		remote_parts[pid].collect(send_max_size);
-	//DVLOG(3)<<"send: "<<data;
+//	DVLOG(3)<<"send: "<<data;
 	std::string res = serialize(data);
 	sending = false;
 	return res;
