@@ -64,7 +64,7 @@ Katz::value_t Katz::MyOperation::func(const node_t& n, const neighbor_t& neighbo
 }
 // scheduling - priority
 priority_t Katz::MyOperation::priority(const node_t& n){
-	double p = n.pf * abs(n.u - n.v);
+	double p = abs(n.u - n.v);
 	return static_cast<priority_t>(p * (use_degree ? n.onb.size() : 1));
 }
 

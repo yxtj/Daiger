@@ -26,7 +26,7 @@ struct Adsorption : public AppKernel {
         virtual priority_t priority(const node_t& n);
 
         private:
-        double damp;
+		double pc, pi;
         bool use_degree;
         id_t dummy_id = -1;
     };
