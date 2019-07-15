@@ -52,6 +52,8 @@ AppBase makeApplication(const std::string& app_name, const std::vector<std::stri
 	app.tmt->init(aa.terminator_arg);
 	app.gh = apk->generateGraph();
 	// gh should be initialized later in Worker::registerWorkers()
+	app.needInNeighbor = apk->needInNeighbor();
+	app.needOutNeighbor = apk->needOutNeighbor();
 	delete apk;
 
 	app.ptn = PartitionerFactory::generate(arg_partitioner[0]);

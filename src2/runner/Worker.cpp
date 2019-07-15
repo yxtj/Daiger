@@ -95,6 +95,11 @@ void Worker::procedureLoadDelta(){
 	graph.loadDelta(sender);
 }
 
+void Worker::procedureBuildINList()
+{
+	// TODO:
+}
+
 void Worker::procedureBuildINCache(){
 	std::function<void(const int, std::string&)> sender = 
 		[&](const int wid, std::string& msg){

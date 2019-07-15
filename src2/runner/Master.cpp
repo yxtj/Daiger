@@ -25,6 +25,9 @@ void Master::run() {
 	procedureLoadGraph();
 	if(opt.do_incremental) {
 		procedureLoadValue();
+		if(app.needInNeighbor){
+			procedureBuildINList();
+		}
 		if(app.opt->is_selective()){
 			procedureBuildINCache(); // necessary for both cache-base and cache-free cases
 			procedureRebuildStructure(); // clear in-neighbor cache if cache-free
@@ -159,6 +162,14 @@ void Master::procedureLoadDelta(){
 	startProcedure(cpid);
 	finishProcedure(cpid);
 	LOG(INFO)<<"Finish loading delta.";
+}
+
+void Master::procedureBuildINList(){
+	cpid = ProcedureType::BuildINList;
+	LOG(INFO) << "Starting building in-neighbor list.";
+	startProcedure(cpid);
+	finishProcedure(cpid);
+	LOG(INFO) << "Finish building in-neighbor list.";
 }
 
 void Master::procedureBuildINCache(){

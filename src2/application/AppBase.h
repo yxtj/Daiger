@@ -23,6 +23,9 @@ struct AppBase {
 
 	GlobalHolderBase* gh; // graph holder
 
+	bool needOutNeighbor;
+	bool needInNeighbor;
+	
 	bool check() const;
 	void clear();
 };

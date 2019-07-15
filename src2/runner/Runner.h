@@ -37,6 +37,7 @@ protected:
 	virtual void procedureLoadGraph() = 0;
 	virtual void procedureLoadValue() = 0;
 	virtual void procedureLoadDelta() = 0;
+	virtual void procedureBuildINList() = 0;
 	virtual void procedureBuildINCache() = 0;
 	virtual void procedureRebuildStructure() = 0;
 	virtual void procedureGenInitMsg() = 0;

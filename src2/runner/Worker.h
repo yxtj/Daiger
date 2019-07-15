@@ -25,6 +25,7 @@ protected:
 	virtual void procedureLoadGraph();
 	virtual void procedureLoadValue();
 	virtual void procedureLoadDelta();
+	virtual void procedureBuildINList();
 	virtual void procedureBuildINCache();
 	virtual void procedureRebuildStructure();
 	virtual void procedureGenInitMsg();
