@@ -51,6 +51,7 @@ struct Adsorption : public AppKernel {
     virtual std::string getName() const;
 
     virtual void reg();
+	virtual bool needInNeighbor(){ return true; }
 
     virtual ArgumentSeparator* generateSeparator();
     virtual OperationBase* generateOperation();

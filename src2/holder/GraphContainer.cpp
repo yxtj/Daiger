@@ -88,6 +88,17 @@ void GraphContainer::dumpResult(){
 	}
 }
 
+void GraphContainer::buildINList(sender_t sender)
+{
+	holder->prepareCollectINList();
+	unordered_map<int, string> tmp = holder->collectINList();
+	for(auto& p : tmp){
+		if(!p.second.empty()){
+			sender(p.first, p.second);
+		}
+	}
+}
+
 void GraphContainer::buildINCache(sender_t sender){
 	holder->prepareCollectINCache();
 	unordered_map<int, string> tmp = holder->collectINCache();

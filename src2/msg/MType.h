@@ -21,7 +21,8 @@ struct MType {
 	static constexpr int GNode = 20;
 	static constexpr int GValue = 21;
 	static constexpr int GDelta = 22;
-	static constexpr int GINCache = 23;
+	static constexpr int GINList = 23;
+	static constexpr int GINCache = 24;
 
 	// Value Update 
 	static constexpr int VUpdate = 30;

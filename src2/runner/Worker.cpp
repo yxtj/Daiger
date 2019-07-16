@@ -97,7 +97,14 @@ void Worker::procedureLoadDelta(){
 
 void Worker::procedureBuildINList()
 {
+	std::function<void(const int, std::string&)> sender =
+		[&](const int wid, std::string& msg){
+		net->send(wm.wid2nid(wid), MType::GINList, move(msg));
+	};
+	setLogThreadName(log_name + "-BIL");
+	VLOG(1) << "Worker start building in-neighbor list";
 	// TODO:
+	graph.buildINList(sender);
 }
 
 void Worker::procedureBuildINCache(){

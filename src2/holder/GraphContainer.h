@@ -19,6 +19,7 @@ public:
 	void loadGraph(sender_t sender = {});
 	void loadValue(sender_t sender = {});
 	void loadDelta(sender_t sender = {});
+	void buildINList(sender_t sender);
 	void buildINCache(sender_t sender);
 	void rebuildSource();
 	void clearINCache();

@@ -43,6 +43,8 @@ public:
 	void registerRequestCallback(sender_req_t f);
 
 	void init_value(const id_t& k, const value_t& v); // used for loading value
+	void add_in_neighbor(const id_t& k, neighbor_t& nei);
+	void add_in_neighbor(const id_t& k, neighbor_list_t& neis);
 
 	// enumerate nodes
 	void enum_rewind();
@@ -246,6 +248,19 @@ void LocalHolder<V, N>::init_value(const id_t& k, const value_t& v){
 		n.u = v;
 		update_priority(n);
 	}
+}
+
+template<class V, class N>
+inline void LocalHolder<V, N>::add_in_neighbor(const id_t & k, neighbor_t & nei){
+	node_t& n = get(k);
+	n.inb.push_back(move(nei));
+}
+
+template<class V, class N>
+inline void LocalHolder<V, N>::add_in_neighbor(const id_t & k, neighbor_list_t & neis)
+{
+	node_t& n = get(k);
+	n.inb.insert(n.inb.end(), neis.begin(), neis.end());
 }
 
 template <class V, class N>

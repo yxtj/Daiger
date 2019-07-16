@@ -47,10 +47,10 @@ public:
 
 	// collect and remove from the table, format: to, from, v
 	//std::vector<std::pair<id_t, std::pair<id_t, value_t>>> collect(){
-	typename MessageDef<V>::MsgVUpdate_t collect(){
+	typename MessageDef<V, N>::MsgVUpdate_t collect(){
 		return collect(size());
 	}
-	typename MessageDef<V>::MsgVUpdate_t collect(const size_t num){
+	typename MessageDef<V, N>::MsgVUpdate_t collect(const size_t num){
 		//return f_collect(num);
 		return ru->collect(num);
 	}
@@ -62,9 +62,9 @@ private:
 	bool update_selective_s(const id_t& from, const id_t& to, const value_t& v); // static-graph
 	bool update_selective_d(const id_t& from, const id_t& to, const value_t& v); // dynamic-graph
 
-	typename MessageDef<V>::MsgVUpdate_t collect_general(const size_t num);
-	typename MessageDef<V>::MsgVUpdate_t collect_accumulative(const size_t num); // aggregated
-	typename MessageDef<V>::MsgVUpdate_t collect_selective(const size_t num); // aggregated
+	typename MessageDef<V, N>::MsgVUpdate_t collect_general(const size_t num);
+	typename MessageDef<V, N>::MsgVUpdate_t collect_accumulative(const size_t num); // aggregated
+	typename MessageDef<V, N>::MsgVUpdate_t collect_selective(const size_t num); // aggregated
 
 private:
 	operation_t* opt;
@@ -74,7 +74,7 @@ private:
 	id_t dummy_worker_id; // used for aggregated message
 
 	RemoteUpdater<V, N>* ru;
-	std::function<typename MessageDef<V>::MsgVUpdate_t(const size_t)> f_collect;
+	std::function<typename MessageDef<V, N>::MsgVUpdate_t(const size_t)> f_collect;
 	std::function<bool(const id_t&, const id_t&, const value_t&)> f_update;
 };
 
@@ -259,8 +259,8 @@ bool RemoteHolder<V, N>::update_selective_d(const id_t& from, const id_t& to, co
 
 
 template <class V, class N>
-typename MessageDef<V>::MsgVUpdate_t RemoteHolder<V, N>::collect_general(const size_t num){
-	typename MessageDef<V>::MsgVUpdate_t res;
+typename MessageDef<V, N>::MsgVUpdate_t RemoteHolder<V, N>::collect_general(const size_t num){
+	typename MessageDef<V, N>::MsgVUpdate_t res;
 	auto it=cont.begin();
 	// if a source send more than one message to identical target, only keep the last one
 	for(size_t i=0; i<num && it!=cont.end(); ++i, ++it){
@@ -288,8 +288,8 @@ typename MessageDef<V>::MsgVUpdate_t RemoteHolder<V, N>::collect_general(const s
 	return res;
 }
 template <class V, class N>
-typename MessageDef<V>::MsgVUpdate_t RemoteHolder<V, N>::collect_accumulative(const size_t num){
-	typename MessageDef<V>::MsgVUpdate_t res;
+typename MessageDef<V, N>::MsgVUpdate_t RemoteHolder<V, N>::collect_accumulative(const size_t num){
+	typename MessageDef<V, N>::MsgVUpdate_t res;
 	auto it=cont.begin();
 	for(size_t i=0; i<num && it!=cont.end(); ++i, ++it){
 		id_t to = it->first;
@@ -311,8 +311,8 @@ typename MessageDef<V>::MsgVUpdate_t RemoteHolder<V, N>::collect_accumulative(co
 	return res;
 }
 template <class V, class N>
-typename MessageDef<V>::MsgVUpdate_t RemoteHolder<V, N>::collect_selective(const size_t num){
-	typename MessageDef<V>::MsgVUpdate_t res;
+typename MessageDef<V, N>::MsgVUpdate_t RemoteHolder<V, N>::collect_selective(const size_t num){
+	typename MessageDef<V, N>::MsgVUpdate_t res;
 	auto it=cont.begin();
 	for(size_t i=0; i<num && it!=cont.end(); ++i, ++it){
 		id_t to = it->first;

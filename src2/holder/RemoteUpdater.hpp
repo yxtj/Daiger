@@ -25,7 +25,7 @@ struct RemoteUpdater {
 	// update the value for a remote node
 	virtual void update(const id_t& from, const id_t& to, const V& m) = 0;
 	// collect data in <pd> and format them into messages
-	virtual typename MessageDef<V>::MsgVUpdate_t collect(const size_t num) = 0;
+	virtual typename MessageDef<V, N>::MsgVUpdate_t collect(const size_t num) = 0;
 	//
 	// virtual 
 
@@ -51,8 +51,8 @@ struct RuNonAggregated : public RemoteUpdater<V, N> {
 		vec.emplace_back(from, m);
 	}
 	// collect all
-	virtual typename MessageDef<V>::MsgVUpdate_t collect(const size_t num){
-		typename MessageDef<V>::MsgVUpdate_t res;
+	virtual typename MessageDef<V, N>::MsgVUpdate_t collect(const size_t num){
+		typename MessageDef<V, N>::MsgVUpdate_t res;
 		auto it=pd->begin();
 		for(size_t i=0; i<num && it!=pd->end(); ++i, ++it){
 			id_t to = it->first;
@@ -88,8 +88,8 @@ struct RuAccCb : public RuAcc<V, N>{
 	using RemoteUpdater<V, N>::dummy_worker_id;
 	// 1, use the later one for whose from the identical source
 	// 2, aggregate messages to the same destination
-	virtual typename MessageDef<V>::MsgVUpdate_t collect(const size_t num){
-		typename MessageDef<V>::MsgVUpdate_t res;
+	virtual typename MessageDef<V, N>::MsgVUpdate_t collect(const size_t num){
+		typename MessageDef<V, N>::MsgVUpdate_t res;
 		auto it=pd->begin();
 		for(size_t i=0; i<num && it!=pd->end(); ++i, ++it){
 			id_t to = it->first;
@@ -129,8 +129,8 @@ struct RuAccCf : public RuAcc<V, N>{
 		}
 	}
 	// directly send the accumulated message
-	virtual typename MessageDef<V>::MsgVUpdate_t collect(const size_t num){
-		typename MessageDef<V>::MsgVUpdate_t res;
+	virtual typename MessageDef<V, N>::MsgVUpdate_t collect(const size_t num){
+		typename MessageDef<V, N>::MsgVUpdate_t res;
 		auto it=pd->begin();
 		for(size_t i=0; i<num && it!=pd->end(); ++i, ++it){
 			id_t to = it->first;
@@ -152,8 +152,8 @@ struct RuSel : public RuNonAggregated<V, N>{
 	using RemoteUpdater<V, N>::pd;
 	using RemoteUpdater<V, N>::opt;
 	// only send the kept best one
-	virtual typename MessageDef<V>::MsgVUpdate_t collect(const size_t num){
-		typename MessageDef<V>::MsgVUpdate_t res;
+	virtual typename MessageDef<V, N>::MsgVUpdate_t collect(const size_t num){
+		typename MessageDef<V, N>::MsgVUpdate_t res;
 		auto it=pd->begin();
 		for(size_t i=0; i<num && it!=pd->end(); ++i, ++it){
 			id_t to = it->first;

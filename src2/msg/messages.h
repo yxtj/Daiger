@@ -19,10 +19,15 @@ enum ProcedureType : int {
 	DumpResult = 9
 };
 
-template <typename V>
+template <typename V, typename N>
 struct MessageDef {
 	using value_t = V;
+	using neighbor_t = N;
+	using neighbor_list_t = std::vector<N>;
 	using CommonMsg_t = std::tuple<id_t, id_t, value_t>; // src, dst, value
+
+	using GINList_t = std::pair<id_t, neighbor_list_t>;
+	using MsgGINList_t = std::vector<GINList_t>;
 
 	using GINCache_t = CommonMsg_t;
 	using MsgGINCache_t = std::vector<GINCache_t>;

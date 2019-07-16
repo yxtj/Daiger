@@ -27,7 +27,7 @@ public:
 	using neighbor_t = typename node_t::neighbor_t;
 	using neighbor_list_t = typename node_t::neighbor_list_t;
 	using sender_t = std::function<void(const int, std::string&)>;
-	using msg_t = MessageDef<V>;
+	using msg_t = MessageDef<V, N>;
 
 	virtual void init(OperationBase* opt, IOHandlerBase* ioh,
 		SchedulerBase* scd, PartitionerBase* ptn, TerminatorBase* tmt,
@@ -39,6 +39,7 @@ public:
 	virtual int loadValue(const std::string& line);
 	virtual int loadDelta(const std::string& line);
 	virtual void prepareUpdate(sender_t f_req);
+	virtual void prepareCollectINList();
 	virtual void prepareCollectINCache();
 	virtual void rebuildSource(); // for selective operators
 	virtual void intializedProcess(); // update <u> and put nodes into the scheduler
@@ -46,6 +47,11 @@ public:
 	virtual std::pair<bool, std::string> dumpResult();
 
 	virtual void addDummyNodes();
+
+	// in-neighbor
+	virtual void clearINList();
+	virtual void takeINList(const std::string& line);
+	virtual std::unordered_map<int, std::string> collectINList();
 
 	virtual void clearINCache();
 	virtual void takeINCache(const std::string& line);
@@ -119,6 +125,9 @@ private:
  	// used for incremental case of accumulative operators, store the source delta nodes
 	// write at loadDelta(), clear at intializedProcess()
 	std::unordered_map<id_t, node_t> touched_node;
+
+	// buffer for in-neighbor of nodes on other workers
+	std::vector<std::unordered_map<id_t, neighbor_list_t>> buf_in; // (node, in-list) for each worker
 };
 
 template <class V, class N>
@@ -340,6 +349,25 @@ void GlobalHolder<V, N>::prepareUpdate(sender_t f_req){
 	});
 }
 template <class V, class N>
+void GlobalHolder<V, N>::prepareCollectINList(){
+	buf_in.resize(nPart);
+	local_part.enum_rewind();
+	for(const node_t* p = local_part.enum_next(true);
+		p != nullptr; p = local_part.enum_next(true))
+	{
+		for(auto& nb : p->onb){
+			id_t dst = get_key(nb);
+			int pid = get_part(dst);
+			neighbor_t nei = make_in_neighbor(p->id, nb);
+			if(is_local_part(pid)){
+				local_part.add_in_neighbor(dst, nei);
+			} else{
+				buf_in[pid][dst].push_back(move(nei));
+			}
+		}
+	}
+}
+template <class V, class N>
 void GlobalHolder<V, N>::prepareCollectINCache(){
 	local_part.enum_rewind();
 	for(const node_t* p = local_part.enum_next(true);
@@ -352,7 +380,6 @@ void GlobalHolder<V, N>::prepareCollectINCache(){
 			if(is_local_part(pid)){
 				local_part.update_cache(p->id, dst, v);
 			}else{
-				// msgs[pid].emplace_back(p->id, dst, v);
 				remote_parts[pid].update(p->id, dst, v);
 			}
 		}
@@ -393,6 +420,38 @@ std::pair<bool, std::string> GlobalHolder<V, N>::dumpResult(){
 
 
 template <class V, class N>
+void GlobalHolder<V, N>::clearINList(){
+	buf_in.clear();
+	local_part.enum_rewind();
+	for(const node_t* p = local_part.enum_next(true);
+		p != nullptr; p = local_part.enum_next(true))
+	{
+		node_t* pp = const_cast<node_t*>(p);
+		pp->inb.clear();
+	}
+}
+template <class V, class N>
+void GlobalHolder<V, N>::takeINList(const std::string& line){
+	auto ms = deserialize<typename msg_t::MsgGINList_t>(line);
+	for(typename msg_t::GINList_t& m : ms) {
+		local_part.add_in_neighbor(m.first, m.second);
+	}
+}
+template <class V, class N>
+std::unordered_map<int, std::string> GlobalHolder<V, N>::collectINList(){
+	std::unordered_map<int, std::string> res;
+	res.reserve(nPart);
+	for(size_t i = 0; i < nPart; ++i){
+		if(is_local_part(i))
+			continue;
+		res[i] = serialize(buf_in[i]);
+		buf_in[i].clear();
+	}
+	buf_in.clear();
+	return res;
+}
+
+template <class V, class N>
 void GlobalHolder<V, N>::clearINCache(){
 	local_part.enum_rewind();
 	for(const node_t* p = local_part.enum_next(true);
@@ -422,7 +481,7 @@ std::unordered_map<int, std::string> GlobalHolder<V, N>::collectINCache(){
 }
 template <class V, class N>
 std::string GlobalHolder<V, N>::collectINCache(const size_t pid){
-	auto temp = remote_parts[pid].collect(send_max_size);
+	auto temp = remote_parts[pid].collect();
 	return serialize(temp);
 }
 

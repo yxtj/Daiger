@@ -42,11 +42,30 @@ enum class DummyNodeType {
 
 // -------- static functions for understanding the neighbor type --------
 
-inline id_t get_key(const id_t& n) { return n; }
+inline id_t get_key(const id_t& n) {
+	return n;
+}
 template <class T>
 inline id_t get_key(const T& n) { 
 	static_assert(impl::type_traits::template_false_type<T>::value, "Neighbor type should be id_t or pair<id_t, W>");
 	return 0;
 }
 template <class W>
-inline id_t get_key(const std::pair<id_t, W>& n) { return n.first; }
+inline id_t get_key(const std::pair<id_t, W>& n) {
+	return n.first;
+}
+
+inline id_t make_in_neighbor(const id_t& from, const id_t& to)
+{
+	return from;
+}
+template <class T>
+inline T make_in_neighbor(const id_t& from, const T& to) {
+	static_assert(impl::type_traits::template_false_type<T>::value, "Neighbor type should be id_t or pair<id_t, W>");
+	return T();
+}
+template <class W>
+inline std::pair<id_t, W> make_in_neighbor(const id_t& from, const std::pair<id_t, W>& to) {
+	return std::make_pair(from, to.second);
+}
+

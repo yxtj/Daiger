@@ -43,6 +43,11 @@ void Katz::MyOperation::init(const std::vector<std::string>& arg_line, const siz
 Katz::MyOperation::node_t Katz::MyOperation::preprocess_node(
 	const id_t& k, neighbor_list_t& neighbors)
 {
+	// remove self-loop
+	auto it = find_if(neighbors.begin(), neighbors.end(), [=](const neighbor_t& n){
+		return n == k;
+	});
+	neighbors.erase(it, neighbors.end());
 	return make_node(k, k == source ? 1.0 : identity_element(), neighbors);
 }
 std::vector<Katz::MyOperation::DummyNode> Katz::MyOperation::dummy_nodes(){

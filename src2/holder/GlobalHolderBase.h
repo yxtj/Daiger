@@ -25,6 +25,7 @@ public:
 	virtual int loadValue(const std::string& line) = 0;
 	virtual int loadDelta(const std::string& line) = 0;
 	virtual void prepareUpdate(sender_t f_req) = 0;
+	virtual void prepareCollectINList() = 0;
 	virtual void prepareCollectINCache() = 0;
 	virtual void rebuildSource() = 0; // for selective operators
 	virtual void intializedProcess() = 0;
@@ -33,6 +34,11 @@ public:
 	virtual std::pair<bool, std::string> dumpResult() = 0;
 
 	virtual void addDummyNodes() = 0;
+
+	// in-neighbor list
+	virtual void clearINList() = 0;
+	virtual void takeINList(const std::string& line) = 0;
+	virtual std::unordered_map<int, std::string> collectINList() = 0;
 
 	// in-neighbor cache
 	virtual void clearINCache() = 0;
