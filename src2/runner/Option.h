@@ -31,6 +31,7 @@ public:
 	float apply_interval;
 	float send_interval;
 	float term_interval;
+	double term_time;
 
 public:
 	Option();

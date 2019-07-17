@@ -55,6 +55,8 @@ Option::Option()
 		("send_interval", value<float>(&send_interval)->default_value(0.5f), "[float] the maximum interval (second) of performing send.")
 		("term_interval", value<float>(&term_interval)->default_value(0.5f),
 			"[float] the minimum interval (second) of reporting progress and do termination check.")
+		("term_time", value<double>(&term_time)->default_value(600),
+			"[float] the maximum updating time.")
 		("send_max_size", value<int>(&conf.send_max_size)->default_value(4096),
 			"[integer] the maximum size (# of nodes) of each sending message.")
 		("send_min_size", value<int>(&conf.send_min_size)->default_value(1),
