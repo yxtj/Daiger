@@ -67,8 +67,10 @@ void Master::terminationCheck(){
 			VLOG(1)<<"Time: "<<tmr.elapseSd()<<" current progress: ("<<s.first<<","<<s.second
 				<<") improvement: ("<<d.first<<","<<d.second<<")";
 		}
-		if(tmr.elapseSd() > opt.term_time)
+		if(tmr.elapseSd() > opt.term_time){
+			VLOG(1) << "update timeout";
 			break;
+		}
 	}
 	VLOG(1)<<"update terminates";
 	net->broadcast(MType::PFinish, my_net_id);

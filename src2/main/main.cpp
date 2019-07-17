@@ -75,15 +75,15 @@ int main(int argc, char* argv[]){
 		LOG(INFO)<<"Behavior parameters: \n"
 			<<"\tBalanced loading: "<<opt.conf.balance_load<<"\n"
 			<<"\tDo incremental: "<<opt.do_incremental<<"\n"
-			<<"\tDo output: "<<opt.do_output<<"\n"
-			<<"\t\tSort result: "<<opt.conf.sort_result<<"\n"
+			<<"\tDo output: "<<opt.do_output<<"\t"<<"Sort result: "<<opt.conf.sort_result<<"\n"
 			<<"\tAsynchronous: "<<opt.conf.async<<"\n"
 			<<"\tCache-free: "<<opt.conf.cache_free;
-		LOG(INFO)<<"Runtime parameters: \n"
-			<<"\tTimeout: "<<opt.timeout<<"\n"
-			<<"\tApply interval: "<<opt.apply_interval<<"\n"
-			<<"\tSend interval: "<<opt.send_interval<<"\n"
-			<<"\tReport interval: "<<opt.term_interval;
+		LOG(INFO) << "Runtime parameters: \n"
+			<< "\tTimeout: " << opt.timeout << "\n"
+			<< "\tApply interval: " << opt.apply_interval << "\n"
+			<< "\tSend interval: " << opt.send_interval << "\n"
+			<< "\tReport interval: " << opt.term_interval << "\n"
+			<< "\tTerm time: " << opt.term_time;
 	}
 	
 	#ifndef NDEBUG
