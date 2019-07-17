@@ -253,7 +253,7 @@ void LocalHolder<V, N>::init_value(const id_t& k, const value_t& v){
 template<class V, class N>
 inline void LocalHolder<V, N>::add_in_neighbor(const id_t & k, neighbor_t & nei){
 	node_t& n = get(k);
-	n.inb.push_back(move(nei));
+	n.inb.push_back(std::move(nei));
 }
 
 template<class V, class N>

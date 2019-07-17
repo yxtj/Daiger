@@ -362,7 +362,7 @@ void GlobalHolder<V, N>::prepareCollectINList(){
 			if(is_local_part(pid)){
 				local_part.add_in_neighbor(dst, nei);
 			} else{
-				buf_in[pid][dst].push_back(move(nei));
+				buf_in[pid][dst].push_back(std::move(nei));
 			}
 		}
 	}
