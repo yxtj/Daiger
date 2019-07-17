@@ -72,6 +72,12 @@ void Master::terminationCheck(){
 			break;
 		}
 	}
+	if(VLOG_IS_ON(1)){
+		auto s = app.tmt->state();
+		auto d = app.tmt->difference();
+		VLOG(1) << "Time: " << tmr.elapseSd() << " current progress: (" << s.first << "," << s.second
+			<< ") improvement: (" << d.first << "," << d.second << ")";
+	}
 	VLOG(1)<<"update terminates";
 	net->broadcast(MType::PFinish, my_net_id);
 }
