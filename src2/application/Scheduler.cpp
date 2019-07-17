@@ -26,10 +26,23 @@ priority_t SchedulerBase::lowest() const{
 void SchedulerRoundRobin::init(const std::vector<std::string>& args){
 	nNode = 0;
 	loop_pointer = 0;
+	try{
+		if(args.size() > 1)
+			portion = stod(args[1]);
+		else
+			portion = 1.0;
+	} catch(exception& e){
+		throw invalid_argument("Unable to get <portion> for SchedulerRoundRobin.");
+	}
 }
 void SchedulerRoundRobin::regist(const id_t& k){
 	SchedulerBase::regist(k);
 	data.push_back(k);
+}
+void SchedulerRoundRobin::ready(){
+	n_each_pick = static_cast<size_t>(ceil(portion * nNode));
+	n_each_pick = max<size_t>(1, n_each_pick);
+	n_each_pick = min<size_t>(nNode, n_each_pick);
 }
 
 bool SchedulerRoundRobin::empty() const {
@@ -66,7 +79,8 @@ id_t SchedulerRoundRobin::pick_one(){
 	return k;
 }
 std::vector<id_t> SchedulerRoundRobin::pick(){
-	return data;
+	//return data;
+	return pick_n(n_each_pick);
 }
 
 // -------- prdefined class SchedulerPriorityMaintain with SCH_PrioritizedMaintainHolder --------

@@ -54,6 +54,7 @@ class SchedulerRoundRobin
 public:
 	virtual void init(const std::vector<std::string>& args);
 	virtual void regist(const id_t& k);
+	virtual void ready();
 
 	virtual bool empty() const;
 	virtual void update(const id_t& k, const priority_t& p);
@@ -64,6 +65,8 @@ public:
 	virtual std::vector<id_t> pick();
 
 private:
+	double portion;
+	size_t n_each_pick;
 	size_t loop_pointer;
 	std::vector<id_t> data;
 };
