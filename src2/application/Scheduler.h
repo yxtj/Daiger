@@ -68,18 +68,18 @@ private:
 	std::vector<id_t> data;
 };
 
-// -------- predefined priority-based Scheduler --------
+// -------- predefined priority-queue Scheduler --------
 
-struct SCH_PrioritizedHolder;
+struct SCH_PrioritizedMaintainHolder;
 /**
  * Pick the top <portion>*<nNode> nodes in terms of their priority
  */
-class SchedulerPriority
+class SchedulerPriorityMaintain
 	: public SchedulerBase
 {
 public:
-	SchedulerPriority();
-	virtual ~SchedulerPriority();
+	SchedulerPriorityMaintain();
+	virtual ~SchedulerPriorityMaintain();
 
 	virtual void init(const std::vector<std::string>& args);
 	virtual void ready();
@@ -95,7 +95,37 @@ public:
 private:
 	double portion;
 	size_t n_each_pick;
-	SCH_PrioritizedHolder* data;
+	SCH_PrioritizedMaintainHolder* data;
+};
+
+// -------- predefined priority-based Scheduler --------
+
+struct SCH_PrioritizedSelectionHolder;
+/**
+ * Pick the top <portion>*<nNode> nodes in terms of their priority
+ */
+class SchedulerPrioritySelection
+	: public SchedulerBase
+{
+public:
+	SchedulerPrioritySelection();
+	virtual ~SchedulerPrioritySelection();
+
+	virtual void init(const std::vector<std::string>& args);
+	virtual void ready();
+
+	virtual bool empty() const;
+	virtual void update(const id_t& k, const priority_t& p);
+	virtual id_t top();
+	virtual void pop();
+	virtual std::vector<id_t> pick_n(const size_t n);
+	virtual id_t pick_one();
+	virtual std::vector<id_t> pick();
+
+private:
+	double portion;
+	size_t n_each_pick;
+	SCH_PrioritizedSelectionHolder* data;
 };
 
 // -------- predefined FIFO Scheduler --------

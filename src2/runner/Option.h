@@ -40,6 +40,6 @@ public:
 private:
 	std::string& sortUpPath(std::string& path);
 	float sortUpInterval(float& interval, const float min, const float max);
-	std::string& setWithRootPath(std::string& path, const std::string& name);
+	std::string setWithRootPath(const std::string& relPath, const std::string& defaultPath="");
 };
 

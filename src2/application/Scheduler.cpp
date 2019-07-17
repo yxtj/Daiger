@@ -68,10 +68,10 @@ std::vector<id_t> SchedulerRoundRobin::pick(){
 	return data;
 }
 
-// -------- prdefined class SchedulerPriority with SCH_PrioritizedHolder --------
+// -------- prdefined class SchedulerPriorityMaintain with SCH_PrioritizedMaintainHolder --------
 
-struct SCH_PrioritizedHolder{
-	//SCH_PrioritizedHolder();
+struct SCH_PrioritizedMaintainHolder{
+	//SCH_PrioritizedMaintainHolder();
 
 	id_t top();
 	void pop();
@@ -99,18 +99,18 @@ private:
 	unordered_map<id_t, handle_t> khm; // key-handler mapper
 };
 
-//SCH_PrioritizedHolder::SCH_PrioritizedHolder()
+//SCH_PrioritizedMaintainHolder::SCH_PrioritizedMaintainHolder()
 //	: heap(CmpUnit())
 //{}
-id_t SCH_PrioritizedHolder::top(){
+id_t SCH_PrioritizedMaintainHolder::top(){
 	return heap.top().k;
 }
-void SCH_PrioritizedHolder::pop(){
+void SCH_PrioritizedMaintainHolder::pop(){
 	id_t k = top();
 	heap.pop();
 	khm.erase(k);
 }
-void SCH_PrioritizedHolder::update(const id_t& k, const priority_t& p){
+void SCH_PrioritizedMaintainHolder::update(const id_t& k, const priority_t& p){
 	auto it = khm.find(k);
 	if(it == khm.end()){ // new key -> push
 		khm[k] = heap.push(Unit{k, p});
@@ -118,7 +118,7 @@ void SCH_PrioritizedHolder::update(const id_t& k, const priority_t& p){
 		heap.update(it->second, Unit{k, p});
 	}
 }
-void SCH_PrioritizedHolder::reset(const id_t& k){
+void SCH_PrioritizedMaintainHolder::reset(const id_t& k){
 	auto it = khm.find(k);
 	if(it != khm.end()){ 
 		heap.erase(it->second);
@@ -126,39 +126,39 @@ void SCH_PrioritizedHolder::reset(const id_t& k){
 	}
 }
 
-SchedulerPriority::SchedulerPriority()
+SchedulerPriorityMaintain::SchedulerPriorityMaintain()
 	: data(nullptr)
 {}
-SchedulerPriority::~SchedulerPriority(){
+SchedulerPriorityMaintain::~SchedulerPriorityMaintain(){
 	delete data;
 }
-void SchedulerPriority::init(const std::vector<std::string>& args){
+void SchedulerPriorityMaintain::init(const std::vector<std::string>& args){
 	nNode = 0;
-	data = new SCH_PrioritizedHolder();
+	data = new SCH_PrioritizedMaintainHolder();
 	try{
 		portion = stod(args[1]);
 	} catch(exception& e){
-		throw invalid_argument("Unable to get <portion> for SchedulerPriority.");
+		throw invalid_argument("Unable to get <portion> for SchedulerPriorityMaintain.");
 	}
 }
-void SchedulerPriority::ready(){
+void SchedulerPriorityMaintain::ready(){
 	n_each_pick = static_cast<size_t>(ceil(portion * nNode));
 	n_each_pick = max<size_t>(1, n_each_pick);
 }
 
-bool SchedulerPriority::empty() const {
+bool SchedulerPriorityMaintain::empty() const {
 	return data->empty();
 }
-void SchedulerPriority::update(const id_t& k, const priority_t& p){
+void SchedulerPriorityMaintain::update(const id_t& k, const priority_t& p){
 	data->update(k, p);
 }
-id_t SchedulerPriority::top(){
+id_t SchedulerPriorityMaintain::top(){
 	return data->top();
 }
-void SchedulerPriority::pop(){
+void SchedulerPriorityMaintain::pop(){
 	data->pop();
 }
-std::vector<id_t> SchedulerPriority::pick_n(const size_t n){
+std::vector<id_t> SchedulerPriorityMaintain::pick_n(const size_t n){
 	std::vector<id_t> res;
 	size_t i=0;
 	while(!data->empty() && i++ < n){
@@ -167,12 +167,134 @@ std::vector<id_t> SchedulerPriority::pick_n(const size_t n){
 	}
 	return res;
 }
-id_t SchedulerPriority::pick_one(){
+id_t SchedulerPriorityMaintain::pick_one(){
 	id_t k=data->top();
 	data->pop();
 	return k;
 }
-std::vector<id_t> SchedulerPriority::pick(){
+std::vector<id_t> SchedulerPriorityMaintain::pick(){
+	return pick_n(n_each_pick);
+}
+
+// -------- prdefined class SchedulerPrioritySelection with SCH_PrioritizedSelectionHolder --------
+
+struct SCH_PrioritizedSelectionHolder{
+	id_t top();
+	void pop();
+	vector<id_t> pickTops(const size_t k);
+
+	void update(const id_t& k, const priority_t& p);
+
+	size_t size() const {
+		return index.size();
+	}
+	bool empty() const {
+		return index.empty();
+	}
+	void clear() {
+		index.clear();
+	}
+	void reserve(const size_t n) {
+		priority.reserve(n);
+		index.reserve(n);
+		in_use.resize(n);
+	}
+
+private:
+	void prepare(const size_t k); // put the highest at the bottom
+
+	using Unit = SchedulerBase::Unit;
+	using CmpUnit = SchedulerBase::CmpUnit;
+	vector<priority_t> priority;
+	vector<id_t> index; // put high priority at the end
+	vector<bool> in_use;
+};
+
+id_t SCH_PrioritizedSelectionHolder::top(){
+	prepare(1);
+	return index.back();
+}
+void SCH_PrioritizedSelectionHolder::pop(){
+	id_t k = index.back();
+	in_use[k] = false;
+	index.pop_back();
+}
+vector<id_t> SCH_PrioritizedSelectionHolder::pickTops(const size_t k)
+{
+	prepare(k);
+	vector<id_t> res;
+	size_t start;
+	if(size() > k)
+		start = size() - k;
+	else
+		start = 0;
+	for(size_t i = start; i < index.size(); ++i){
+		id_t k = index[i];
+		in_use[k] = false;
+		res.push_back(k);
+	}
+	index.erase(index.begin() + start, index.end());
+	return res;
+}
+void SCH_PrioritizedSelectionHolder::update(const id_t& k, const priority_t& p){
+	if(in_use[k] == false){
+		in_use[k] = true;
+		index.push_back(k);
+	}
+	priority[k] = p;
+}
+void SCH_PrioritizedSelectionHolder::prepare(const size_t k)
+{
+	auto it = index.rbegin() + k;
+	nth_element(index.rbegin(), it, index.rend(),
+		[&](const id_t& l, const id_t& r){
+		return priority[l] > priority[r];
+	});
+}
+
+SchedulerPrioritySelection::SchedulerPrioritySelection()
+	: data(nullptr)
+{}
+SchedulerPrioritySelection::~SchedulerPrioritySelection(){
+	delete data;
+}
+void SchedulerPrioritySelection::init(const std::vector<std::string>& args){
+	nNode = 0;
+	data = new SCH_PrioritizedSelectionHolder();
+	try{
+		portion = stod(args[1]);
+	} catch(exception& e){
+		throw invalid_argument("Unable to get <portion> for SchedulerPrioritySelection.");
+	}
+}
+void SchedulerPrioritySelection::ready(){
+	n_each_pick = static_cast<size_t>(ceil(portion * nNode));
+	n_each_pick = max<size_t>(1, n_each_pick);
+
+	data->reserve(nNode);
+}
+
+bool SchedulerPrioritySelection::empty() const {
+	return data->empty();
+}
+void SchedulerPrioritySelection::update(const id_t& k, const priority_t& p){
+	data->update(k, p);
+}
+id_t SchedulerPrioritySelection::top(){
+	return data->top();
+}
+void SchedulerPrioritySelection::pop(){
+	data->pop();
+}
+std::vector<id_t> SchedulerPrioritySelection::pick_n(const size_t n){
+	return data->pickTops(n);
+}
+id_t SchedulerPrioritySelection::pick_one(){
+	id_t k = data->top();
+	data->pop();
+	return k;
+}
+std::vector<id_t> SchedulerPrioritySelection::pick(){
 	return pick_n(n_each_pick);
 }
 

@@ -15,6 +15,7 @@ Option::Option()
 {
 	// define
 	using boost::program_options::value;
+	using boost::program_options::bool_switch;
 	pimpl->desc.add_options()
 		("help", "Print help messages")
 		("show_info", value<bool>(&show)->default_value(1), "Print the initializing information.")
@@ -24,6 +25,7 @@ Option::Option()
 			"[integer] # of workers, used check whether a correct number of instance is started.")
 		("node", value<size_t>(&conf.nNode)->default_value(0), 
 			"[integer] # of nodes, used for preactively allocate space, 0 for skipping that.")
+		// path and file-prefix
 		("path", value<string>(&path_root), "Root path of graph, delta, value and result."
 			" They are in subdirectories of their names. They can be overriden by given path_xxx.")
 		("path_graph", value<string>(&conf.path_graph), "Path of the input graph files.")
@@ -34,15 +36,20 @@ Option::Option()
 		("prefix_value", value<string>(&conf.prefix_value)->default_value(string("value-")), "Prefix of the initial value files.")
 		("path_result", value<string>(&conf.path_result), "Path of the output value files. If not given, do NOT output result.")
 		("prefix_result", value<string>(&conf.prefix_result)->default_value(string("res-")), "Prefix of the output value files.")
+		// mode
+		("async", value<bool>(&conf.async)->default_value(true), "Whether to perform asynchronous computation.")
+		("incremental", bool_switch(&do_incremental)->default_value(false), "Whether to perform incremental update."
+			" Require <path_delta> and <path_value> being set.")
+		// app
 		("app", value<string>(&app_name), "The name of the application to run.")
 		("app_args", value<vector<string>>(&app_args)->multitoken()->default_value({}, ""), "Application parameters.")
 		("partitioner", value<vector<string>>(&partitioner_args)->multitoken()->default_value({"mod"}, "mod"),
 			"Partition strategy name and parameters. Supports: mod.")
 		("scheduler", value<vector<string>>(&scheduler_args)->multitoken()->default_value({"priority", "0.1"}, "priority"),
 			"Scheduler name and parameters. Supports: rr, priority, fifo.")
-		("async", value<bool>(&conf.async)->default_value(true), "Whether to perform asynchronous computation.")
 		("sort_result", value<bool>(&conf.sort_result)->default_value(false), "Whether to sort the result by node id before dumping.")
 		("cache_free", value<bool>(&conf.cache_free)->default_value(false), "Whether to perform cache-free computation.")
+		// running parameter
 		("timeout", value<float>(&timeout)->default_value(1.0f), "[float] time threshold (second) for determining error.")
 		("apply_interval", value<float>(&apply_interval)->default_value(0.5f), "[float] the maximum interval (second) of performing apply.")
 		("send_interval", value<float>(&send_interval)->default_value(0.5f), "[float] the maximum interval (second) of performing send.")
@@ -81,19 +88,16 @@ bool Option::parseInput(int argc, char* argv[]) {
 	}
 
 	while(!flag_help) {
-		do_incremental = true;
 		do_output = true;
 
 		sortUpPath(path_root);
 		if(!path_root.empty()){
-			if(vm.count("path_graph") == 0)
-				setWithRootPath(conf.path_graph, "graph");
-			if(vm.count("path_delta") == 0)
-				setWithRootPath(conf.path_delta, "delta");
-			if(vm.count("path_value") == 0)
-				setWithRootPath(conf.path_value, "value");
-			if(vm.count("path_result") == 0)
-				setWithRootPath(conf.path_result, "result");
+			conf.path_graph = setWithRootPath(conf.path_graph, "graph");
+			if(do_incremental){
+				conf.path_delta = setWithRootPath(conf.path_delta, "delta");
+				conf.path_value = setWithRootPath(conf.path_value, "value");
+			}
+			conf.path_result = setWithRootPath(conf.path_result, "result");
 		}
 		if(conf.path_graph.empty()) {
 			cerr << "Graph path is not given" << endl;
@@ -104,9 +108,6 @@ bool Option::parseInput(int argc, char* argv[]) {
 		sortUpPath(conf.path_value);
 		sortUpPath(conf.path_delta);
 		sortUpPath(conf.path_result);
-
-		if(conf.path_delta.empty() || conf.path_value.empty())
-			do_incremental=false;
 		
 		if(conf.path_result.empty())
 			do_output=false;
@@ -131,6 +132,8 @@ bool Option::parseInput(int argc, char* argv[]) {
 
 std::string& Option::sortUpPath(std::string & path)
 {
+	if(path.empty())
+		return path;
 	size_t p=0;
 	while(p < path.size() && path[p] == ' ') ++p;
 	if(p != 0)
@@ -150,8 +153,11 @@ float Option::sortUpInterval(float& interval, const float min, const float max){
 	return interval;
 }
 
-std::string& Option::setWithRootPath(std::string& path, const std::string& name){
-	if(path.empty())
-		path = path_root + name + "/";
+std::string Option::setWithRootPath(const std::string& relPath, const std::string& defaultPath){
+	string path = path_root;
+	if(relPath.empty())
+		path += defaultPath + "/";
+	else
+		path += relPath + "/";
 	return path;
 }

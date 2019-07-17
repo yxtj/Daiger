@@ -20,8 +20,10 @@ void SchedulerFactory::init()
 	// TODO: add new strategy here
 	registerClass<SchedulerRoundRobin>("rr",
 		"rr. Round-Robin for all nodes.");
-	registerClass<SchedulerPriority>("priority",
-		"priority <portion>. Pick the top <portion> percent local nodes. Only select affected nodes.");
+	registerClass<SchedulerPriorityMaintain>("priorityM",
+		"priorityM <portion>. Pick the top <portion> percent local nodes. Maintain top-k for each update.");
+	registerClass<SchedulerPrioritySelection>("priority",
+		"priority <portion>. Pick the top <portion> percent local nodes. Only do one selection when it is needed");
 	registerClass<SchedulerFIFO>("fifo",
 		"fifo. Run on all affected nodes, according to the order they got touched.");
 	
