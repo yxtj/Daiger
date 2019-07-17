@@ -71,7 +71,7 @@ void Worker::procedureLoadGraph(){
 			net->send(wm.wid2nid(wid), MType::GNode, move(msg));
 		};
 	setLogThreadName(log_name+"-PLG");
-	VLOG(1)<<"Worker start loading graph";
+	LOG(INFO) << "Worker start loading graph";
 	graph.loadGraph(sender);
 }
 
@@ -81,7 +81,7 @@ void Worker::procedureLoadValue(){
 			net->send(wm.wid2nid(wid), MType::GValue, move(msg));
 		};
 	setLogThreadName(log_name+"-PLV");
-	VLOG(1)<<"Worker start loading value";
+	LOG(INFO) << "Worker start loading value";
 	graph.loadValue(sender);
 }
 
@@ -91,7 +91,7 @@ void Worker::procedureLoadDelta(){
 			net->send(wm.wid2nid(wid), MType::GDelta, move(msg));
 		};
 	setLogThreadName(log_name+"-PLD");
-	VLOG(1)<<"Worker start loading delta";
+	LOG(INFO) << "Worker start loading delta";
 	graph.loadDelta(sender);
 }
 
@@ -102,8 +102,7 @@ void Worker::procedureBuildINList()
 		net->send(wm.wid2nid(wid), MType::GINList, move(msg));
 	};
 	setLogThreadName(log_name + "-BIL");
-	VLOG(1) << "Worker start building in-neighbor list";
-	// TODO:
+	LOG(INFO) << "Worker start building in-neighbor list";
 	graph.buildINList(sender);
 }
 
@@ -113,13 +112,13 @@ void Worker::procedureBuildINCache(){
 			net->send(wm.wid2nid(wid), MType::GINCache, move(msg));
 		};
 	setLogThreadName(log_name+"-BIC");
-	VLOG(1)<<"Worker start building in-neighbor cache";
+	LOG(INFO) << "Worker start building in-neighbor cache";
 	graph.buildINCache(sender);
 }
 
 void Worker::procedureRebuildStructure(){
 	setLogThreadName(log_name+"-RSS");
-	VLOG(1)<<"Worker start reconstructing source structure";
+	LOG(INFO) << "Worker start reconstructing source structure";
 	graph.rebuildSource();
 	if(opt.conf.cache_free)
 		graph.clearINCache();
@@ -127,7 +126,7 @@ void Worker::procedureRebuildStructure(){
 
 void Worker::procedureGenInitMsg(){
 	setLogThreadName(log_name+"-GIM");
-	VLOG(1)<<"Worker start generating initial messages";
+	LOG(INFO) << "Worker start generating initial messages";
 	graph.genInitMsg();
 }
 
@@ -199,7 +198,7 @@ void Worker::procedureUpdate(){
 
 void Worker::procedureDumpResult(){
 	setLogThreadName(log_name+"-PDR");
-	VLOG(1)<<"Worker start dumping result";
+	LOG(INFO) << "Worker start dumping result";
 	graph.dumpResult();
 }
 

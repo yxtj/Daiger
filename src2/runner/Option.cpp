@@ -18,9 +18,9 @@ Option::Option()
 	using boost::program_options::bool_switch;
 	pimpl->desc.add_options()
 		("help", "Print help messages")
-		("show_info", value<bool>(&show)->default_value(1), "Print the initializing information.")
-		("agg_message", value<bool>(&conf.aggregate_message)->default_value(1), "Aggregate messages to save bandwidth.")
-		("load_balance", value<bool>(&conf.balance_load)->default_value(1), "Support loading from arbitrary number of files.")
+		("show", bool_switch(&show)->default_value(false), "Print the initializing information.")
+		("agg_message", value<bool>(&conf.aggregate_message)->default_value(true), "Aggregate messages to save bandwidth.")
+		("load_balance", value<bool>(&conf.balance_load)->default_value(true), "Support loading from arbitrary number of files.")
 		("part", value<size_t>(&conf.nPart)->default_value(0), 
 			"[integer] # of workers, used check whether a correct number of instance is started.")
 		("node", value<size_t>(&conf.nNode)->default_value(0), 
@@ -47,8 +47,8 @@ Option::Option()
 			"Partition strategy name and parameters. Supports: mod.")
 		("scheduler", value<vector<string>>(&scheduler_args)->multitoken()->default_value({"priority", "0.1"}, "priority"),
 			"Scheduler name and parameters. Supports: rr, priority, fifo.")
-		("sort_result", value<bool>(&conf.sort_result)->default_value(false), "Whether to sort the result by node id before dumping.")
-		("cache_free", value<bool>(&conf.cache_free)->default_value(false), "Whether to perform cache-free computation.")
+		("sort_result", bool_switch(&conf.sort_result)->default_value(false), "Whether to sort the result by node id before dumping.")
+		("cache_free", bool_switch(&conf.cache_free)->default_value(false), "Whether to perform cache-free computation.")
 		// running parameter
 		("timeout", value<float>(&timeout)->default_value(1.0f), "[float] time threshold (second) for determining error.")
 		("apply_interval", value<float>(&apply_interval)->default_value(0.5f), "[float] the maximum interval (second) of performing apply.")

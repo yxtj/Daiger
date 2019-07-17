@@ -54,7 +54,7 @@ int main(int argc, char* argv[]){
 	}
 	if(!app.check()){
 		LOG(ERROR)<<"The application is not correctly setup.";
-		return 2;
+		return 3;
 	}
 	app.ptn->setParts(net->size());
 

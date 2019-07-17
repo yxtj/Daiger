@@ -54,14 +54,14 @@ void Runner::msgLoop(const std::string& name) {
 	while(running){
 		int n = 16; // prevent spending too much time in pushing but never popping 
 		while(msg_do_push && n-->=0 && net->tryReadAny(data, &info.source, &info.tag)){
-			DVLOG(2)<<"Get "<<info.source<<" -> "<<info.dest<<" ("<<info.tag
+			DVLOG(4)<<"Get "<<info.source<<" -> "<<info.dest<<" ("<<info.tag
 				<<"), queue: "<<driver.queSize()<<", net: "<<net->unpicked_pkgs();
 			driver.pushData(data, info);
 		}
 		while(msg_do_pop && !driver.empty()){
 			#ifndef NDEBUG
 			auto& info = driver.front().second;
-			DVLOG(2)<<"Pop "<<info.source<<" -> "<<info.dest<<" ("<<info.tag
+			DVLOG(4)<<"Pop "<<info.source<<" -> "<<info.dest<<" ("<<info.tag
 				<<(info.tag==0?"-"+to_string(deserialize<int>(driver.front().first)):"")
 				<<"), queue: "<<driver.queSize()<<", net: "<<net->unpicked_pkgs();
 			#endif
