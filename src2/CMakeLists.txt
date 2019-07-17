@@ -41,6 +41,7 @@ message(STATUS "Boost_INCLUDE_DIRS: ${Boost_INCLUDE_DIRS}")
 
 # -------- MPI --------
 
+set(MPI_EXECUTABLE_SUFFIX ".openmpi")
 find_package(MPI REQUIRED)
 message(STATUS "MPI: ${MPI_CXX_FOUND} ${MPIEXEC}")
 #include_directories(SYSTEM ${MPI_CXX_INCLUDE_PATH})
