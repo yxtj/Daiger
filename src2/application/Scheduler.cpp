@@ -1,6 +1,7 @@
 #include "Scheduler.h"
 #include <numeric>
 #include <unordered_map>
+#include <unordered_set>
 #include <stdexcept>
 #include <cmath>
 #include <queue>
@@ -186,18 +187,18 @@ struct SCH_PrioritizedSelectionHolder{
 	void update(const id_t& k, const priority_t& p);
 
 	size_t size() const {
-		return index.size();
+		return priority.size();
 	}
 	bool empty() const {
-		return index.empty();
+		return priority.empty();
 	}
 	void clear() {
+		priority.clear();
 		index.clear();
 	}
 	void reserve(const size_t n) {
 		priority.reserve(n);
 		index.reserve(n);
-		in_use.resize(n);
 	}
 
 private:
@@ -205,9 +206,8 @@ private:
 
 	using Unit = SchedulerBase::Unit;
 	using CmpUnit = SchedulerBase::CmpUnit;
-	vector<priority_t> priority;
-	vector<id_t> index; // put high priority at the end
-	vector<bool> in_use;
+	unordered_map<id_t, priority_t> priority;
+	vector<id_t> index;
 };
 
 id_t SCH_PrioritizedSelectionHolder::top(){
@@ -216,7 +216,7 @@ id_t SCH_PrioritizedSelectionHolder::top(){
 }
 void SCH_PrioritizedSelectionHolder::pop(){
 	id_t k = index.back();
-	in_use[k] = false;
+	priority.erase(k);
 	index.pop_back();
 }
 vector<id_t> SCH_PrioritizedSelectionHolder::pickTops(const size_t k)
@@ -230,21 +230,25 @@ vector<id_t> SCH_PrioritizedSelectionHolder::pickTops(const size_t k)
 		start = 0;
 	for(size_t i = start; i < index.size(); ++i){
 		id_t k = index[i];
-		in_use[k] = false;
 		res.push_back(k);
+		priority.erase(k);
 	}
 	index.erase(index.begin() + start, index.end());
 	return res;
 }
 void SCH_PrioritizedSelectionHolder::update(const id_t& k, const priority_t& p){
-	if(in_use[k] == false){
-		in_use[k] = true;
+	auto it = priority.find(k);
+	if(it == priority.end()){
+		priority[k] = p;
 		index.push_back(k);
+	} else{
+		it->second = p;
 	}
-	priority[k] = p;
 }
 void SCH_PrioritizedSelectionHolder::prepare(const size_t k)
 {
+	if(size() <= k)
+		return;
 	auto it = index.rbegin() + k;
 	nth_element(index.rbegin(), it, index.rend(),
 		[&](const id_t& l, const id_t& r){
