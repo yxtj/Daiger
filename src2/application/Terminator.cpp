@@ -102,3 +102,45 @@ std::pair<double, size_t> TerminatorDiffBase::difference(){
 	return make_pair(sum.sum - sum_gp_last,
 		sum.n_inf - sum_gi_last);
 }
+
+// -------- TerminatorVariance --------
+
+void TerminatorVarianceBase::init(const std::vector<std::string>& args)
+{
+	try{
+		var_portion = stod(args[0]);
+		decay = var_portion; // modified when n_worker is given
+	} catch(exception& e){
+		throw invalid_argument("Unable to get parameters for TerminatorVariance.");
+	}
+}
+
+void TerminatorVarianceBase::prepare_global_checker(const size_t n_worker)
+{
+	TerminatorBase::prepare_global_checker(n_worker);
+	last.resize(n_worker);
+	average = 0.0;
+	decay = var_portion / n_worker;
+	untouched = true;
+}
+
+void TerminatorVarianceBase::update_report(const size_t wid, const ProgressReport & report)
+{
+	untouched = false;
+	double new_average = average - TerminatorBase::curr[wid].sum + report.sum;
+	average = average * (1 - decay) + new_average * decay;
+	last[wid] = TerminatorBase::curr[wid];
+	sum_last = sum;
+	TerminatorBase::update_report(wid, report);
+}
+
+bool TerminatorVarianceBase::check_term()
+{
+	return !untouched && abs(average-sum.sum)/average < var_portion;
+}
+
+std::pair<double, size_t> TerminatorVarianceBase::difference()
+{
+	return make_pair(sum.sum - sum_last.sum,
+		sum.n_inf - sum_last.n_inf);
+}

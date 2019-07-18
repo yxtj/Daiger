@@ -132,3 +132,31 @@ template <typename V, typename N>
 class TerminatorDiff
 	: public TerminatorDiffBase, public Terminator<V, N>
 {};
+
+// -------- an example of a variance-based terminator --------
+// calculate an average level, and check whether the variance is smaller than a scale
+// the average level is maintained with exponential average
+
+class TerminatorVarianceBase
+	: virtual public TerminatorBase
+{
+public:
+	virtual void init(const std::vector<std::string>& args);
+	virtual void prepare_global_checker(const size_t n_worker);
+	virtual void update_report(const size_t wid, const ProgressReport& report);
+	virtual bool check_term();
+	virtual std::pair<double, size_t> difference();
+
+private:
+	std::vector<ProgressReport> last;
+	ProgressReport sum_last;
+	double average;
+	double decay; // = var_portion/n_worker
+	double var_portion; // the portion threshold
+	bool untouched;
+};
+
+template <typename V, typename N>
+class TerminatorVariance
+	: public TerminatorVarianceBase, public Terminator<V, N>
+{};
