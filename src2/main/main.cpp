@@ -68,10 +68,10 @@ int main(int argc, char* argv[]){
 			<<"\tPrefix value: "<<opt.conf.prefix_value<<"\n"
 			<<"\tPrefix delta: "<<opt.conf.prefix_delta<<"\n"
 			<<"\tPrefix result: "<<opt.conf.prefix_result;
-		LOG(INFO)<<"Application: "<<opt.app_name<<"\n"
-			<<"\targs: "<<opt.app_args<<"\n"
-			<<"\tPartitioner: "<<opt.partitioner_args<<"\n"
-			<<"\tScheduler: "<<opt.scheduler_args;
+		LOG(INFO) << "Application: " << opt.app_name << "\n"
+			<< "\targs: " << opt.app_args << "\n"
+			<< "\tPartitioner: " << opt.partitioner_args << "\n"
+			<< "\tScheduler: " << opt.scheduler_args << "\n";
 		LOG(INFO)<<"Behavior parameters: \n"
 			<<"\tBalanced loading: "<<opt.conf.balance_load<<"\n"
 			<<"\tDo incremental: "<<opt.do_incremental<<"\n"
@@ -80,10 +80,12 @@ int main(int argc, char* argv[]){
 			<<"\tCache-free: "<<opt.conf.cache_free;
 		LOG(INFO) << "Runtime parameters: \n"
 			<< "\tTimeout: " << opt.timeout << "\n"
-			<< "\tApply interval: " << opt.apply_interval << "\n"
-			<< "\tSend interval: " << opt.send_interval << "\n"
-			<< "\tReport interval: " << opt.term_interval << "\n"
-			<< "\tTerm time: " << opt.term_time;
+			<< "\tApply: interval: " << opt.conf.apply_interval 
+			<< "\tmin-ratio: "<<opt.conf.apply_min_portion << "\tmax-ratio: " << opt.conf.apply_max_portion
+			<< "\tSend: interval: " << opt.conf.send_interval
+			<< "\tmin-size: " << opt.conf.send_min_size<< "\tmax-size: " << opt.conf.send_max_size
+			<< "\tProgress report interval: " << opt.conf.progress_interval<< "\n"
+			<< "\tTermination max time: " << opt.conf.termination_max_time;
 	}
 	
 	#ifndef NDEBUG

@@ -4,7 +4,8 @@
 #include "GlobalHolderBase.h"
 #include "util/Timer.h"
 #include <functional>
-#include <unordered_map>
+#include <mutex>
+#include <deque>
 #include <string>
 
 class GraphContainer {
@@ -39,16 +40,29 @@ public:
 	void msgRequest(const std::string& line);
 	void msgReply(const std::string& line);
 
-	void apply();
-	void send();
-	void reportProgress();
+	// do the update loop, including: process message, apply, send, report progress.
+	void update();
+	enum class MsgType {
+		Update,
+		Request,
+		Reply
+	};
+	void pushMsg(MsgType type, std::string & msg);
+	void stop_update();
+
+	void apply(); // apply local u to local v
+	void tryApply();
+	void send(); // send remote u to their workers
+	void trySend();
+	void report(); // report local progress to master
+	void tryReport();
 
 private:
 	void loadGraphFile(const std::string& fn, sender_t sender);
 	void loadValueFile(const std::string& fn, sender_t sender);
 	void loadDeltaFile(const std::string& fn, sender_t sender);
 
-	bool needApply();
+	std::pair<MsgType, std::string> popMsg(); // only called when message queue is not empty
 
 private:
 	AppBase app;
@@ -60,9 +74,15 @@ private:
 	sender_t sender_req;
 	sender0_t sender_pro;
 	
+	bool allow_update;
 	bool applying;
 	bool sending;
+	std::mutex mtx;
+	std::deque<std::pair<MsgType, std::string>> messages; // buffered messages to be processed in update()
 
-	Timer tmr_send;
+	Timer tmr;
+	double t_last_apply;
+	double t_last_send;
+	double t_last_report;
 };
 

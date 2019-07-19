@@ -16,7 +16,8 @@
  */
 class MsgDriver{
 public:
-	typedef Dispatcher<const std::string&, const RPCInfo&>::callback_t callback_t;
+	using dispatcher_t = Dispatcher<std::string&, const RPCInfo&>;
+	using callback_t = dispatcher_t::callback_t;
 	static callback_t GetDummyHandler();
 
 	MsgDriver();
@@ -68,10 +69,10 @@ private:
 
 	bool running_;
 
-	Dispatcher<const std::string&, const RPCInfo&> inDisper; //immediately response
+	dispatcher_t inDisper; //immediately response
 	std::deque<std::pair<std::string, RPCInfo> > que; //queue for message waiting for process
 //	mutable std::mutex lockQue;
-	Dispatcher<const std::string&, const RPCInfo&> outDisper; //response when processed
+	dispatcher_t outDisper; //response when processed
 	callback_t defaultHandler;
 };
 

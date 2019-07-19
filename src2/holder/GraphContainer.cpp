@@ -18,6 +18,7 @@ void GraphContainer::init(int wid, GlobalHolderBase* holder, bool incremental){
 		conf.nPart, wid, conf.aggregate_message,
 		incremental, conf.async, conf.cache_free, conf.sort_result,
 		conf.send_min_size, conf.send_max_size);
+	allow_update = true;
 	applying = false;
 	sending = false;
 }
@@ -128,6 +129,24 @@ void GraphContainer::prepareUpdate(sender_t sender_val, sender_t sender_req, sen
 	holder->prepareUpdate(sender_req);
 }
 
+void GraphContainer::pushMsg(MsgType type, std::string & msg)
+{
+	lock_guard<mutex> lg(mtx);
+	messages.emplace_back(move(type), move(msg));
+}
+std::pair<GraphContainer::MsgType, std::string> GraphContainer::popMsg()
+{
+	std::pair<MsgType, std::string> res = messages.front();
+	lock_guard<mutex> lg(mtx);
+	messages.pop_front();
+	return res;
+}
+
+void GraphContainer::stop_update()
+{
+	allow_update = false;
+}
+
 void GraphContainer::apply(){
 	if(!applying && holder->needApply()){
 		applying = true;
@@ -135,10 +154,16 @@ void GraphContainer::apply(){
 		applying = false;
 	}
 }
-void GraphContainer::send(){
-	if(sending || !holder->needSend(tmr_send.elapseSd() > conf.send_max_interval))
+void GraphContainer::tryApply()
+{
+	double t = tmr.elapseSd();
+	if(t - t_last_apply < conf.progress_interval)
 		return;
-	tmr_send.restart();
+	t_last_apply = t;
+	apply();
+}
+
+void GraphContainer::send(){
 	sending = true;
 	for(int i=0; i<conf.nPart; ++i){
 		if(i == wid)
@@ -148,10 +173,26 @@ void GraphContainer::send(){
 	}
 	sending = false;
 }
+void GraphContainer::trySend()
+{
+	double t = tmr.elapseSd();
+	if(sending || !holder->needSend(t - t_last_send > conf.send_interval))
+		return;
+	t_last_send = t;
+	send();
+}
 
-void GraphContainer::reportProgress(){
+void GraphContainer::report(){
 	string progress = holder->collectLocalProgress();
 	sender_pro(progress);
+}
+void GraphContainer::tryReport()
+{
+	double t = tmr.elapseSd();
+	if(t - t_last_report < conf.progress_interval)
+		return;
+	t_last_report = t;
+	report();
 }
 // --------
 
@@ -206,4 +247,38 @@ void GraphContainer::msgRequest(const std::string& line){
 }
 void GraphContainer::msgReply(const std::string& line){
 	holder->msgReply(line);
+}
+
+void GraphContainer::update()
+{
+	tmr.restart();
+	double t = tmr.elapseSd();
+	t_last_apply = t;
+	t_last_send = t;
+	t_last_report = t;
+	while(allow_update){
+		if(messages.empty()){
+			tryApply();
+			trySend();
+			tryReport();
+		} else{
+			MsgType type;
+			string msg;
+			tie(type, msg) = popMsg();
+			switch(type)
+			{
+			case GraphContainer::MsgType::Update:
+				msgUpdate(msg);
+				break;
+			case GraphContainer::MsgType::Request:
+				msgRequest(msg);
+				break;
+			case GraphContainer::MsgType::Reply:
+				msgReply(msg);
+				break;
+			default:
+				break;
+			}
+		}
+	}
 }

@@ -115,7 +115,7 @@ bool MsgDriver::popData(){
 //	{
 //		lock_guard<mutex> ql(lockQue);
 //		tie(d,r)=move(que.front());
-	auto p=move(que.front());
+		auto p=move(que.front());
 		que.pop_front();
 //	}
 //	return processOutput(d, r);

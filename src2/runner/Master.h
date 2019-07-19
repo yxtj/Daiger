@@ -44,14 +44,14 @@ private:
 	//using callback_t = void (Master::*)(const std::string&, const RPCInfo&);
 	//typedef void (Master::*callback_t)(const string&, const RPCInfo&);
 	using typename Runner::callback_t;
-	callback_t localCBBinder(void (Master::*fp)(const std::string&, const RPCInfo&));
+	callback_t localCBBinder(void (Master::*fp)(std::string&, const RPCInfo&));
 	virtual void registerHandlers();
 
 public:
-	void handleReply(const std::string& d, const RPCInfo& info);
+	void handleReply(std::string& d, const RPCInfo& info);
 
-	void handleRegister(const std::string& d, const RPCInfo& info);
-	void handleProgressReport(const std::string& d, const RPCInfo& info);
+	void handleRegister(std::string& d, const RPCInfo& info);
+	void handleProgressReport(std::string& d, const RPCInfo& info);
 
 private:
 	int my_net_id;

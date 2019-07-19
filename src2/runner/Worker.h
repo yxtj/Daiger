@@ -42,37 +42,37 @@ private:
 	//using callback_t = void (Worker::*)(const std::string&, const RPCInfo&);
 	//typedef void (Worker::*callback_t)(const string&, const RPCInfo&);
 	using typename Runner::callback_t;
-	callback_t localCBBinder(void (Worker::*fp)(const std::string&, const RPCInfo&));
+	callback_t localCBBinder(void (Worker::*fp)(std::string&, const RPCInfo&));
 	virtual void registerHandlers();
 
 // handlers
 public:
-	void handleReply(const std::string& d, const RPCInfo& info);
+	void handleReply(std::string& d, const RPCInfo& info);
 
-	void handleOnline(const std::string& d, const RPCInfo& info);
-	void handleRegister(const std::string& d, const RPCInfo& info);
-	void handleWorkers(const std::string& d, const RPCInfo& info);
-	void handleShutdown(const std::string& d, const RPCInfo& info); // normal exit
-	void handleTerminate(const std::string& d, const RPCInfo& info); // force exit
+	void handleOnline(std::string& d, const RPCInfo& info);
+	void handleRegister(std::string& d, const RPCInfo& info);
+	void handleWorkers(std::string& d, const RPCInfo& info);
+	void handleShutdown(std::string& d, const RPCInfo& info); // normal exit
+	void handleTerminate(std::string& d, const RPCInfo& info); // force exit
 
-	void handleClear(const std::string& d, const RPCInfo& info);
-	void handleProcedure(const std::string& d, const RPCInfo& info);
-	void handleFinish(const std::string& d, const RPCInfo& info);
+	void handleClear(std::string& d, const RPCInfo& info);
+	void handleProcedure(std::string& d, const RPCInfo& info);
+	void handleFinish(std::string& d, const RPCInfo& info);
 
-	void handleGNode(const std::string& d, const RPCInfo& info);
-	void handleGValue(const std::string& d, const RPCInfo& info);
-	void handleGDelta(const std::string& d, const RPCInfo& info);
+	void handleGNode(std::string& d, const RPCInfo& info);
+	void handleGValue(std::string& d, const RPCInfo& info);
+	void handleGDelta(std::string& d, const RPCInfo& info);
 
-	void handleINCache(const std::string& d, const RPCInfo& info);
+	void handleINCache(std::string& d, const RPCInfo& info);
 
-	void handleVUpdate(const std::string& d, const RPCInfo& info);
-	void handleVRequest(const std::string& d, const RPCInfo& info);
-	void handleVReply(const std::string& d, const RPCInfo& info);
+	void handleVUpdate(std::string& d, const RPCInfo& info);
+	void handleVRequest(std::string& d, const RPCInfo& info);
+	void handleVReply(std::string& d, const RPCInfo& info);
 
-	void handlePApply(const std::string& d, const RPCInfo& info);
-	void handlePSend(const std::string& d, const RPCInfo& info);
-	void handlePReport(const std::string& d, const RPCInfo& info);
-	void handlePFinish(const std::string& d, const RPCInfo& info);
+	//void handlePApply(std::string& d, const RPCInfo& info);
+	//void handlePSend(std::string& d, const RPCInfo& info);
+	//void handlePReport(std::string& d, const RPCInfo& info);
+	void handlePFinish(std::string& d, const RPCInfo& info);
 
 private:
 	int master_net_id;

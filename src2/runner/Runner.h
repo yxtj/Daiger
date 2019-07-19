@@ -46,9 +46,8 @@ protected:
 
 // handler helpers
 protected:
-	using callback_t = std::function<void(const std::string&, const RPCInfo&)>;
-	//using callback_t = void (Master::*)(const std::string&, const RPCInfo&);
-	//typedef void (Master::*callback_t)(const string&, const RPCInfo&);
+	//using callback_t = MsgDriver::callback_t;
+	using callback_t = std::function<void(std::string&, const RPCInfo&)>;
 	//using replier_t = std::function<void()>;
 	virtual void registerHandlers() = 0;
 	void regDSPImmediate(const int type, callback_t fp);

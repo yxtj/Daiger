@@ -132,7 +132,7 @@ void Worker::procedureGenInitMsg(){
 
 void Worker::reportProgress(){
 	VLOG(2)<<"sending progress report";
-	graph.reportProgress();
+	graph.report();
 }
 
 static int _helper_gcd(int a, int b){
@@ -156,6 +156,8 @@ void Worker::procedureUpdate(){
 	VLOG(1)<<"Worker start updating";
 	graph.prepareUpdate(sender_val, sender_req, sender_pro);
 
+	graph.update();
+	/*
 	// start periodic apply-and-send and periodic progress-report
 	update_finish=false;
 	int ams = static_cast<int>(opt.apply_interval*1000); // millisecond
@@ -194,6 +196,7 @@ void Worker::procedureUpdate(){
 			break;
 		}
 	}
+	*/
 }
 
 void Worker::procedureDumpResult(){

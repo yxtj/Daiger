@@ -15,7 +15,7 @@ using namespace std;
 
 // register helpers
 Worker::callback_t Worker::localCBBinder(
-	void (Worker::*fp)(const std::string&, const RPCInfo&))
+	void (Worker::*fp)(std::string&, const RPCInfo&))
 {
 	return bind(fp, this, placeholders::_1, placeholders::_2);
 }
@@ -45,9 +45,9 @@ void Worker::registerHandlers() {
 	regDSPProcess(MType::VRequest, localCBBinder(&Worker::handleVRequest));
 	regDSPProcess(MType::VReply, localCBBinder(&Worker::handleVReply));
 
-	regDSPProcess(MType::PApply, localCBBinder(&Worker::handlePApply));
-	regDSPProcess(MType::PSend, localCBBinder(&Worker::handlePSend));
-	regDSPProcess(MType::PReport, localCBBinder(&Worker::handlePReport));
+	//regDSPProcess(MType::PApply, localCBBinder(&Worker::handlePApply));
+	//regDSPProcess(MType::PSend, localCBBinder(&Worker::handlePSend));
+	//regDSPProcess(MType::PReport, localCBBinder(&Worker::handlePReport));
 	regDSPProcess(MType::PFinish, localCBBinder(&Worker::handlePFinish));
 
 	// part 2: reply handler:
@@ -58,13 +58,13 @@ void Worker::registerHandlers() {
 	// by handlerRegisterWorker()
 }
 
-void Worker::handleReply(const std::string& d, const RPCInfo& info) {
+void Worker::handleReply(std::string& d, const RPCInfo& info) {
     int type = deserialize<int>(d);
 	pair<bool, int> source = wm.nidtrans(info.source);
     rph.input(type, source.second);
 }
 
-void Worker::handleOnline(const std::string& d, const RPCInfo& info){
+void Worker::handleOnline(std::string& d, const RPCInfo& info){
 	int nid = deserialize<int>(d);
 	master_net_id = nid;
 	// sendReply(info);
@@ -72,27 +72,27 @@ void Worker::handleOnline(const std::string& d, const RPCInfo& info){
 	su_master.notify(); // notify registerWorker()
 }
 
-void Worker::handleRegister(const std::string& d, const RPCInfo& info){
+void Worker::handleRegister(std::string& d, const RPCInfo& info){
 	int nid = deserialize<int>(d);
 	master_net_id = nid;
 	LOG(DEBUG)<<"got master id";
 	su_master.notify(); // notify registerWorker()
 }
 
-void Worker::handleWorkers(const std::string& d, const RPCInfo& info){
+void Worker::handleWorkers(std::string& d, const RPCInfo& info){
 	vector<pair<int, int>> winfo = deserialize<vector<pair<int, int>>>(d);
 	storeWorkerInfo(winfo);
 	sendReply(info);
 }
-void Worker::handleShutdown(const std::string& d, const RPCInfo& info){
+void Worker::handleShutdown(std::string& d, const RPCInfo& info){
 	shutdownWorker();
 	sendReply(info);
 }
-void Worker::handleTerminate(const std::string& d, const RPCInfo& info){
+void Worker::handleTerminate(std::string& d, const RPCInfo& info){
 	terminateWorker();
 }
 
-void Worker::handleClear(const std::string& d, const RPCInfo& info){
+void Worker::handleClear(std::string& d, const RPCInfo& info){
 	if(tprcd.joinable())
 		tprcd.join();
 	// pass info as an value copy to keep it until it is used
@@ -103,7 +103,7 @@ void Worker::handleClear(const std::string& d, const RPCInfo& info){
 		sendReply(info);
 	}, info);
 }
-void Worker::handleProcedure(const std::string& d, const RPCInfo& info){
+void Worker::handleProcedure(std::string& d, const RPCInfo& info){
 	int pid = deserialize<int>(d);
 	function<void()> fun;
 	switch(pid){
@@ -135,7 +135,7 @@ void Worker::handleProcedure(const std::string& d, const RPCInfo& info){
 	tprcd = thread(fun);
 	sendReply(info);
 }
-void Worker::handleFinish(const std::string& d, const RPCInfo& info){
+void Worker::handleFinish(std::string& d, const RPCInfo& info){
 	if(tprcd.joinable())
 		tprcd.join();
 	// pass info as an value copy to keep it until it is used
@@ -147,40 +147,47 @@ void Worker::handleFinish(const std::string& d, const RPCInfo& info){
 	}, info);
 }
 
-void Worker::handleGNode(const std::string& d, const RPCInfo& info){
+void Worker::handleGNode(std::string& d, const RPCInfo& info){
 	graph.loadGraphPiece(d);
 }
-void Worker::handleGValue(const std::string& d, const RPCInfo& info){
+void Worker::handleGValue(std::string& d, const RPCInfo& info){
 	graph.loadValuePiece(d);
 }
-void Worker::handleGDelta(const std::string& d, const RPCInfo& info){
+void Worker::handleGDelta(std::string& d, const RPCInfo& info){
 	graph.loadDeltaPiece(d);
 }
 
-void Worker::handleINCache(const std::string& d, const RPCInfo& info){
+void Worker::handleINCache(std::string& d, const RPCInfo& info){
 	graph.takeINCache(d);
 }
 
-void Worker::handleVUpdate(const std::string& d, const RPCInfo& info){
-	graph.msgUpdate(d);
+void Worker::handleVUpdate(std::string& d, const RPCInfo& info){
+	//graph.msgUpdate(d);
+	graph.pushMsg(GraphContainer::MsgType::Update, d);
 }
-void Worker::handleVRequest(const std::string& d, const RPCInfo& info){
-	graph.msgRequest(d);
+void Worker::handleVRequest(std::string& d, const RPCInfo& info){
+	//graph.msgRequest(d);
+	graph.pushMsg(GraphContainer::MsgType::Request, d);
 }
-void Worker::handleVReply(const std::string& d, const RPCInfo& info){
-	graph.msgReply(d);
+void Worker::handleVReply(std::string& d, const RPCInfo& info){
+	//graph.msgReply(d);
+	graph.pushMsg(GraphContainer::MsgType::Reply, d);
 }
 
-void Worker::handlePApply(const std::string& d, const RPCInfo& info){
+/*
+void Worker::handlePApply(std::string& d, const RPCInfo& info){
 	graph.apply();
 }
-void Worker::handlePSend(const std::string& d, const RPCInfo& info){
+void Worker::handlePSend(std::string& d, const RPCInfo& info){
 	graph.send();
 }
-void Worker::handlePReport(const std::string& d, const RPCInfo& info){
+void Worker::handlePReport(std::string& d, const RPCInfo& info){
 	reportProgress();
 }
-void Worker::handlePFinish(const std::string& d, const RPCInfo& info){
-	update_finish = true;
-	su_update.notify();
+*/
+
+void Worker::handlePFinish(std::string& d, const RPCInfo& info){
+	//update_finish = true;
+	//su_update.notify();
+	graph.stop_update();
 }

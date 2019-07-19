@@ -58,7 +58,8 @@ void Runner::msgLoop(const std::string& name) {
 				<<"), queue: "<<driver.queSize()<<", net: "<<net->unpicked_pkgs();
 			driver.pushData(data, info);
 		}
-		while(msg_do_pop && !driver.empty()){
+		int m = 32;
+		while(msg_do_pop && m-- >= 0 && !driver.empty()){
 			#ifndef NDEBUG
 			auto& info = driver.front().second;
 			DVLOG(4)<<"Pop "<<info.source<<" -> "<<info.dest<<" ("<<info.tag
@@ -103,7 +104,7 @@ void Runner::addRPHEach(
 	rph.activateType(type);
 }
 void Runner::addRPHEachSU(const int type, SyncUnit& su){
-	addRPHEach(type, bind(&SyncUnit::notify, &su), opt.conf.nPart, false);
+	addRPHEach(type, bind(&SyncUnit::notify, &su), static_cast<int>(opt.conf.nPart), false);
 }
 void Runner::addRPHAny(
     const int type, std::function<void()> fun, const bool newThread)
