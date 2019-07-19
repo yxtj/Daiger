@@ -75,8 +75,6 @@ private:
 	sender0_t sender_pro;
 	
 	bool allow_update;
-	bool applying;
-	bool sending;
 	std::mutex mtx;
 	std::deque<std::pair<MsgType, std::string>> messages; // buffered messages to be processed in update()
 

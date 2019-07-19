@@ -19,8 +19,6 @@ void GraphContainer::init(int wid, GlobalHolderBase* holder, bool incremental){
 		incremental, conf.async, conf.cache_free, conf.sort_result,
 		conf.send_min_size, conf.send_max_size);
 	allow_update = true;
-	applying = false;
-	sending = false;
 }
 
 void GraphContainer::loadGraph(sender_t sender){
@@ -148,35 +146,29 @@ void GraphContainer::stop_update()
 }
 
 void GraphContainer::apply(){
-	if(!applying && holder->needApply()){
-		applying = true;
-		holder->doApply();
-		applying = false;
-	}
+	holder->doApply();
 }
 void GraphContainer::tryApply()
 {
 	double t = tmr.elapseSd();
-	if(t - t_last_apply < conf.progress_interval)
+	if(t - t_last_apply < conf.progress_interval && holder->needApply())
 		return;
 	t_last_apply = t;
 	apply();
 }
 
 void GraphContainer::send(){
-	sending = true;
 	for(int i=0; i<conf.nPart; ++i){
 		if(i == wid)
 			continue;
 		string msg = holder->collectMsg(i);
 		sender_val(i, msg);
 	}
-	sending = false;
 }
 void GraphContainer::trySend()
 {
 	double t = tmr.elapseSd();
-	if(sending || !holder->needSend(t - t_last_send > conf.send_interval))
+	if(!holder->needSend(t - t_last_send > conf.send_interval))
 		return;
 	t_last_send = t;
 	send();
