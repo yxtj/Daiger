@@ -54,7 +54,7 @@ Option::Option()
 		("apply_interval", value<double>(&conf.apply_interval)->default_value(0.5f), "[double] the interval (second) of performing apply.")
 		("apply_min_ratio", value<double>(&conf.apply_min_portion)->default_value(0.01),
 			"[double] the minimum ratio of nodes to be processed before performing apply.")
-		("apply_max_ratio", value<double>(&conf.apply_min_portion)->default_value(1),
+		("apply_max_ratio", value<double>(&conf.apply_max_portion)->default_value(1),
 			"[double] the maximum ratio of nodes to be processed before performing apply.")
 		("send_interval", value<double>(&conf.send_interval)->default_value(0.5f), "[double] the interval (second) of send buffered update.")
 		("send_min_size", value<int>(&conf.send_min_size)->default_value(1),
