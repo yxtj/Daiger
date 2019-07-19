@@ -62,9 +62,10 @@ public:
 	virtual std::string msgRequest(const std::string& line);
 	virtual void msgReply(const std::string& line);
 
-	virtual bool needApply();
+	virtual size_t toApply();
 	virtual void doApply();
-	virtual bool needSend(bool force);
+	virtual size_t toSend();
+	virtual size_t toSend(const int pid);
 	virtual std::string collectMsg(const int pid);
 
 	virtual std::string collectLocalProgress();
@@ -115,9 +116,6 @@ private:
 	LocalHolder<V, N> local_part;
 	int local_id;
 
-	bool applying;
-	bool sending;
-
 	//std::function<void(const id_t)> pf_processNode;
 	using pf_pn_t = void (GlobalHolder<V, N>::*)(const id_t);
 	pf_pn_t pf_processNode; // do not need to make related functions public
@@ -163,8 +161,6 @@ void GlobalHolder<V, N>::init(OperationBase* opt, IOHandlerBase* ioh,
 			continue;
 		remote_parts[i].init(this->opt, local_id, aggregate_message, incremental, cache_free);
 	}
-	applying = false;
-	sending = false;
 
 	if(is_acf()){
 		// std::bind(&GlobalHolder::processNode_acf, this, std::placeholders::_1);
@@ -528,22 +524,24 @@ void GlobalHolder<V, N>::prepare_cal(const id_t& from, const id_t& to, const val
 
 template <class V, class N>
 void GlobalHolder<V, N>::processNodeForced(const id_t id){
-	#ifndef NDEBUG
+	#if !defined(NDEBUG) || defined(_DEBUG)
 	const node_t& n = local_part.get(id);
 	DVLOG(3)<<"k="<<n.id<<" v="<<n.v<<" u="<<n.u<<" cache="<<n.cs;
 	auto pgs = local_part.get_progress();
 	DVLOG(3)<<"progress=("<<pgs.sum<<","<<pgs.n_inf<<","<<pgs.n_change<<") update="<<local_part.get_n_uncommitted();
 	#endif
+
 	(this->*pf_processNode)(id);
 }
 template <class V, class N>
 void GlobalHolder<V, N>::processNode(const id_t id){
-	#ifndef NDEBUG
+	#if !defined(NDEBUG) || defined(_DEBUG)
 	const node_t& n = local_part.get(id);
 	DVLOG(3)<<"k="<<n.id<<" v="<<n.v<<" u="<<n.u<<" cache="<<n.cs;
 	auto pgs = local_part.get_progress();
 	DVLOG(3)<<"progress=("<<pgs.sum<<","<<pgs.n_inf<<","<<pgs.n_change<<") update="<<local_part.get_n_uncommitted();
 	#endif
+
 	if(!local_part.need_commit(id))
 		return;
 	//pf_processNode(id);
@@ -577,51 +575,49 @@ void GlobalHolder<V, N>::processNode_acf(const id_t id){
 	if(left != opt->identity_element())
 		update_cal(id, id, left);
 }
+
 template <class V, class N>
-bool GlobalHolder<V, N>::needApply(){
-	return !applying && !scd->empty();
-		//local_part.has_uncommitted();
+size_t GlobalHolder<V, N>::toApply(){
+	return !scd->empty();
 }
 template <class V, class N>
 void GlobalHolder<V, N>::doApply(){
-	applying = true;
 	std::vector<id_t> nodes = scd->pick();
 	for(const id_t id : nodes){
 		processNode(id);
 	}
-	#ifndef NDEBUG
-	for(const id_t id: nodes){
-		const node_t& n = local_part.get(id);
-		DVLOG(3)<<"k="<<n.id<<" v="<<n.v<<" u="<<n.u;
+	#if !defined(NDEBUG) || defined(_DEBUG)
+	if(VLOG_IS_ON(3)){
+		for(const id_t id : nodes){
+			const node_t& n = local_part.get(id);
+			DVLOG(3) << "k=" << n.id << " v=" << n.v << " u=" << n.u;
+		}
 	}
 	#endif
-	applying = false;
 }
 
 template <class V, class N>
-bool GlobalHolder<V, N>::needSend(bool force){
-	if(sending)
-		return false;
+size_t GlobalHolder<V, N>::toSend(){
+	return remote_parts[pid].size();
+}
+template <class V, class N>
+size_t GlobalHolder<V, N>::toSend(const int pid){
 	size_t th = force ? 0 : send_min_size;
 	size_t sum = 0;
 	for(auto& t : remote_parts){
 		sum += t.size();
-		if(sum > th)
-			return true;
 	}
-	return false;
+	return sum;
 }
 
 template <class V, class N>
 std::string GlobalHolder<V, N>::collectMsg(const int pid){
-	sending = true;
 	// msg_t::MsgVUpdate_t = std::vector<typename msg_t::VUpdate_t>
 	typename msg_t::MsgVUpdate_t data =
 	// std::vector<std::pair<id_t, std::pair<id_t, value_t>>> data =
 		remote_parts[pid].collect(send_max_size);
 //	DVLOG(3)<<"send: "<<data;
 	std::string res = serialize(data);
-	sending = false;
 	return res;
 }
 

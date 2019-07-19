@@ -89,12 +89,12 @@ public:
 	void reset_progress_count(){
 		progress_changed = 0;
 	}
-	size_t get_n_uncommitted() const { return n_uncommitted; }
-	bool has_uncommitted() const { return n_uncommitted != 0; }
-	void reset_n_uncommitted(){ n_uncommitted = 0; }
+	size_t get_n_update() const { return n_update; }
+	bool has_uncommitted() const { return n_update != 0; }
+	void reset_n_update(){ n_update = 0; }
 
 private:
-	void update_priority(const node_t& n); // when n.u changes. ALSO update n_uncommitted
+	void update_priority(const node_t& n); // when n.u changes. ALSO update n_update
 	void update_progress(const double old_p, const double new_p); // when n.v changes
 
 private:
@@ -119,7 +119,7 @@ private:
 	size_t progress_inf; // # of the infinity
 	size_t progress_changed; // # of changed nodes
 
-	size_t n_uncommitted; // # of uncommitted changes on n.u
+	size_t n_update; // total # of update on n.u
 
 	using iterator_t = typename decltype(cont)::const_iterator;
 	iterator_t enum_it;
@@ -460,7 +460,7 @@ template <class V, class N>
 void LocalHolder<V, N>::update_priority(const node_t& n){
 	if(plu->need_commit(n)){
 		scd->update(n.id, f_priority(n));
-		++n_uncommitted;
+		++n_update;
 	}
 }
 

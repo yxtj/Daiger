@@ -50,10 +50,11 @@ public:
 	virtual std::string msgRequest(const std::string& line) = 0;
 	virtual void msgReply(const std::string& line) = 0;
 	// update procedure
-	virtual bool needApply() = 0;
+	virtual size_t toApply() = 0;
 	virtual void doApply() = 0;
 	// update sending
-	virtual bool needSend(bool force = false) = 0;
+	virtual size_t toSend() = 0;
+	virtual size_t toSend(const int pid) = 0;
 	virtual std::string collectMsg(const int pid) = 0;
 
 	virtual std::string collectLocalProgress() = 0;
