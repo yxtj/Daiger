@@ -18,6 +18,12 @@ public:
 
 	// test whether there are any elements to top
 	virtual bool empty() const = 0;
+	// the number of elements to top
+	virtual size_t size() const = 0;
+	// the number of registered elements
+	virtual size_t capacity() const {
+		return nNode;
+	}
 	// update/set the priority of a node
 	virtual void update(const id_t& k, const priority_t& p) = 0;
 	// get the node id with top priority
@@ -57,6 +63,7 @@ public:
 	virtual void ready();
 
 	virtual bool empty() const;
+	virtual size_t size() const;
 	virtual void update(const id_t& k, const priority_t& p);
 	virtual id_t top();
 	virtual void pop();
@@ -88,6 +95,7 @@ public:
 	virtual void ready();
 
 	virtual bool empty() const;
+	virtual size_t size() const;
 	virtual void update(const id_t& k, const priority_t& p);
 	virtual id_t top();
 	virtual void pop();
@@ -118,6 +126,7 @@ public:
 	virtual void ready();
 
 	virtual bool empty() const;
+	virtual size_t size() const;
 	virtual void update(const id_t& k, const priority_t& p);
 	virtual id_t top();
 	virtual void pop();
@@ -148,6 +157,7 @@ public:
 	virtual void ready();
 	
 	virtual bool empty() const;
+	virtual size_t size() const;
 	virtual void update(const id_t& k, const priority_t& p);
 	virtual id_t top();
 	virtual void pop();

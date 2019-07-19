@@ -48,6 +48,10 @@ void SchedulerRoundRobin::ready(){
 bool SchedulerRoundRobin::empty() const {
 	return data.empty();
 }
+size_t SchedulerRoundRobin::size() const
+{
+	return nNode;
+}
 void SchedulerRoundRobin::update(const id_t& k, const priority_t& p){
 }
 id_t SchedulerRoundRobin::top(){
@@ -163,6 +167,10 @@ void SchedulerPriorityMaintain::ready(){
 
 bool SchedulerPriorityMaintain::empty() const {
 	return data->empty();
+}
+size_t SchedulerPriorityMaintain::size() const
+{
+	return data->size();
 }
 void SchedulerPriorityMaintain::update(const id_t& k, const priority_t& p){
 	data->update(k, p);
@@ -295,6 +303,9 @@ void SchedulerPrioritySelection::ready(){
 bool SchedulerPrioritySelection::empty() const {
 	return data->empty();
 }
+size_t SchedulerPrioritySelection::size() const {
+	return data->size();
+}
 void SchedulerPrioritySelection::update(const id_t& k, const priority_t& p){
 	data->update(k, p);
 }
@@ -368,6 +379,10 @@ void SchedulerFIFO::ready(){
 
 bool SchedulerFIFO::empty() const {
 	return data->empty();
+}
+size_t SchedulerFIFO::size() const
+{
+	return data->size();
 }
 void SchedulerFIFO::update(const id_t& k, const priority_t& p){
 	data->update(k, p);
