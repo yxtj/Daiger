@@ -55,8 +55,10 @@ struct Operation
 	// subtype for selective
 	virtual bool better(const value_t& a, const value_t& b); // when is_selective() is true, default: false
 	
-	// priority for scheduling
-	virtual priority_t priority(const node_t& n){ return n.u; }; // default: current uncommitted value
+	// priority for scheduling,  default: current uncommitted value
+	virtual priority_t priority(const node_t& n){
+		return static_cast<priority_t>(n.u);
+	}
 
 	virtual ~Operation()=default;
 

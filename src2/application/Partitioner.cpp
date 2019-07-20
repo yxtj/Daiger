@@ -9,6 +9,6 @@ void PartitionerBase::setParts(const size_t n){
 
 // -------- PartitionerMod --------
 
-size_t PartitionerMod::owner(const id_t& id) const {
-	return id % nWorker;
+int PartitionerMod::owner(const id_t& id) const {
+	return static_cast<int>(id % nWorker);
 }

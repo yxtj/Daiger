@@ -82,7 +82,7 @@ public:
 	// on workers:
 	// get the progress of a single node, return INF for special nodes/values
 	virtual double progress(const Node<V, N>& n){
-		return ProgressHelper<V, N>::helper_progress_value(n);
+		return helper_progress_value(n);
 	};
 };
 
@@ -105,7 +105,7 @@ private:
 
 template <typename V, typename N>
 class TerminatorStop
-	: public TerminatorStopBase, public Terminator<V, N>
+	: virtual public TerminatorStopBase, virtual public Terminator<V, N>
 {};
 
 // -------- an example of a difference-based terminator --------
@@ -130,7 +130,7 @@ private:
 
 template <typename V, typename N>
 class TerminatorDiff
-	: public TerminatorDiffBase, public Terminator<V, N>
+	: virtual public TerminatorDiffBase, virtual public Terminator<V, N>
 {};
 
 // -------- an example of a variance-based terminator --------
@@ -158,5 +158,5 @@ private:
 
 template <typename V, typename N>
 class TerminatorVariance
-	: public TerminatorVarianceBase, public Terminator<V, N>
+	: virtual public TerminatorVarianceBase, virtual public Terminator<V, N>
 {};

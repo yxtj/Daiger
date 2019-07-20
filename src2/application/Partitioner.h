@@ -9,7 +9,7 @@ public:
 	virtual void init(const std::vector<std::string>& args){}
 	void setParts(const size_t n);
 	// the the worker id of a node key
-	virtual size_t owner(const id_t& id) const = 0;
+	virtual int owner(const id_t& id) const = 0;
 protected:
 	size_t nWorker;
 };
@@ -20,5 +20,5 @@ class PartitionerMod
 	: public PartitionerBase
 {
 public:
-	virtual size_t owner(const id_t& id) const;
+	virtual int owner(const id_t& id) const;
 };
