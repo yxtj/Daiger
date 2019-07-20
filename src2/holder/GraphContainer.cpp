@@ -16,9 +16,14 @@ void GraphContainer::init(int wid, GlobalHolderBase* holder, bool incremental){
 	this->holder = holder;
 	holder->init(app.opt, app.ioh, app.scd, app.ptn, app.tmt,
 		conf.nPart, wid, conf.aggregate_message,
-		incremental, conf.async, conf.cache_free, conf.sort_result,
-		conf.send_min_size, conf.send_max_size);
+		incremental, conf.async, conf.cache_free, conf.sort_result);
 	allow_update = true;
+	apply_min_size = static_cast<size_t>(conf.apply_min_portion*holder->numLocalNode());
+	if(apply_min_size<1)
+		apply_min_size = 1;
+	apply_max_size = static_cast<size_t>(conf.apply_max_portion*holder->numLocalNode());
+	if(apply_max_size >= holder->numLocalNode())
+		apply_max_size = holder->numLocalNode();
 }
 
 void GraphContainer::loadGraph(sender_t sender){
@@ -151,15 +156,18 @@ void GraphContainer::apply(){
 void GraphContainer::tryApply()
 {
 	double t = tmr.elapseSd();
-	if(t - t_last_apply < conf.progress_interval && holder->needApply())
-		return;
-	t_last_apply = t;
-	apply();
+	size_t n = holder->toApply();
+	if(n >= apply_max_size ||
+		(t - t_last_apply >= conf.apply_interval && n >= apply_min_size))
+	{
+		t_last_apply = t;
+		apply();
+	}
 }
 
 void GraphContainer::send(){
 	for(int i=0; i<conf.nPart; ++i){
-		if(i == wid)
+		if(i == wid || holder->toSend(i) == 0)
 			continue;
 		string msg = holder->collectMsg(i);
 		sender_val(i, msg);
@@ -168,10 +176,13 @@ void GraphContainer::send(){
 void GraphContainer::trySend()
 {
 	double t = tmr.elapseSd();
-	if(!holder->needSend(t - t_last_send > conf.send_interval))
-		return;
-	t_last_send = t;
-	send();
+	size_t n = holder->toSend();
+	if(n >= conf.send_max_size ||
+		(t - t_last_apply >= conf.send_interval && n >= conf.send_min_size))
+	{
+		t_last_send = t;
+		send();
+	}
 }
 
 void GraphContainer::report(){
@@ -181,10 +192,11 @@ void GraphContainer::report(){
 void GraphContainer::tryReport()
 {
 	double t = tmr.elapseSd();
-	if(t - t_last_report < conf.progress_interval)
-		return;
-	t_last_report = t;
-	report();
+	if(t - t_last_report >= conf.progress_interval)
+	{
+		t_last_report = t;
+		report();
+	}
 }
 // --------
 

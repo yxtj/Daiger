@@ -82,5 +82,8 @@ private:
 	double t_last_apply;
 	double t_last_send;
 	double t_last_report;
+
+	size_t apply_min_size;
+	size_t apply_max_size;
 };
 

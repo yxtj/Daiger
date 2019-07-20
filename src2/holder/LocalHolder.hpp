@@ -90,7 +90,7 @@ public:
 		progress_changed = 0;
 	}
 	size_t get_n_update() const { return n_update; }
-	bool has_uncommitted() const { return n_update != 0; }
+	//bool has_uncommitted() const { return n_update != 0; }
 	void reset_n_update(){ n_update = 0; }
 
 private:
@@ -113,7 +113,7 @@ private:
 	//f_update_incremental_t f_update_incremental;
 	//sender_req_t f_send_req;
 	std::function<std::vector<std::pair<id_t, value_t>>(const id_t&)> f_spread;
-	std::function<double(const node_t&)> f_priority;
+	std::function<priority_t(const node_t&)> f_priority;
 
 	double progress_value; // summation of the non-infinity value
 	size_t progress_inf; // # of the infinity
@@ -166,7 +166,7 @@ void LocalHolder<V, N>::setUpdateFunction(bool incremental, bool async, bool cac
 			value_t t = n.v;
 			node_t& nn = const_cast<node_t&>(n);
 			nn.v = opt->identity_element();
-			double p = opt->priority(n);
+			priority_t p = opt->priority(n);
 			nn.v = t;
 			return p;
 		};

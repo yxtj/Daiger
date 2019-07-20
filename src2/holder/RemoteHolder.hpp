@@ -56,6 +56,7 @@ public:
 	}
 
 private:
+	/*
 	bool update_general(const id_t& from, const id_t& to, const value_t& v);
 	bool update_accumulative_cb(const id_t& from, const id_t& to, const value_t& v); // cache-based
 	bool update_accumulative_cf(const id_t& from, const id_t& to, const value_t& v); // cache-free
@@ -65,7 +66,7 @@ private:
 	typename MessageDef<V, N>::MsgVUpdate_t collect_general(const size_t num);
 	typename MessageDef<V, N>::MsgVUpdate_t collect_accumulative(const size_t num); // aggregated
 	typename MessageDef<V, N>::MsgVUpdate_t collect_selective(const size_t num); // aggregated
-
+	*/
 private:
 	operation_t* opt;
 	// buffer for remote nodes.

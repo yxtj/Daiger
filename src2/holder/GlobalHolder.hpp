@@ -32,8 +32,9 @@ public:
 	virtual void init(OperationBase* opt, IOHandlerBase* ioh,
 		SchedulerBase* scd, PartitionerBase* ptn, TerminatorBase* tmt,
 		const size_t nPart, const int localId, const bool aggregate_message,
-		const bool incremental, const bool async, const bool cache_free, const bool sort_result,
-		const size_t send_min_size, const size_t send_max_size);
+		const bool incremental, const bool async, const bool cache_free, const bool sort_result);
+
+	virtual size_t numLocalNode();
 
 	virtual int loadGraph(const std::string& line);
 	virtual int loadValue(const std::string& line);
@@ -103,8 +104,6 @@ private:
 	PartitionerBase* ptn;
 	terminator_t* tmt;
 	size_t nPart;
-	size_t send_max_size;
-	size_t send_min_size;
 
 	bool aggregate_message;
 	bool incremental;
@@ -132,8 +131,7 @@ template <class V, class N>
 void GlobalHolder<V, N>::init(OperationBase* opt, IOHandlerBase* ioh,
 		SchedulerBase* scd, PartitionerBase* ptn, TerminatorBase* tmt,
 		const size_t nPart, const int localId, const bool aggregate_message,
-		const bool incremental, const bool async, const bool cache_free, const bool sort_result,
-		const size_t send_min_size, const size_t send_max_size)
+		const bool incremental, const bool async, const bool cache_free, const bool sort_result)
 {
 	this->opt = dynamic_cast<operation_t*>(opt);
 	this->ioh = dynamic_cast<iohandler_t*>(ioh);
@@ -147,10 +145,6 @@ void GlobalHolder<V, N>::init(OperationBase* opt, IOHandlerBase* ioh,
 	this->async = async;
 	this->cache_free = cache_free;
 	this->sort_result = sort_result;
-	this->send_min_size = send_min_size;
-	if(this->send_min_size != 0)
-		--this->send_min_size; // ">" is used instead of ">=", so "send_min_size-1" is necessary
-	this->send_max_size = send_max_size;
 
 	this->ptn->setParts(nPart);
 
@@ -169,6 +163,12 @@ void GlobalHolder<V, N>::init(OperationBase* opt, IOHandlerBase* ioh,
 		// std::bind(&GlobalHolder::processNode_general, this, std::placeholders::_1);
 		pf_processNode = &GlobalHolder<V, N>::processNode_general;
 	}
+}
+
+template<class V, class N>
+inline size_t GlobalHolder<V, N>::numLocalNode()
+{
+	return local_part.size();
 }
 
 template <class V, class N>
@@ -437,7 +437,7 @@ template <class V, class N>
 std::unordered_map<int, std::string> GlobalHolder<V, N>::collectINList(){
 	std::unordered_map<int, std::string> res;
 	res.reserve(nPart);
-	for(size_t i = 0; i < nPart; ++i){
+	for(int i = 0; i < static_cast<int>(nPart); ++i){
 		if(is_local_part(i))
 			continue;
 		res[i] = serialize(buf_in[i]);
@@ -468,7 +468,7 @@ template <class V, class N>
 std::unordered_map<int, std::string> GlobalHolder<V, N>::collectINCache(){
 	std::unordered_map<int, std::string> res;
 	res.reserve(nPart);
-	for(size_t i = 0; i<nPart; ++i){
+	for(int i = 0; i< static_cast<int>(nPart); ++i){
 		if(is_local_part(i))
 			continue;
 		res[i] = collectINCache(i);
@@ -525,10 +525,12 @@ void GlobalHolder<V, N>::prepare_cal(const id_t& from, const id_t& to, const val
 template <class V, class N>
 void GlobalHolder<V, N>::processNodeForced(const id_t id){
 	#if !defined(NDEBUG) || defined(_DEBUG)
-	const node_t& n = local_part.get(id);
-	DVLOG(3)<<"k="<<n.id<<" v="<<n.v<<" u="<<n.u<<" cache="<<n.cs;
-	auto pgs = local_part.get_progress();
-	DVLOG(3)<<"progress=("<<pgs.sum<<","<<pgs.n_inf<<","<<pgs.n_change<<") update="<<local_part.get_n_uncommitted();
+	if(VLOG_IS_ON(3)){
+		const node_t& n = local_part.get(id);
+		DVLOG(3) << "k=" << n.id << " v=" << n.v << " u=" << n.u << " cache=" << n.cs;
+		auto pgs = local_part.get_progress();
+		DVLOG(3) << "progress=(" << pgs.sum << "," << pgs.n_inf << "," << pgs.n_change << ") update=" << local_part.get_n_update();
+	}
 	#endif
 
 	(this->*pf_processNode)(id);
@@ -536,10 +538,12 @@ void GlobalHolder<V, N>::processNodeForced(const id_t id){
 template <class V, class N>
 void GlobalHolder<V, N>::processNode(const id_t id){
 	#if !defined(NDEBUG) || defined(_DEBUG)
-	const node_t& n = local_part.get(id);
-	DVLOG(3)<<"k="<<n.id<<" v="<<n.v<<" u="<<n.u<<" cache="<<n.cs;
-	auto pgs = local_part.get_progress();
-	DVLOG(3)<<"progress=("<<pgs.sum<<","<<pgs.n_inf<<","<<pgs.n_change<<") update="<<local_part.get_n_uncommitted();
+	if(VLOG_IS_ON(3)){
+		const node_t& n = local_part.get(id);
+		DVLOG(3) << "k=" << n.id << " v=" << n.v << " u=" << n.u << " cache=" << n.cs;
+		auto pgs = local_part.get_progress();
+		DVLOG(3) << "progress=(" << pgs.sum << "," << pgs.n_inf << "," << pgs.n_change << ") update=" << local_part.get_n_update();
+	}
 	#endif
 
 	if(!local_part.need_commit(id))
@@ -598,24 +602,23 @@ void GlobalHolder<V, N>::doApply(){
 
 template <class V, class N>
 size_t GlobalHolder<V, N>::toSend(){
-	return remote_parts[pid].size();
-}
-template <class V, class N>
-size_t GlobalHolder<V, N>::toSend(const int pid){
-	size_t th = force ? 0 : send_min_size;
 	size_t sum = 0;
 	for(auto& t : remote_parts){
 		sum += t.size();
 	}
 	return sum;
 }
+template <class V, class N>
+size_t GlobalHolder<V, N>::toSend(const int pid){
+	return remote_parts[pid].size();
+}
 
 template <class V, class N>
 std::string GlobalHolder<V, N>::collectMsg(const int pid){
 	// msg_t::MsgVUpdate_t = std::vector<typename msg_t::VUpdate_t>
-	typename msg_t::MsgVUpdate_t data =
 	// std::vector<std::pair<id_t, std::pair<id_t, value_t>>> data =
-		remote_parts[pid].collect(send_max_size);
+	typename msg_t::MsgVUpdate_t data =
+		remote_parts[pid].collect();
 //	DVLOG(3)<<"send: "<<data;
 	std::string res = serialize(data);
 	return res;
