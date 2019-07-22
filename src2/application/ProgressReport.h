@@ -1,4 +1,5 @@
 #pragma once
+#include <cstddef>
 
 struct ProgressReport{
 	double sum; // summation of the non-infinity progress value
