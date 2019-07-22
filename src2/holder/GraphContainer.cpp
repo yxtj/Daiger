@@ -17,13 +17,6 @@ void GraphContainer::init(int wid, GlobalHolderBase* holder, bool incremental){
 	holder->init(app.opt, app.ioh, app.scd, app.ptn, app.tmt,
 		conf.nPart, wid, conf.aggregate_message,
 		incremental, conf.async, conf.cache_free, conf.sort_result);
-	allow_update = true;
-	apply_min_size = static_cast<size_t>(conf.apply_min_portion*holder->numLocalNode());
-	if(apply_min_size<1)
-		apply_min_size = 1;
-	apply_max_size = static_cast<size_t>(conf.apply_max_portion*holder->numLocalNode());
-	if(apply_max_size >= holder->numLocalNode())
-		apply_max_size = holder->numLocalNode();
 }
 
 void GraphContainer::loadGraph(sender_t sender){
@@ -126,6 +119,14 @@ void GraphContainer::genInitMsg(){
 }
 
 void GraphContainer::prepareUpdate(sender_t sender_val, sender_t sender_req, sender0_t sender_pro){
+	allow_update = true;
+	apply_min_size = static_cast<size_t>(conf.apply_min_portion*holder->numLocalNode());
+	if(apply_min_size < 1)
+		apply_min_size = 1;
+	apply_max_size = static_cast<size_t>(conf.apply_max_portion*holder->numLocalNode());
+	if(apply_max_size >= holder->numLocalNode())
+		apply_max_size = holder->numLocalNode();
+
 	this->sender_val = sender_val;
 	this->sender_req = sender_req;
 	this->sender_pro = sender_pro;

@@ -105,7 +105,7 @@ private:
 
 template <typename V, typename N>
 class TerminatorStop
-	: virtual public TerminatorStopBase, virtual public ProgressHelper<V, N>
+	: virtual public TerminatorStopBase, virtual public Terminator<V, N>
 {};
 
 // -------- an example of a difference-based terminator --------
@@ -130,7 +130,7 @@ private:
 
 template <typename V, typename N>
 class TerminatorDiff
-	: virtual public TerminatorDiffBase, virtual public ProgressHelper<V, N>
+	: virtual public TerminatorDiffBase, virtual public Terminator<V, N>
 {};
 
 // -------- an example of a variance-based terminator --------
@@ -158,5 +158,5 @@ private:
 
 template <typename V, typename N>
 class TerminatorVariance
-	: virtual public TerminatorVarianceBase, virtual public ProgressHelper<V, N>
+	: virtual public TerminatorVarianceBase, virtual public Terminator<V, N>
 {};
