@@ -70,7 +70,7 @@ std::pair<double, size_t> TerminatorStop::difference(){
 
 void TerminatorDiffValue::init(const std::vector<std::string>& args){
 	try{
-		epsilon = stod(args[0]);
+		epsilon = stod(args[1]);
 	} catch (exception& e){
 		throw invalid_argument("Unable to get <epsilon> for TerminatorDiffValue.");
 	}
@@ -107,9 +107,9 @@ std::pair<double, size_t> TerminatorDiffValue::difference(){
 
 void TerminatorDiffRatio::init(const std::vector<std::string>& args){
 	try{
-		ratio = stod(args[0]);
+		ratio = stod(args[1]);
 	} catch(exception& e){
-		throw invalid_argument("Unable to get <epsilon> for TerminatorDiffRatio.");
+		throw invalid_argument("Unable to get <ratio> for TerminatorDiffRatio.");
 	}
 }
 
@@ -124,7 +124,7 @@ bool TerminatorDiffRatio::check_term(){
 void TerminatorVariance::init(const std::vector<std::string>& args)
 {
 	try{
-		var_portion = stod(args[0]);
+		var_portion = stod(args[1]);
 		decay = var_portion; // modified when n_worker is given
 	} catch(exception& e){
 		throw invalid_argument("Unable to get parameters for TerminatorVariance.");

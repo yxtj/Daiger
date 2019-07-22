@@ -6,6 +6,8 @@ set(HEADERS
 	IOHandler_Helper.h
 	Scheduler.h
 	Partitioner.h
+	Progressor.h
+	ProgressReport.h
 	Terminator.h
 )
 set(SOURCES

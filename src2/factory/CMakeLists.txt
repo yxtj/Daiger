@@ -5,6 +5,7 @@ set(HEADERS
 	IOHandlerFactory.h
 	SchedulerFactory.h
 	PartitionerFactory.h
+	ProgressorFactory.h
 	TerminatorFactory.h
 	factory_reg.h
 )
@@ -14,6 +15,7 @@ set(SOURCES
 	IOHandlerFactory.cpp
 	SchedulerFacrory.cpp
 	PartitionerFactory.cpp
+	ProgressorFactory.cpp
 	TerminatorFactory.cpp
 	factory_reg.cpp
 )

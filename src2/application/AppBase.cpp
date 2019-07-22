@@ -17,7 +17,8 @@ AppBase::AppBase()
 
 bool AppBase::check() const {
 	return opt!=nullptr && prg!=nullptr && ioh!=nullptr
-		&& ptn!=nullptr && scd!=nullptr && gh!=nullptr;
+		&& ptn!=nullptr && scd!=nullptr && tmt != nullptr
+		&& gh!=nullptr;
 }
 
 void AppBase::clear() {
@@ -58,10 +59,9 @@ AppBase makeApplication(const std::string& app_name, const std::vector<std::stri
 
 	app.ptn = PartitionerFactory::generate(arg_partitioner[0]);
 	app.ptn->init(arg_partitioner);
-	// ptn should be given number of worker later in main()
 	app.scd = SchedulerFactory::generate(arg_scheduler[0]);
 	app.scd->init(arg_scheduler);
-	app.tmt=TerminatorFactory::generate(arg_terminator[0]);
+	app.tmt = TerminatorFactory::generate(arg_terminator[0]);
 	app.tmt->init(arg_terminator);
 
 	return app;
