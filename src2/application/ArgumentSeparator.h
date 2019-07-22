@@ -6,7 +6,7 @@ struct AppArguments {
 	std::string name;
 	std::vector<std::string> operation_arg;
 	std::vector<std::string> iohandler_arg;
-	std::vector<std::string> terminator_arg;
+	std::vector<std::string> progressor_arg;
 };
 
 class ArgumentSeparator {

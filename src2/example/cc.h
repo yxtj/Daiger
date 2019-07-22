@@ -34,7 +34,7 @@ struct ConnectedComponent
 	typedef MySeparator separator_t;
 	typedef MyOperation operation_t;
 	typedef IOHandlerUnweighted<value_t> iohandler_t;
-	typedef TerminatorStop<value_t, neighbor_t> terminator_t;
+	typedef ProgressorValue<value_t, neighbor_t> progressor_t;
 	typedef GlobalHolder<value_t, neighbor_t> graph_t;
 
 	virtual std::string getName() const;
@@ -44,7 +44,7 @@ struct ConnectedComponent
 	virtual ArgumentSeparator* generateSeparator();
 	virtual OperationBase* generateOperation();
 	virtual IOHandlerBase* generateIOHandler();
-	virtual TerminatorBase* generateTerminator();
+	virtual ProgressorBase* generateProgressor();
 	virtual GlobalHolderBase* generateGraph();
 
 };

@@ -5,7 +5,7 @@
 class ArgumentSeparator;
 class OperationBase;
 class IOHandlerBase;
-class TerminatorBase;
+class ProgressorBase;
 class GlobalHolderBase;
 
 struct AppKernel {
@@ -19,6 +19,6 @@ struct AppKernel {
 	virtual ArgumentSeparator* generateSeparator() = 0;
 	virtual OperationBase* generateOperation() = 0;
 	virtual IOHandlerBase* generateIOHandler() = 0;
-	virtual TerminatorBase* generateTerminator() = 0;
+	virtual ProgressorBase* generateProgressor() = 0;
 	virtual GlobalHolderBase* generateGraph() = 0;
 };

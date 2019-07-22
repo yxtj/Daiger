@@ -35,17 +35,11 @@ struct Adsorption : public AppKernel {
         public:
         virtual AppArguments separate(const std::vector<std::string>& args);
     };
-    class MyTerminator : public TerminatorDiff<value_t, neighbor_t> {
-        public:
-        virtual double progress(const Node<value_t, neighbor_t>& n) {
-            return helper_progress_vsquare(n);
-        };
-    };
 
     typedef MySeparator separator_t;
     typedef MyOperation operation_t;
     typedef IOHandlerWeighted<value_t, neighbor_t> iohandler_t;
-    typedef MyTerminator terminator_t;
+	typedef ProgressorSquare<value_t, neighbor_t> progressor_t;
     typedef GlobalHolder<value_t, neighbor_t> graph_t;
 
     virtual std::string getName() const;
@@ -56,6 +50,6 @@ struct Adsorption : public AppKernel {
     virtual ArgumentSeparator* generateSeparator();
     virtual OperationBase* generateOperation();
     virtual IOHandlerBase* generateIOHandler();
-    virtual TerminatorBase* generateTerminator();
+    virtual ProgressorBase* generateProgressor();
     virtual GlobalHolderBase* generateGraph();
 };

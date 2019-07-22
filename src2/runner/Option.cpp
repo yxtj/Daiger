@@ -47,6 +47,8 @@ Option::Option()
 			"Partition strategy name and parameters. Supports: mod.")
 		("scheduler", value<vector<string>>(&scheduler_args)->multitoken()->default_value({"priority", "0.1"}, "priority"),
 			"Scheduler name and parameters. Supports: rr, priority, fifo.")
+		("termiator", value<vector<string>>(&terminator_args)->multitoken()->default_value({ "diff", "1e-5" }, "diff"),
+			"Terminator name and parameters. Supports: stop, diff, diffr, var.")
 		("sort_result", bool_switch(&conf.sort_result)->default_value(false), "Whether to sort the result by node id before dumping.")
 		("cache_free", bool_switch(&conf.cache_free)->default_value(false), "Whether to perform cache-free computation.")
 		// running parameter

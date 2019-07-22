@@ -9,7 +9,7 @@
 #include <unordered_map>
 #include <string>
 #include <functional>
-#ifndef NDEBUG
+#if !defined(NDEBUG) || defined(_DEBUG)
 #include "dbg/dbg.h"
 #include "logging/logging.h"
 #endif
@@ -21,7 +21,7 @@ class GlobalHolder
 public:
 	using operation_t = Operation<V, N>;
 	using iohandler_t= IOHandler<V, N>;
-	using terminator_t = Terminator<V, N>;
+	using progressor_t = Progressor<V, N>;
 	using node_t = Node<V, N>;
 	using value_t = typename node_t::value_t;
 	using neighbor_t = typename node_t::neighbor_t;
@@ -30,7 +30,7 @@ public:
 	using msg_t = MessageDef<V, N>;
 
 	virtual void init(OperationBase* opt, IOHandlerBase* ioh,
-		SchedulerBase* scd, PartitionerBase* ptn, TerminatorBase* tmt,
+		SchedulerBase* scd, PartitionerBase* ptn, ProgressorBase* prg,
 		const size_t nPart, const int localId, const bool aggregate_message,
 		const bool incremental, const bool async, const bool cache_free, const bool sort_result);
 
@@ -102,7 +102,7 @@ private:
 	iohandler_t* ioh;
 	SchedulerBase* scd;
 	PartitionerBase* ptn;
-	terminator_t* tmt;
+	progressor_t* prg;
 	size_t nPart;
 
 	bool aggregate_message;
@@ -129,7 +129,7 @@ private:
 
 template <class V, class N>
 void GlobalHolder<V, N>::init(OperationBase* opt, IOHandlerBase* ioh,
-		SchedulerBase* scd, PartitionerBase* ptn, TerminatorBase* tmt,
+		SchedulerBase* scd, PartitionerBase* ptn, ProgressorBase* prg,
 		const size_t nPart, const int localId, const bool aggregate_message,
 		const bool incremental, const bool async, const bool cache_free, const bool sort_result)
 {
@@ -137,7 +137,7 @@ void GlobalHolder<V, N>::init(OperationBase* opt, IOHandlerBase* ioh,
 	this->ioh = dynamic_cast<iohandler_t*>(ioh);
 	this->scd = scd;
 	this->ptn = ptn;
-	this->tmt = dynamic_cast<terminator_t*>(tmt);
+	this->prg = dynamic_cast<progressor_t*>(prg);
 	this->nPart = nPart;
 	this->local_id = localId;
 	this->aggregate_message = aggregate_message;
@@ -148,7 +148,7 @@ void GlobalHolder<V, N>::init(OperationBase* opt, IOHandlerBase* ioh,
 
 	this->ptn->setParts(nPart);
 
-	local_part.init(this->opt, this->scd, this->tmt, nPart, incremental, async, cache_free);
+	local_part.init(this->opt, this->scd, this->prg, nPart, incremental, async, cache_free);
 	remote_parts.resize(nPart);
 	for(size_t i = 0; i<nPart; ++i){
 		if(i == local_id)

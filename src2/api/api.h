@@ -2,7 +2,7 @@
 #include "application/ArgumentSeparator.h"
 #include "application/Operation.h"
 #include "application/IOHandler.h"
-#include "application/Terminator.h"
+#include "application/Progressor.h"
 
 #include "factory/ArgumentSeparatorFactory.h"
 #include "factory/OperationFactory.h"

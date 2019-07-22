@@ -28,8 +28,8 @@ OperationBase* MarkovChain::generateOperation(){
 IOHandlerBase* MarkovChain::generateIOHandler(){
 	return new iohandler_t();
 }
-TerminatorBase* MarkovChain::generateTerminator(){
-	return new terminator_t();
+ProgressorBase* MarkovChain::generateProgressor(){
+	return new progressor_t();
 }
 GlobalHolderBase* MarkovChain::generateGraph(){
 	return new graph_t();
@@ -103,12 +103,12 @@ priority_t MarkovChain::MyOperation::priority(const node_t& n){
 	return static_cast<priority_t>(p * (use_degree ? n.onb.size() : 1));
 }
 
-// <source> <use-degree-priority> <epsilon-termination>
+// <source> <use-degree-priority>
 AppArguments MarkovChain::MySeparator::separate(const std::vector<std::string>& args){
 	AppArguments res;
 	res.name = MarkovChain::name;
 	res.operation_arg = {args[0], args[1]};
 	res.iohandler_arg = {};
-	res.terminator_arg = {args[2]};
+	res.progressor_arg = {};
 	return res;
 }

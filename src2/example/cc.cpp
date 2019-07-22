@@ -17,7 +17,7 @@ void ConnectedComponent::reg(){
 	// ArgumentSeparatorFactory::registerClass<separator_t>(name);
 	// OperationFactory::registerClass<operation_t>(name);
 	// IOHandlerFactory::registerClass<iohandler_t>(name);
-	// TerminatorFactory::registerClass<terminator_t>(name);
+	// ProgressorFactory::registerClass<Progressor_t>(name);
 }
 
 ArgumentSeparator* ConnectedComponent::generateSeparator(){
@@ -29,8 +29,8 @@ OperationBase* ConnectedComponent::generateOperation(){
 IOHandlerBase* ConnectedComponent::generateIOHandler(){
 	return new iohandler_t();
 }
-TerminatorBase* ConnectedComponent::generateTerminator(){
-	return new terminator_t();
+ProgressorBase* ConnectedComponent::generateProgressor(){
+	return new progressor_t();
 }
 GlobalHolderBase* ConnectedComponent::generateGraph(){
 	return new graph_t();
@@ -58,6 +58,6 @@ AppArguments ConnectedComponent::MySeparator::separate(const std::vector<std::st
 	res.name = ConnectedComponent::name;
 	res.operation_arg = {};
 	res.iohandler_arg = {};
-	res.terminator_arg = {};
+	res.progressor_arg = {};
 	return res;
 }

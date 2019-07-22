@@ -25,8 +25,8 @@ OperationBase* PageRank::generateOperation(){
 IOHandlerBase* PageRank::generateIOHandler(){
 	return new iohandler_t();
 }
-TerminatorBase* PageRank::generateTerminator(){
-	return new terminator_t();
+ProgressorBase* PageRank::generateProgressor(){
+	return new progressor_t();
 }
 GlobalHolderBase* PageRank::generateGraph(){
 	return new graph_t();
@@ -69,12 +69,12 @@ priority_t PageRank::MyOperation::priority(const node_t& n){
 	return static_cast<priority_t>(p * (use_degree ? n.onb.size() : 1));
 }
 
-// <damp-factor> <use-degree-priority> <epsilon-termination>
+// <damp-factor> <use-degree-priority>
 AppArguments PageRank::MySeparator::separate(const std::vector<std::string>& args){
 	AppArguments res;
 	res.name = PageRank::name;
 	res.operation_arg = {args[0], args[1]};
 	res.iohandler_arg = {};
-	res.terminator_arg = {args[2]};
+	res.progressor_arg = {};
 	return res;
 }

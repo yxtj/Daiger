@@ -14,7 +14,7 @@ void Adsorption::reg() { AppKernelFactory::registerClass<Adsorption>(name); }
 ArgumentSeparator* Adsorption::generateSeparator() { return new separator_t(); }
 OperationBase* Adsorption::generateOperation() { return new operation_t(); }
 IOHandlerBase* Adsorption::generateIOHandler() { return new iohandler_t(); }
-TerminatorBase* Adsorption::generateTerminator() { return new terminator_t(); }
+ProgressorBase* Adsorption::generateProgressor() { return new progressor_t(); }
 GlobalHolderBase* Adsorption::generateGraph() { return new graph_t(); }
 
 // -------- Components --------
@@ -51,13 +51,13 @@ priority_t Adsorption::MyOperation::priority(const node_t& n) {
     return static_cast<priority_t>(p * (use_degree ? n.onb.size() : 1));
 }
 
-// <p-c> <p-i> <use-degree-priority> <epsilon-termination>
+// <p-c> <p-i> <use-degree-priority>
 AppArguments Adsorption::MySeparator::separate(
     const std::vector<std::string>& args) {
     AppArguments res;
     res.name = Adsorption::name;
     res.operation_arg = {args[0], args[1], args[2] };
     res.iohandler_arg = {};
-    res.terminator_arg = {args[3]};
+    res.progressor_arg = {};
     return res;
 }

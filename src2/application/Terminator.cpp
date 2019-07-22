@@ -5,7 +5,7 @@
 
 using namespace std;
 
-// -------- TerminatorBase --------
+// -------- Terminator Base --------
 
 void TerminatorBase::prepare_global_checker(const size_t n_worker){
 	curr.resize(n_worker);
@@ -42,14 +42,14 @@ bool TerminatorBase::helper_no_change(const std::vector<ProgressReport>& reports
 
 // -------- TerminatorStop --------
 
-void TerminatorStopBase::prepare_global_checker(const size_t n_worker){
+void TerminatorStop::prepare_global_checker(const size_t n_worker){
 	TerminatorBase::prepare_global_checker(n_worker);
 	last.resize(n_worker);
 	sum_last = sum;
 	untouched = true;
 }
 
-void TerminatorStopBase::update_report(const size_t wid, const ProgressReport& report){
+void TerminatorStop::update_report(const size_t wid, const ProgressReport& report){
 	untouched = false;
 	//sum_gc_last += TerminatorBase::curr[wid].n_change - last[wid];
 	last[wid] = TerminatorBase::curr[wid];
@@ -57,26 +57,26 @@ void TerminatorStopBase::update_report(const size_t wid, const ProgressReport& r
 	TerminatorBase::update_report(wid, report);
 }
 
-bool TerminatorStopBase::check_term(){
+bool TerminatorStop::check_term(){
 	return !untouched && sum.n_change == 0 && sum_last.n_change == 0;
 }
 
-std::pair<double, size_t> TerminatorStopBase::difference(){
+std::pair<double, size_t> TerminatorStop::difference(){
 	return make_pair(sum.sum - sum_last.sum,
 		sum.n_inf - sum_last.n_inf);
 }
 
-// -------- TerminatorDiff --------
+// -------- TerminatorDiffValue --------
 
-void TerminatorDiffBase::init(const std::vector<std::string>& args){
+void TerminatorDiffValue::init(const std::vector<std::string>& args){
 	try{
 		epsilon = stod(args[0]);
 	} catch (exception& e){
-		throw invalid_argument("Unable to get <epsilon> for TerminatorDiff.");
+		throw invalid_argument("Unable to get <epsilon> for TerminatorDiffValue.");
 	}
 }
 
-void TerminatorDiffBase::prepare_global_checker(const size_t n_worker){
+void TerminatorDiffValue::prepare_global_checker(const size_t n_worker){
 	TerminatorBase::prepare_global_checker(n_worker);
 	last.resize(n_worker);
 	sum_gp_last=0.0;
@@ -84,7 +84,7 @@ void TerminatorDiffBase::prepare_global_checker(const size_t n_worker){
 	untouched = true;
 }
 
-void TerminatorDiffBase::update_report(const size_t wid, const ProgressReport& report){
+void TerminatorDiffValue::update_report(const size_t wid, const ProgressReport& report){
 	untouched = false;
 	sum_gp_last += TerminatorBase::curr[wid].sum - last[wid].first;
 	sum_gi_last += TerminatorBase::curr[wid].n_inf - last[wid].second;
@@ -93,19 +93,35 @@ void TerminatorDiffBase::update_report(const size_t wid, const ProgressReport& r
 	TerminatorBase::update_report(wid, report);
 }
 
-bool TerminatorDiffBase::check_term(){
+bool TerminatorDiffValue::check_term(){
 	return !untouched && sum_gi_last == sum.n_inf
 		&& fabs(sum_gp_last - sum.sum) < epsilon;
 }
 
-std::pair<double, size_t> TerminatorDiffBase::difference(){
+std::pair<double, size_t> TerminatorDiffValue::difference(){
 	return make_pair(sum.sum - sum_gp_last,
 		sum.n_inf - sum_gi_last);
 }
 
+// -------- TerminatorDiffRatio--------
+
+void TerminatorDiffRatio::init(const std::vector<std::string>& args){
+	try{
+		ratio = stod(args[0]);
+	} catch(exception& e){
+		throw invalid_argument("Unable to get <epsilon> for TerminatorDiffRatio.");
+	}
+}
+
+bool TerminatorDiffRatio::check_term(){
+	return !untouched && sum_gi_last == sum.n_inf
+		&& fabs(sum_gp_last - sum.sum)/sum_gp_last < ratio;
+}
+
+
 // -------- TerminatorVariance --------
 
-void TerminatorVarianceBase::init(const std::vector<std::string>& args)
+void TerminatorVariance::init(const std::vector<std::string>& args)
 {
 	try{
 		var_portion = stod(args[0]);
@@ -115,7 +131,7 @@ void TerminatorVarianceBase::init(const std::vector<std::string>& args)
 	}
 }
 
-void TerminatorVarianceBase::prepare_global_checker(const size_t n_worker)
+void TerminatorVariance::prepare_global_checker(const size_t n_worker)
 {
 	TerminatorBase::prepare_global_checker(n_worker);
 	last.resize(n_worker);
@@ -124,7 +140,7 @@ void TerminatorVarianceBase::prepare_global_checker(const size_t n_worker)
 	untouched = true;
 }
 
-void TerminatorVarianceBase::update_report(const size_t wid, const ProgressReport & report)
+void TerminatorVariance::update_report(const size_t wid, const ProgressReport & report)
 {
 	untouched = false;
 	double new_average = average - TerminatorBase::curr[wid].sum + report.sum;
@@ -134,12 +150,12 @@ void TerminatorVarianceBase::update_report(const size_t wid, const ProgressRepor
 	TerminatorBase::update_report(wid, report);
 }
 
-bool TerminatorVarianceBase::check_term()
+bool TerminatorVariance::check_term()
 {
 	return !untouched && abs(average-sum.sum)/average < var_portion;
 }
 
-std::pair<double, size_t> TerminatorVarianceBase::difference()
+std::pair<double, size_t> TerminatorVariance::difference()
 {
 	return make_pair(sum.sum - sum_last.sum,
 		sum.n_inf - sum_last.n_inf);

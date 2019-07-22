@@ -25,8 +25,8 @@ OperationBase* Katz::generateOperation(){
 IOHandlerBase* Katz::generateIOHandler(){
 	return new iohandler_t();
 }
-TerminatorBase* Katz::generateTerminator(){
-	return new terminator_t();
+ProgressorBase* Katz::generateProgressor(){
+	return new progressor_t();
 }
 GlobalHolderBase* Katz::generateGraph(){
 	return new graph_t();
@@ -73,12 +73,12 @@ priority_t Katz::MyOperation::priority(const node_t& n){
 	return static_cast<priority_t>(p * (use_degree ? n.onb.size() : 1));
 }
 
-// <source> <beta> <use-degree-priority> <epsilon-termination>
+// <source> <beta> <use-degree-priority>
 AppArguments Katz::MySeparator::separate(const std::vector<std::string>& args){
 	AppArguments res;
 	res.name = Katz::name;
 	res.operation_arg = {args[0], args[1], args[2]};
 	res.iohandler_arg = {};
-	res.terminator_arg = {args[3]};
+	res.progressor_arg = {};
 	return res;
 }

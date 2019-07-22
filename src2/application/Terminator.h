@@ -1,15 +1,9 @@
 #pragma once
-#include "common/Node.h"
+#include "ProgressorReport.h"
 #include <vector>
 #include <string>
 #include <utility>
 #include <limits>
-
-struct ProgressReport{
-	double sum; // summation of the non-infinity progress value
-	size_t n_inf; // # of infinity progress values
-	size_t n_change; // # of changed nodes
-};
 
 class TerminatorBase {
 public:
@@ -45,50 +39,9 @@ protected:
 	ProgressReport sum; // summary of all elements in curr (by accumulating)
 };
 
-// get the progress of a single node, return INF for special nodes/values
-template <typename V, typename N, bool HAS_INF = true>
-struct ProgressHelperBase
-{
-	static double helper_progress_value(const Node<V, N>& n){
-		return static_cast<double>(n.v);
-	}
-	static double helper_progress_vsquare(const Node<V, N>& n){
-		return static_cast<double>(n.v*n.v);
-	}
-};
-template <typename V, typename N>
-struct ProgressHelperBase<V, N, false>
-{
-	static constexpr double MAX = std::numeric_limits<V>::max();
-	static constexpr double INF = std::numeric_limits<double>::infinity();
-
-	static double helper_progress_value(const Node<V, N>& n){
-		return static_cast<double>(n.v == MAX ? INF : n.v);
-	}
-	static double helper_progress_vsquare(const Node<V, N>& n){
-		return static_cast<double>(n.v == MAX ? INF : n.v*n.v);
-	}
-};
-template <typename V, typename N>
-struct ProgressHelper
-	: public ProgressHelperBase<V, N, std::numeric_limits<V>::has_infinity>
-{};
-
-template <typename V, typename N>
-class Terminator
-	: virtual public TerminatorBase, public ProgressHelper<V, N>
-{
-public:
-	// on workers:
-	// get the progress of a single node, return INF for special nodes/values
-	virtual double progress(const Node<V, N>& n){
-		return ProgressHelper<V, N>::helper_progress_value(n);
-	};
-};
-
 // -------- an example which stops when no one changes --------
 
-class TerminatorStopBase
+class TerminatorStop
 	: virtual public TerminatorBase
 {
 public:
@@ -103,14 +56,9 @@ private:
 	bool untouched;
 };
 
-template <typename V, typename N>
-class TerminatorStop
-	: virtual public TerminatorStopBase, virtual public Terminator<V, N>
-{};
-
 // -------- an example of a difference-based terminator --------
 
-class TerminatorDiffBase
+class TerminatorDiffValue
 	: virtual public TerminatorBase
 {
 public:
@@ -128,16 +76,27 @@ private:
 	bool untouched;
 };
 
-template <typename V, typename N>
-class TerminatorDiff
-	: virtual public TerminatorDiffBase, virtual public Terminator<V, N>
-{};
+class TerminatorDiffRatio
+	: virtual public TerminatorDiffValue
+{
+public:
+	virtual void init(const std::vector<std::string>& args);
+	virtual bool check_term();
+
+private:
+	std::vector<std::pair<double, size_t>> last; // sum, n_inf
+	double sum_gp_last;
+	size_t sum_gi_last;
+	double ratio;
+	double epsilon;
+	bool untouched;
+};
 
 // -------- an example of a variance-based terminator --------
 // calculate an average level, and check whether the variance is smaller than a scale
 // the average level is maintained with exponential average
 
-class TerminatorVarianceBase
+class TerminatorVariance
 	: virtual public TerminatorBase
 {
 public:
@@ -155,8 +114,3 @@ private:
 	double var_portion; // the portion threshold
 	bool untouched;
 };
-
-template <typename V, typename N>
-class TerminatorVariance
-	: virtual public TerminatorVarianceBase, virtual public Terminator<V, N>
-{};

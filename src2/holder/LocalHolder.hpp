@@ -2,7 +2,7 @@
 #include "common/Node.h"
 #include "application/Operation.h"
 #include "application/Scheduler.h"
-#include "application/Terminator.h"
+#include "application/Progressor.h"
 #include "LocalUpdater.hpp"
 #include <vector>
 #include <unordered_map>
@@ -18,7 +18,7 @@ class LocalHolder
 public:
 	using operation_t = Operation<V, N>;
 	using scheduler_t = SchedulerBase;
-	using terminator_t = Terminator<V, N>;
+	using progressor_t = Progressor<V, N>;
 	using node_t = Node<V, N>;
 	using value_t = V; //typename node_t::value_t;
 	using neighbor_t = typename node_t::neighbor_t;
@@ -26,7 +26,7 @@ public:
 	using sender_req_t = std::function<void(const id_t&, const id_t&)>;
 
 	LocalHolder() = default;
-	void init(operation_t* opt, scheduler_t* scd, terminator_t* tmt, size_t n,
+	void init(operation_t* opt, scheduler_t* scd, progressor_t* prg, size_t n,
 		bool incremental, bool async, bool cache_free);
 	void setUpdateFunction(bool incremental, bool async, bool cache_free);
 
@@ -104,7 +104,7 @@ private:
 
 	operation_t* opt;
 	scheduler_t* scd;
-	terminator_t* tmt;
+	progressor_t* prg;
 	bool cache_free;
 	std::unordered_map<id_t, node_t> cont;
 	//f_update_general_t f_update_general;
@@ -128,12 +128,12 @@ private:
 };
 
 template <class V, class N>
-void LocalHolder<V, N>::init(operation_t* opt, scheduler_t* scd, terminator_t* tmt, size_t n,
+void LocalHolder<V, N>::init(operation_t* opt, scheduler_t* scd, progressor_t* prg, size_t n,
 	bool incremental, bool async, bool cache_free)
 {
 	this->opt = opt;
 	this->scd = scd;
-	this->tmt = tmt;
+	this->prg = prg;
 	this->cache_free = cache_free;
 	progress_value = 0.0;
 	progress_inf = 0;
@@ -184,13 +184,13 @@ void LocalHolder<V, N>::setUpdateFunction(bool incremental, bool async, bool cac
 
 template <class V, class N>
 void LocalHolder<V, N>::add(const node_t& n){
-	update_progress(0.0, tmt->progress(n));
+	update_progress(0.0, prg->progress(n));
 	update_priority(n);
 	cont[n.id]=n;
 }
 template <class V, class N>
 void LocalHolder<V, N>::add(node_t&& n){
-	update_progress(0.0, tmt->progress(n));
+	update_progress(0.0, prg->progress(n));
 	update_priority(n);
 	cont[n.id]=std::move(n);
 }
@@ -198,7 +198,7 @@ template <class V, class N>
 bool LocalHolder<V, N>::remove(const id_t& k){
 	auto it = cont.find(k);
 	if(it != cont.end()){
-		update_progress(tmt->progress(*it), 0.0);
+		update_progress(prg->progress(*it), 0.0);
 		return true;
 	}
 	return false;
@@ -236,9 +236,9 @@ void LocalHolder<V, N>::registerRequestCallback(sender_req_t f){
 template <class V, class N>
 void LocalHolder<V, N>::init_value(const id_t& k, const value_t& v){
 	node_t& n = get(k);
-	double oldp = tmt->progress(n);
+	double oldp = prg->progress(n);
 	n.v = v;
-	update_progress(oldp, tmt->progress(n));
+	update_progress(oldp, prg->progress(n));
 	if(cache_free && opt->is_accumulative()){
 		// if(n.u != opt->identity_element()){
 		// 	n.u = opt->identity_element();
@@ -314,9 +314,9 @@ const typename LocalHolder<V, N>::node_t* LocalHolder<V, N>::enum_sorted_next(){
 template <class V, class N>
 bool LocalHolder<V, N>::modify(const id_t& k, const value_t& v){
 	MODIFY_TEMPLATE(
-		double oldp = tmt->progress(*it);
+		double oldp = prg->progress(*it);
 		it->second.v=v;
-		update_progress(oldp, tmt->progress(*it));
+		update_progress(oldp, prg->progress(*it));
 	)
 }
 template <class V, class N>
@@ -427,9 +427,9 @@ bool LocalHolder<V, N>::commit(const id_t& k){
 	node_t& n=cont[k];
 	if(!plu->need_commit(n))
 		return false;
-	double oldp = tmt->progress(n);
+	double oldp = prg->progress(n);
 	plu->commit(n);
-	update_progress(oldp, tmt->progress(n));
+	update_progress(oldp, prg->progress(n));
 	return true;
 }
 // generate outgoing messages

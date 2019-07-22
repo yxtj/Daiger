@@ -3,6 +3,7 @@
 #include "driver/tools/SyncUnit.h"
 #include "runner_helpers.h"
 #include "util/Timer.h"
+#include "application/ProgressorReport.h"
 #include <string>
 
 class NetworkThread;
