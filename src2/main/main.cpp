@@ -81,9 +81,9 @@ int main(int argc, char* argv[]){
 		LOG(INFO) << "Runtime parameters: \n"
 			<< "\tTimeout: " << opt.timeout << "\n"
 			<< "\tApply: interval: " << opt.conf.apply_interval 
-			<< "\tmin-ratio: "<<opt.conf.apply_min_portion << "\tmax-ratio: " << opt.conf.apply_max_portion
+			<< "\tmin-ratio: "<<opt.conf.apply_min_portion << "\tmax-ratio: " << opt.conf.apply_max_portion << "\n"
 			<< "\tSend: interval: " << opt.conf.send_interval
-			<< "\tmin-size: " << opt.conf.send_min_size<< "\tmax-size: " << opt.conf.send_max_size
+			<< "\tmin-size: " << opt.conf.send_min_size<< "\tmax-size: " << opt.conf.send_max_size << "\n"
 			<< "\tProgress report interval: " << opt.conf.progress_interval<< "\n"
 			<< "\tTermination max time: " << opt.conf.termination_max_time;
 	}
