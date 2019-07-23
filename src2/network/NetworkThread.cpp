@@ -3,7 +3,7 @@
 #include <chrono>
 using namespace std;
 
-double FLAGS_sleep_time = 0.001;
+double FLAGS_sleep_time = 0.0001;
 
 static inline void Sleep(){
 	this_thread::sleep_for(chrono::duration<double>(FLAGS_sleep_time));
@@ -80,10 +80,11 @@ void NetworkThread::Run(){
 		/* bunch send: */
 		if(!pause_ && !pending_sends_->empty()){
 			//two-buffers-swapping implementation for better performance
-			vector<pair<Task*,bool>>* pv=pending_sends_;
+			vector<pair<Task*, bool>>* pv;
 			{
 				lock_guard<recursive_mutex> sl(ps_lock);
-				pending_sends_=&ps_buffer_[++ps_idx_%2];
+				pv = pending_sends_;
+				pending_sends_ = &ps_buffer_[++ps_idx_ % 2];
 			}
 			auto end_it=pv->end();
 			for(auto it = pv->begin(); it!=end_it; ++it){
@@ -115,11 +116,9 @@ bool NetworkThread::checkReceiveQueue(std::string& data, TaskBase& info){
 }
 
 void NetworkThread::readAny(string& data, int *srcRet, int *typeRet){
-//	Timer t;
 	while(!tryReadAny(data, srcRet, typeRet)){
 		Sleep();
 	}
-//	stats["network_time"] += t.elapsed();
 }
 bool NetworkThread::tryReadAny(string& data, int *srcRet, int *typeRet){
 	TaskBase info;
@@ -152,14 +151,13 @@ int NetworkThread::sendDirect(Task *req){
 	return size;
 }
 
-
 int NetworkThread::broadcast(Task* req) {
 	int size = req->payload.size();
 	lock_guard<recursive_mutex> sl(ps_lock);
 	pending_sends_->emplace_back(req, true);
 	//net->broadcast(req);
-	++stat_send_pkg;
-	stat_send_byte += size;
+	stat_send_pkg += this->size() - 1;
+	stat_send_byte += size * (this->size() - 1);
 	return size;
 }
 
@@ -208,6 +206,7 @@ void NetworkThread::Terminate()
 		swap(p, self);
 		p->running = false;
 		p->t_.join();
+		p->net = nullptr;
 		delete p;
 		NetworkImplMPI::Shutdown();
 	}
