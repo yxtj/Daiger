@@ -51,7 +51,8 @@ Katz::MyOperation::node_t Katz::MyOperation::preprocess_node(
 	auto it = find_if(neighbors.begin(), neighbors.end(), [=](const neighbor_t& n){
 		return n == k;
 	});
-	neighbors.erase(it);
+	if(it!=neighbors.end())
+		neighbors.erase(it);
 	return make_node(k, k == source ? 1.0 : 0.0, neighbors);
 }
 std::vector<Katz::MyOperation::DummyNode> Katz::MyOperation::dummy_nodes(){
