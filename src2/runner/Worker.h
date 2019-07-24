@@ -35,7 +35,6 @@ protected:
 // local logic functions
 private:
 	void storeWorkerInfo(const std::vector<std::pair<int, int>>& winfo);
-	void reportProgress();
 
 // handler helpers
 private:

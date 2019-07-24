@@ -582,7 +582,7 @@ void GlobalHolder<V, N>::processNode_acf(const id_t id){
 
 template <class V, class N>
 size_t GlobalHolder<V, N>::toApply(){
-	return !scd->empty();
+	return scd->size();
 }
 template <class V, class N>
 void GlobalHolder<V, N>::doApply(){

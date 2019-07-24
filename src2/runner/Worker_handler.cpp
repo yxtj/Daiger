@@ -128,7 +128,7 @@ void Worker::handleProcedure(std::string& d, const RPCInfo& info){
 		case ProcedureType::DumpResult:
 			fun = bind(&Worker::procedureDumpResult, this); break;
 		default:
-			cerr<<"Wrong Procedure ID."<<endl;
+			LOG(FATAL) << "Wrong Procedure ID: " << pid;
 	}
 	if(tprcd.joinable())
 		tprcd.join();
@@ -162,14 +162,16 @@ void Worker::handleINCache(std::string& d, const RPCInfo& info){
 }
 
 void Worker::handleVUpdate(std::string& d, const RPCInfo& info){
-	//graph.msgUpdate(d);
+	VLOG(2) << "receive update from " << wm.nid2wid(info.source);
 	graph.pushMsg(GraphContainer::MsgType::Update, d);
 }
 void Worker::handleVRequest(std::string& d, const RPCInfo& info){
+	VLOG(2) << "receive request from " << wm.nid2wid(info.source);
 	//graph.msgRequest(d);
 	graph.pushMsg(GraphContainer::MsgType::Request, d);
 }
 void Worker::handleVReply(std::string& d, const RPCInfo& info){
+	VLOG(2) << "receive reply from " << wm.nid2wid(info.source);
 	//graph.msgReply(d);
 	graph.pushMsg(GraphContainer::MsgType::Reply, d);
 }

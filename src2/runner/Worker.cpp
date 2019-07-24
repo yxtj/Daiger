@@ -130,11 +130,6 @@ void Worker::procedureGenInitMsg(){
 	graph.genInitMsg();
 }
 
-void Worker::reportProgress(){
-	VLOG(2)<<"sending progress report";
-	graph.report();
-}
-
 static int _helper_gcd(int a, int b){
 	return b == 0 ? a : _helper_gcd(b, a % b);
 }
