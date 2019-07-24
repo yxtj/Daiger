@@ -91,7 +91,7 @@ vector<float> cal_pr_dlt(const vector<vector<int> >& g, const float damp,
 int main(int argc, char* argv[]){
 	if(argc<=3){
 		cerr<<"Calculate PageRank."<<endl;
-		cerr<<"Usage: <#parts> <in-folder> <out-folder> [delta-folder] [dump-factor] [normalize] [max-iter] [epsilon]\n"
+		cerr<<"Usage: <#parts> <in-folder> <out-folder> [delta-folder] [dump-factor] [normalize] [max-iter] [epsilon] [method]\n"
 			<<"  <in-folder>: input file folder, file name: 'part-<id>' is automatically used\n"
 			<<"  <out-folder>: output file folder, file name 'value-<id>' is automatically used\n"
 			<<"  [delta-folder]: (=-) delta file folder, not used by default. File name: 'delta-<id>' is automatically used\n"

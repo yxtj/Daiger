@@ -285,13 +285,13 @@ bool Option::setWeight(string& method){
 int main(int argc, char* argv[]){
 	if(argc<3 || argc>9){
 		cerr<<"Generate graph.\n"
-			"Usage: <#parts> <#nodes> [out-dir] [self-loop] [weight:<min>,<max>] [deg-dist:<param>] [random-seed]"<<endl;
+			"Usage: <#parts> <#nodes> [out-dir] [self-loop] [weight:<min>,<max>] [deg-dist:<param>] [online] [random-seed]"<<endl;
 		cerr<<"  [self-loop]: (=true) whether to allow self-loop edge.\n"
 			"  [out-dir]: (=./) the folder to store the output fieles\n"
 			"  [weight]: (=no) the weight distribution. If unweighted graph is needed, use \"no\" here.\n"
 			"  [deg-dist]: (=pl:2.3) the degree distribution. Support: uni (uniform), pl:<alpha> (power-law with alpha)\n"
 			"  [online]: (=0) whether to perform online generation. "
-			"Offline version guarantees equivalent output for same graph and seed."
+			"Offline version guarantees equivalent output for same graph and seed. "
 			"Online version guarantees that ONLY when <#part> is also identical (optimized for huge graph).\n"
 			"  [random-seed]: (=1535345) seed for random numbers.\n"
 			"i.e.: ./gen.exe 2 100 out 0 no pl:2.6 0 123456 \n"
