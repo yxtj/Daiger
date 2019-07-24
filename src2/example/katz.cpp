@@ -38,7 +38,11 @@ void Katz::MyOperation::init(const std::vector<std::string>& arg_line, const siz
 	source = stoid(arg_line[0]); 
 	beta = stod(arg_line[1]);
 	use_degree = beTrueOption(arg_line[2]);
-	dummy_id = gen_dummy_id(10 + nInstance);
+	dummy_id = gen_dummy_id(1);
+	if(!use_degree)
+		pfun = &Katz::MyOperation::priority_v;
+	else
+		pfun = &Katz::MyOperation::priority_vn;
 }
 Katz::MyOperation::node_t Katz::MyOperation::preprocess_node(
 	const id_t& k, neighbor_list_t& neighbors)
@@ -48,7 +52,7 @@ Katz::MyOperation::node_t Katz::MyOperation::preprocess_node(
 		return n == k;
 	});
 	neighbors.erase(it, neighbors.end());
-	return make_node(k, k == source ? 1.0 : identity_element(), neighbors);
+	return make_node(k, k == source ? 1.0 : 0.0, neighbors);
 }
 std::vector<Katz::MyOperation::DummyNode> Katz::MyOperation::dummy_nodes(){
 	DummyNode res;
@@ -69,8 +73,15 @@ Katz::value_t Katz::MyOperation::func(const node_t& n, const neighbor_t& neighbo
 }
 // scheduling - priority
 priority_t Katz::MyOperation::priority(const node_t& n){
-	double p = abs(n.u - n.v);
-	return static_cast<priority_t>(p * (use_degree ? n.onb.size() : 1));
+	return (*pfun)(n);
+}
+priority_t Katz::MyOperation::priority_v(const node_t& n){
+	value_t p = abs(n.u - n.v);
+	return static_cast<priority_t>(p);
+}
+priority_t Katz::MyOperation::priority_vn(const node_t& n){
+	value_t p = abs(n.u - n.v);
+	return static_cast<priority_t>(p*n.onb.size());
 }
 
 // <source> <beta> <use-degree-priority>
