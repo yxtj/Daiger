@@ -23,7 +23,7 @@ using namespace std;
 // ------ online unweighted ------
 
 vector<vector<int> > gen_one_uw(const int nPart, const int id, const int nNode,
-		mt19937& gen, function<unsigned(mt19937&)> rngDeg, const bool selfLoop)
+		mt19937& gen, function<unsigned(mt19937&)> rngDeg, const bool noSelfLoop)
 {
 	vector<vector<int> > g(nNode);
 	auto deg_gen=bind(rngDeg,gen);
@@ -36,7 +36,7 @@ vector<vector<int> > gen_one_uw(const int nPart, const int id, const int nNode,
 		}
 		sort(g[i].begin(),g[i].end());
 		g[i].erase(unique(g[i].begin(),g[i].end()),g[i].end());
-		if(!selfLoop){
+		if(noSelfLoop){
 			auto it=lower_bound(g[i].begin(), g[i].end(), i);
 			if(it!=g[i].end() && *it==i)
 				g[i].erase(it);
@@ -61,7 +61,7 @@ bool dump_one_uw(const vector<vector<int> >& g, const int nPart, const int id, c
 // ------ online weighted ------
 
 vector<vector<pair<int,double>> > gen_one_w(const int nPart, const int id, const int nNode, mt19937& gen,
-	function<unsigned(mt19937&)> rngDeg, function<double(mt19937&)> rngWgt, const bool selfLoop)
+	function<unsigned(mt19937&)> rngDeg, function<double(mt19937&)> rngWgt, const bool noSelfLoop)
 {
 	vector<vector<pair<int,double>> > g(nNode);
 	auto deg_gen=bind(rngDeg,gen);
@@ -80,7 +80,7 @@ vector<vector<pair<int,double>> > gen_one_w(const int nPart, const int id, const
 			return lth.first==rth.first;
 		});
 		g[i].erase(it,g[i].end());
-		if(!selfLoop){
+		if(noSelfLoop){
 			auto it=lower_bound(g[i].begin(), g[i].end(), i, [](const pair<int,double>& lth, int rth){
 				return lth.first<rth;
 			});
@@ -107,7 +107,7 @@ bool dump_one_w(const vector<vector<pair<int,double>> >& g, const int nPart, con
 // ------ offline unweighted ------
 
 vector<vector<int> > gen_uw(const int nPart, const int nNode, const unsigned long seed,
-	function<unsigned(mt19937&)> rngDeg, bool selfLoop)
+	function<unsigned(mt19937&)> rngDeg, bool noSelfLoop)
 {
 	vector<vector<int> > g(nNode);
 	mt19937 gen(seed);
@@ -121,7 +121,7 @@ vector<vector<int> > gen_uw(const int nPart, const int nNode, const unsigned lon
 		}
 		sort(g[i].begin(),g[i].end());
 		g[i].erase(unique(g[i].begin(),g[i].end()),g[i].end());
-		if(selfLoop){
+		if(noSelfLoop){
 			auto it=lower_bound(g[i].begin(), g[i].end(), i);
 			if(it!=g[i].end() && *it==i)
 				g[i].erase(it);
@@ -156,7 +156,7 @@ int dump_uw(const vector<vector<int> >& g, const int nPart, const string& outDir
 // ------ offline weighted ------
 
 vector<vector<pair<int,double>> > gen_w(const int nPart, const int nNode, const unsigned long seed,
-	function<unsigned(mt19937&)> rngDeg, function<double(mt19937&)> rngWgt, bool selfLoop)
+	function<unsigned(mt19937&)> rngDeg, function<double(mt19937&)> rngWgt, bool noSelfLoop)
 {
 	vector<vector<pair<int,double>> > g(nNode);
 	mt19937 gen(seed);
@@ -176,7 +176,7 @@ vector<vector<pair<int,double>> > gen_w(const int nPart, const int nNode, const 
 			return lth.first==rth.first;
 		});
 		g[i].erase(it,g[i].end());
-		if(selfLoop){
+		if(noSelfLoop){
 			auto it=lower_bound(g[i].begin(), g[i].end(), i, [](const pair<int,double>& lth, int rth){
 				return lth.first<rth;
 			});
@@ -219,7 +219,7 @@ struct Option{
 	string weight;
 	double wmin,wmax;
 	string outDir;
-	bool selfLoop;
+	bool noSelfLoop;
 	bool online;
 	unsigned long seed;
 
@@ -234,9 +234,9 @@ void Option::parse(int argc, char* argv[]){
 	outDir="./";
 	if(argc>3)
 		outDir=argv[3];
-	selfLoop=true;
+	noSelfLoop=false;
 	if(argc>4){
-		selfLoop=beTrueOption(string(argv[4]));
+		noSelfLoop=beTrueOption(string(argv[4]));
 	}
 	string weightMethod="no";
 	if(argc>5)
@@ -327,7 +327,7 @@ int main(int argc, char* argv[]){
 		if(opt.weight=="no"){
 			for(int i=0; i<opt.nPart; ++i){
 				cout<<"  "<<i+1<<"/"<<opt.nPart<<endl;
-				vector<vector<int> > g=gen_one_uw(opt.nPart,i,opt.nNode,gen,rngDeg,opt.selfLoop);
+				vector<vector<int> > g=gen_one_uw(opt.nPart,i,opt.nNode,gen,rngDeg,opt.noSelfLoop);
 				bool f=dump_one_uw(g,opt.nPart,i,opt.outDir);
 				if(f)
 					++n;
@@ -337,7 +337,7 @@ int main(int argc, char* argv[]){
 			function<double(mt19937&)> rngWgt=bind(uni_dis,placeholders::_1);
 			for(int i=0; i<opt.nPart; ++i){
 				cout<<"  "<<i+1<<"/"<<opt.nPart<<endl;
-				vector<vector<pair<int,double>> > g=gen_one_w(opt.nPart,i,opt.nNode,gen,rngDeg,rngWgt,opt.selfLoop);
+				vector<vector<pair<int,double>> > g=gen_one_w(opt.nPart,i,opt.nNode,gen,rngDeg,rngWgt,opt.noSelfLoop);
 				bool f=dump_one_w(g,opt.nPart,i,opt.outDir);
 				if(f)
 					++n;
@@ -345,13 +345,13 @@ int main(int argc, char* argv[]){
 		}
 	}else{ // offline
 		if(opt.weight=="no"){
-			vector<vector<int> > g=gen_uw(opt.nPart,opt.nNode,opt.seed,rngDeg,opt.selfLoop);
+			vector<vector<int> > g=gen_uw(opt.nPart,opt.nNode,opt.seed,rngDeg,opt.noSelfLoop);
 			cout<<"dumping"<<endl;
 			n=dump_uw(g,opt.nPart,opt.outDir);
 		}else{
 			uniform_real_distribution<double> uni_dis(opt.wmin, opt.wmax);
 			function<double(mt19937&)> rngWgt=bind(uni_dis,placeholders::_1);
-			vector<vector<pair<int,double>> > g=gen_w(opt.nPart,opt.nNode,opt.seed,rngDeg,rngWgt,opt.selfLoop);
+			vector<vector<pair<int,double>> > g=gen_w(opt.nPart,opt.nNode,opt.seed,rngDeg,rngWgt,opt.noSelfLoop);
 			cout<<"dumping"<<endl;
 			n=dump_w(g,opt.nPart,opt.outDir);
 		}
