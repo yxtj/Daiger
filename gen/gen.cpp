@@ -285,9 +285,10 @@ bool Option::setWeight(string& method){
 int main(int argc, char* argv[]){
 	if(argc<3 || argc>9){
 		cerr<<"Generate graph.\n"
-			"Usage: <#parts> <#nodes> [out-dir] [self-loop] [weight:<min>,<max>] [deg-dist:<param>] [online] [random-seed]"<<endl;
+			"Usage: <#parts> <#nodes> [out-dir] [no-self-loop] [weight:<min>,<max>] [deg-dist:<param>] [online] [random-seed]"<<endl;
 		cerr<<"  [self-loop]: (=true) whether to allow self-loop edge.\n"
 			"  [out-dir]: (=./) the folder to store the output fieles\n"
+			"  [no-self-loop]: (=0) whether to remove self loop edges\n"
 			"  [weight]: (=no) the weight distribution. If unweighted graph is needed, use \"no\" here.\n"
 			"  [deg-dist]: (=pl:2.3) the degree distribution. Support: uni (uniform), pl:<alpha> (power-law with alpha)\n"
 			"  [online]: (=0) whether to perform online generation. "
