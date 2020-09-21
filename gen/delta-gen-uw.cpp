@@ -306,7 +306,7 @@ int changeGraphOffline(const string& graphFolder, const string& deltaFolder,
     start_t = chrono::system_clock::now();
 	vector<vector<Link>> g;
 	try{
-		g = general_load_weight(nPart, graphFolder, "part-");
+		g = general_load_unweight(nPart, graphFolder, "part-");
 	}catch(exception& e){
 		cerr<<e.what()<<endl;
 		return 3;
