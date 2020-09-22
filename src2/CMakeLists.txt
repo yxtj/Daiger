@@ -47,6 +47,8 @@ message(STATUS "MPI: ${MPI_CXX_FOUND} ${MPIEXEC}")
 #include_directories(SYSTEM ${MPI_CXX_INCLUDE_PATH})
 # ${MPI_CXX_LINK_FLAGS}     Linking flags for MPI programs
 # ${MPI_CXX_LIBRARIES}      All libraries to link MPI programs against
+link_directories(${MPI_LIBDIRS})
+
 message(STATUS "mpi-include-path ${MPI_CXX_INCLUDE_PATH}")
 message(STATUS "mpi-compile-flags ${MPI_CXX_COMPILE_FLAGS}")
 message(STATUS "mpi-link-flags ${MPI_CXX_LINK_FLAGS}")
