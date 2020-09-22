@@ -244,7 +244,7 @@ int changeGraphOnline(const string& graphFolder, const string& deltaFolder,
 
 // normal return: totalE
 // return by reference: resultSet = {addSet, rmvSet}
-int changeAll(const vector<vector<Link>>& g, const ModifyThreshold& threshold,
+int changeAll(const vector<vector<int>>& g, const ModifyThreshold& threshold,
 		uniform_real_distribution<double>& rnd_prob, uniform_int_distribution<int>& rnd_node,
 		mt19937& gen, ModifyEdges& resultSet)
 {
@@ -257,14 +257,14 @@ int changeAll(const vector<vector<Link>>& g, const ModifyThreshold& threshold,
 	for(size_t i = 0; i < g.size(); ++i){
 		int addCnt = 0;
 		const auto& vec = g[i];
-		for(const Link& e : vec){
+		for(const int& j : vec){
 			double r = rnd_prob(gen);
 			if(r < threshold.trivial){
 				continue;
 			}else if(r < threshold.add){
 				++addCnt;
 			}else if(r < threshold.rmv){
-				rmvSet.push_back(Edge{i, e.node});
+				rmvSet.push_back(Edge{i, j});
 			}
 		}
 		totalE += vec.size();
@@ -274,7 +274,7 @@ int changeAll(const vector<vector<Link>>& g, const ModifyThreshold& threshold,
 			int newV;
 			do{
 				newV = rnd_node(gen);
-			}while(find_if(vec.begin(), vec.end(), [&](const Link& e){ return e.node == newV; }) != vec.end() && rpt++ < 10);
+			}while(binary_search(vec.begin(), vec.end(), newV) && rpt++ < 10);
 			if(rpt < 10){
 				Edge e{ i, newV};
 				addSet.push_back(e);
@@ -304,7 +304,7 @@ int changeGraphOffline(const string& graphFolder, const string& deltaFolder,
 	// load
 	cout << "Loading " << nPart << " parts, from folder: " << graphFolder << endl;
     start_t = chrono::system_clock::now();
-	vector<vector<Link>> g;
+	vector<vector<int>> g;
 	try{
 		g = general_load_unweight(nPart, graphFolder, "part-");
 	}catch(exception& e){
@@ -433,11 +433,11 @@ bool Option::normalizeRates(){
 int main(int argc, char* argv[]){
 	if(argc < 7 || argc > 10){
 		cerr << "Generate delta information for unweighted graph.\n"
-				"Usage: <#parts> <graph-folder> <delta-prefix> <deltaRate> <addRate> <rmvRate> [online] [dir] [random-seed]"
+				"Usage: <#parts> <graph-folder> <delta-folder> <deltaRate> <addRate> <rmvRate> [online] [dir] [random-seed]"
 				<< endl;
 		cerr <<	"  <#parts>: number of parts the graphs are separated (the number of files to operate).\n"
-				"  <graph-folder>: the folder of graphs.\n"
-				"  <delta-prefix>: the path and name prefix of generated delta graphs, naming format: \"<delta-prefix>-<part>\".\n"
+				"  <graph-folder>: the folder of graphs, naming format: \"<graph-folder>/part-<part>\".\n"
+				"  <delta-folder>: the folder of generated delta information, naming format: \"<delta-folder>/delta-<part>\".\n"
 				"  <deltaRate>: the rate of changed edges.\n"
 				"  <addRate>, <rmvRate>: "
 				"among the changed edges the rates for edge-addition and edge-removal. "
