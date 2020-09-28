@@ -87,9 +87,15 @@ priority_t Katz::MyOperation::priority_vn(const node_t& n){
 
 // <source> <beta> <use-degree-priority>
 AppArguments Katz::MySeparator::separate(const std::vector<std::string>& args){
+	if(args.size() < 1 || args.size() > 2){
+		throw invalid_argument("Katz Parameter: <source> <beta> [degree-priority]. degree-priority=true");
+	}
 	AppArguments res;
 	res.name = Katz::name;
-	res.operation_arg = {args[0], args[1], args[2]};
+	if(args.size() == 1)
+		res.operation_arg = { args[0], args[1], "true" };
+	else
+		res.operation_arg = { args[0], args[1], args[2] };
 	res.iohandler_arg = {};
 	res.progressor_arg = {};
 	return res;

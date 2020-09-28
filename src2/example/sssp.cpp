@@ -57,9 +57,15 @@ priority_t ShortestPath::MyOperation::priority(const node_t& n){
 
 // <source> <use-degree-priority>
 AppArguments ShortestPath::MySeparator::separate(const std::vector<std::string>& args){
+	if(args.size() < 1 || args.size() > 2){
+		throw invalid_argument("SSSP Parameter: <source> [degree-priority]. degree-priority=false");
+	}
 	AppArguments res;
 	res.name = ShortestPath::name;
-	res.operation_arg = {args[0], args[1]};
+	if(args.size() == 1)
+		res.operation_arg = { args[0], "false" };
+	else
+		res.operation_arg = { args[0], args[1] };
 	res.iohandler_arg = {};
 	res.progressor_arg = {};
 	return res;
