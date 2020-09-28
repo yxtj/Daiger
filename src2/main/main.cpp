@@ -37,12 +37,7 @@ int main(int argc, char* argv[]){
 	// init network
 	NetworkThread::Init(argc, argv);
 	NetworkThread* net = NetworkThread::GetInstance();
-	if(net->size() != 1 + opt.conf.nPart){
-		// 1 master + <n> workers
-		LOG(ERROR)<<"The number of network instances ("<<net->size()
-			<<") does not match required ("<<1 + opt.conf.nPart<<").";
-		return 3;
-	}
+
 	// init App
 	AppBase app;
 	try{
@@ -57,6 +52,14 @@ int main(int argc, char* argv[]){
 		return 3;
 	}
 	app.ptn->setParts(net->size());
+
+	// check network size
+	if(net->size() != 1 + opt.conf.nPart){
+		// 1 master + <n> workers
+		LOG(ERROR) << "The number of network instances (" << net->size()
+			<< ") does not match required (" << 1 + opt.conf.nPart << ").";
+		return 3;
+	}
 
 	if(opt.show && net->id() == 0){
 		LOG(INFO)<<"Successfully initialized.\n"
@@ -102,7 +105,7 @@ int main(int argc, char* argv[]){
 		Master m(app, opt);
 		m.run();
 	}else{ // worker
-		LOG(INFO)<<"starting worker";
+		LOG(INFO) << "starting worker " << net->id();
 		Worker w(app, opt);
 		w.run();
 	}

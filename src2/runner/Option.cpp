@@ -47,17 +47,17 @@ Option::Option()
 			"Partition strategy name and parameters. Supports: mod.")
 		("scheduler", value<vector<string>>(&scheduler_args)->multitoken()->default_value({"priority", "0.1"}, "priority"),
 			"Scheduler name and parameters. Supports: rr, priority, fifo.")
-		("termiator", value<vector<string>>(&terminator_args)->multitoken()->default_value({ "diff", "1e-5" }, "diff"),
+		("terminator", value<vector<string>>(&terminator_args)->multitoken()->default_value({ "diff", "1e-5" }, "diff"),
 			"Terminator name and parameters. Supports: stop, diff, diffr, var.")
 		("sort_result", bool_switch(&conf.sort_result)->default_value(false), "Whether to sort the result by node id before dumping.")
 		("cache_free", bool_switch(&conf.cache_free)->default_value(false), "Whether to perform cache-free computation.")
 		// running parameter
 		("timeout", value<float>(&timeout)->default_value(1.0f), "[float] time threshold (second) for determining error.")
-		("apply_interval", value<double>(&conf.apply_interval)->default_value(0.5f), "[double] the interval (second) of performing apply.")
-		("apply_min_ratio", value<double>(&conf.apply_min_portion)->default_value(0.01),
-			"[double] the minimum ratio of nodes to be processed before performing apply.")
-		("apply_max_ratio", value<double>(&conf.apply_max_portion)->default_value(1),
-			"[double] the maximum ratio of nodes to be processed before performing apply.")
+		("update_interval", value<double>(&conf.apply_interval)->default_value(0.5f), "[double] the interval (second) of performing updates.")
+		("update_min_ratio", value<double>(&conf.apply_min_portion)->default_value(0.01),
+			"[double] the minimum ratio of nodes to be processed before performing updates.")
+		("update_max_ratio", value<double>(&conf.apply_max_portion)->default_value(1),
+			"[double] the maximum ratio of nodes to be processed before performing updates.")
 		("send_interval", value<double>(&conf.send_interval)->default_value(0.5f), "[double] the interval (second) of send buffered update.")
 		("send_min_size", value<int>(&conf.send_min_size)->default_value(1),
 			"[integer] the minimum size (# of nodes) of each sending message, before reaching <send_interval>.")

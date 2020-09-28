@@ -192,11 +192,13 @@ void NetworkThread::Shutdown() {
 			while(!p->done) {
 				Sleep();
 			}
-			p->t_.join();
+			if(p->t_.joinable())
+				p->t_.join();
 			p->net = nullptr;
 			NetworkImplMPI::Shutdown();
 		}
 	}
+
 }
 
 void NetworkThread::Terminate()
@@ -205,7 +207,8 @@ void NetworkThread::Terminate()
 		NetworkThread* p = nullptr;
 		swap(p, self);
 		p->running = false;
-		p->t_.join();
+		if(p->t_.joinable())
+			p->t_.join();
 		p->net = nullptr;
 		delete p;
 		NetworkImplMPI::Shutdown();

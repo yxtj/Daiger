@@ -1,12 +1,12 @@
-cmake_minimum_required (VERSION 3.0)
+cmake_minimum_required (VERSION 3.1)
 
 macro(use_cxx11)
   if (CMAKE_VERSION VERSION_LESS "3.1")
     if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-      set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+      set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
     endif ()
   else ()
-    set (CMAKE_CXX_STANDARD 11)
+    set (CMAKE_CXX_STANDARD 14)
   endif ()
 endmacro(use_cxx11)
 
@@ -60,12 +60,6 @@ message(STATUS "mpi-libs ${MPI_CXX_LIBRARIES}")
 #exec_program("mpic++ -showme:libdirs" OUTPUT_VARIABLE MPI_LIBDIRS)
 #exec_program("mpic++ -showme:libs" OUTPUT_VARIABLE MPI_CXX_LIBRARIES)
 
-# -------- compress (LZO) --------
-#check_include_file("/usr/include/lzo/lzo1x.h" HAVE_LZO1X_H)
-#if (NOT HAVE_LZO1X_H)
-#  message(FATAL_ERROR "Required lzo header file not found.")
-#endif()
-
 # -------- thread --------
 
 find_package (Threads)
@@ -82,7 +76,6 @@ message(STATUS "Binary dir: ${PROJECT_BINARY_DIR}")
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 include_directories( ${CMAKE_CURRENT_SOURCE_DIR}
-#                     ${MAITER_BINARY_DIR}
 #                     ${PROTOBUF_INCLUDE_DIRS}
                      ${MPI_CXX_INCLUDE_PATH}
                    )

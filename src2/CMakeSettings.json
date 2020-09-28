@@ -11,27 +11,37 @@
       "name": "x64-Debug",
       "generator": "Ninja",
       "configurationType": "Debug",
-      "inheritEnvironments": [
-        "msvc_x64_x64"
-      ],
+      "inheritEnvironments": [ "msvc_x64_x64" ],
       "buildRoot": "${env.BuildDirLocal}\\Debug",
-      //"installRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\install\\${name}",
-      "cmakeCommandArgs": "-DCMAKE_TOOLCHAIN_FILE=${env.VcpkgFile}",
+      "cmakeCommandArgs": "",
       "buildCommandArgs": "-v",
-      "ctestCommandArgs": ""
+      "ctestCommandArgs": "",
+      "variables": [],
+      "cmakeToolchain": "${env.VcpkgFile}"
     },
     {
       "name": "x64-Release",
       "generator": "Ninja",
       "configurationType": "Release",
-      "inheritEnvironments": [
-        "msvc_x64_x64"
-      ],
+      "inheritEnvironments": [ "msvc_x64_x64" ],
       "buildRoot": "${env.BuildDirLocal}\\Release",
-      "installRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\install\\${name}",
+      "installRoot": "${projectDir}\\out\\install\\${name}",
       "cmakeCommandArgs": "-DCMAKE_TOOLCHAIN_FILE=${env.VcpkgFile}",
       "buildCommandArgs": "-v",
-      "ctestCommandArgs": ""
+      "ctestCommandArgs": "",
+      "variables": []
+    },
+    {
+      "name": "x64-RelwDI",
+      "generator": "Ninja",
+      "configurationType": "RelWithDebInfo",
+      "buildRoot": "${env.BuildDirLocal}\\Relwdi",
+      "installRoot": "${projectDir}\\out\\install\\${name}",
+      "cmakeCommandArgs": "-DCMAKE_TOOLCHAIN_FILE=${env.VcpkgFile}",
+      "buildCommandArgs": "-v",
+      "ctestCommandArgs": "",
+      "inheritEnvironments": [ "msvc_x64_x64" ],
+      "variables": []
     }
   ]
 }
