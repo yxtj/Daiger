@@ -95,7 +95,7 @@ int main(int argc, char* argv[]){
 	#ifndef NDEBUG
 		if(net->id()==0){
 			DLOG(DEBUG)<<"pause.";
-			DLOG(DEBUG)<<cin.get();
+			cin.get();
 		}
 	#endif
 	// Run
