@@ -76,8 +76,8 @@ private:
 
 	//buffer for request to be sent, double buffer design for performance
 	std::vector<std::pair<Task*, bool>> ps_buffer_[2]; // pair(task, broadcast)
-	std::vector<std::pair<Task*, bool>>* pending_sends_=&ps_buffer_[0];
-	unsigned ps_idx_=0;
+	std::vector<std::pair<Task*, bool>>* pending_sends_, *backup_sends_;
+
 	mutable std::recursive_mutex ps_lock;
 
 	std::deque<std::pair<std::string,TaskBase> > receive_buffer;
