@@ -1,8 +1,8 @@
 """
-This is an example implementation of PageRank.
+This is an example implementation of PageRank for incremental case.
 
 Example Usage:
-bin/spark-submit pagerank.py data/pagerank_data.txt 10 1e-8
+bin/spark-submit pagerank_incr.py data/pagerank_data.txt data/delta_data.txt 10 1e-8
 """
 from __future__ import print_function
 
@@ -33,7 +33,6 @@ def loadFile(infile, prefix, opt_prefix=None):
         lines = sc.union(tmp)
     return lines
 
-
 def computeContribs(urls, rank):
     """Calculates URL contributions to the rank of other URLs."""
     num_urls = len(urls)
@@ -45,24 +44,49 @@ def parseNeighborList(line):
     key=int(t[0])
     value=[int(v) for v in t[1].split(' ') if len(v)>0]
     return (key, value)
+    
+def parseRef(line):
+    t=line.split('\t')
+    key=int(t[0])
+    value=float(t[1])
+    return (key, value)
 
-#def difference(x, y):
-#   return x.join(y).mapValues(lambda p:abs(p[0]-p[1])).map(lambda pv: pv[1]).reduce(add)
-
+def parseDelta(line):
+    t=line[0]
+    s,d=line[2:].split(',')
+    s=int(s)
+    d=int(d)
+    return (s,t,d)
+    
+def mergeDelta(record):
+    # src, (links, deltas)
+    s=record[0]
+    l=record[1][0].data[0]
+    if record[1][1].maxindex != 0:
+        ms=record[1][1].data[0].data
+        for m in ms:
+            if m[1] == 'A':
+                l.append(m[2])
+            else: # m[1] == 'R':
+                l.remove(m[2])
+    return (s,l)
+    
 if __name__ == "__main__":
     argc=len(sys.argv)
-    if argc < 3 or argc > 7:
-        print("Usage: pagerank <file-or-folder> [damp-factor=0.8] [iterations=100] [epsilon=1e-6] [parallel-factor=2] [break-lineage=20] [output-file]", file=sys.stderr)
-        print("\tIf <file> is given, load a single file. If <folder> is given, load all 'part-*' files of that folder", file=sys.stderr)
+    if argc < 5 or argc > 9:
+        print("Usage: pagerank-incr <graph-file> <delta-file> <ref-file> [damp-factor=0.8] [iterations=100] [epsilon=1e-6] [parallel-factor=2] [break-lineage=20] [output-file]", file=sys.stderr)
+        print("\tIf <*-file> is a file, load that file. If it is a directory, load all 'part-*', 'delta-', 'ref-' files of that directory", file=sys.stderr)
         exit(-1)
     infile=sys.argv[1]
-    damp=float(sys.argv[2]) if argc > 2 else 0.8
+    deltafile=sys.argv[2]
+    reffile=sys.argv[3]
+    damp=float(sys.argv[4]) if argc > 4 else 0.8
     damp_c=1-damp
-    max_iteration=int(sys.argv[3]) if argc > 3 else 100
-    epsilon=float(sys.argv[4]) if argc > 4 else 1e-6
-    parallel_factor=int(sys.argv[5]) if argc > 5 else 2
-    break_lineage=int(sys.argv[6]) if argc > 6 else 20
-    outfile=sys.argv[7] if argc > 7 else ''
+    max_iteration=int(sys.argv[5]) if argc > 5 else 100
+    epsilon=float(sys.argv[6]) if argc > 6 else 1e-6
+    parallel_factor=int(sys.argv[7]) if argc > 7 else 2
+    break_lineage=int(sys.argv[8]) if argc > 8 else 20
+    outfile=sys.argv[9] if argc > 9 else ''
 
     # Initialize the spark context.
     sc = SparkContext()
@@ -81,9 +105,21 @@ if __name__ == "__main__":
     # ...
     lines = loadFile(infile, 'part-')
     #graph = lines.map(lambda urls: parseNeighbors(urls)).distinct().groupByKey().cache()
-    graph = lines.map(lambda urls: parseNeighborList(urls)).cache()
-    del lines
+    graph = lines.map(lambda urls: parseNeighborList(urls))
 
+    # delta file
+    # format:
+    # A 3,5
+    # R 1,4
+    lines = loadFile(deltafile, 'delta-')
+    delta = lines.map(lambda l: parseDelta(l)).groupBy(lambda r: r[0])
+    
+    # change graph
+    print(time.strftime('%H:%M:%S'), 'Changing graph')
+    time01=time.time()
+    graph = graph.cogroup(delta).map(mergeDelta).cache()
+    del delta
+    
     n = graph.count()
     npart = max(graph.getNumPartitions(), sc.defaultParallelism)
     if graph.getNumPartitions() < sc.defaultParallelism:
@@ -91,21 +127,25 @@ if __name__ == "__main__":
     maxnpart = parallel_factor*npart
 
     # initialize ranks
-    print(time.strftime('%H:%M:%S'), 'Initializing')
+    print(time.strftime('%H:%M:%S'), 'Initializing value')
     time1=time.time()
-    ranks = graph.map(lambda url_neighbors: (url_neighbors[0], 1.0))
-    progress = graph.count()*1.0
+    lines = loadFile(reffile, 'ref-', 'value-')
+    ranks = lines.map(parseRef)
+    if ranks.getNumPartitions() < sc.defaultParallelism:
+        ranks = ranks.repartition(nparallel)
+    progress = ranks.map(lambda v: v[1]**2).sum()
+    del lines
     
     # Calculates and updates URL ranks continuously using PageRank algorithm.
     print(time.strftime('%H:%M:%S'), 'Calculating')
-    time2=time.time()   
+    time2=time.time()
     for iteration in range(max_iteration):
         time_iter=time.time()
         # Calculates URL contributions to the rank of other URLs.
         contribs = graph.join(ranks).flatMap(
             lambda url_urls_rank: computeContribs(url_urls_rank[1][0], url_urls_rank[1][1]))
         # Re-calculates URL ranks based on neighbor contributions.
-        ranks = contribs.reduceByKey(add).mapValues(lambda rank: rank * damp + damp_c)  
+        ranks = contribs.reduceByKey(add).mapValues(lambda r: r * damp + damp_c)        
         if ranks.getNumPartitions() >= maxnpart:
             ranks = ranks.coalesce(npart)
         if break_lineage != 0 and iteration != 0 and iteration % break_lineage == 0:
@@ -140,6 +180,7 @@ if __name__ == "__main__":
     
     print('iterations: %d' % min(iteration+1, max_iteration))
     print('loading time: %f' % (time1-time0))
+    print('changing time: %f' % (time1-time01))
     print('initialize time: %f' % (time2-time1))
     print('computing time: %f' % (time3-time2))
     print('dumping time: %f' % (time4-time3))
