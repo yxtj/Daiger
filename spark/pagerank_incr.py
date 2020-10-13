@@ -73,7 +73,7 @@ def mergeDelta(record):
     
 if __name__ == "__main__":
     argc=len(sys.argv)
-    if argc < 5 or argc > 9:
+    if argc < 4 or argc > 10:
         print("Usage: pagerank-incr <graph-file> <delta-file> <ref-file> [damp-factor=0.8] [iterations=100] [epsilon=1e-6] [parallel-factor=2] [break-lineage=20] [output-file]", file=sys.stderr)
         print("\tIf <*-file> is a file, load that file. If it is a directory, load all 'part-*', 'delta-', 'ref-' files of that directory", file=sys.stderr)
         exit(-1)
@@ -92,7 +92,7 @@ if __name__ == "__main__":
     sc = SparkContext()
     spark = SparkSession\
         .builder\
-        .appName("PythonPageRank")\
+        .appName("PythonPageRankIncr")\
         .getOrCreate()
 
     # load
@@ -123,7 +123,7 @@ if __name__ == "__main__":
     n = graph.count()
     npart = max(graph.getNumPartitions(), sc.defaultParallelism)
     if graph.getNumPartitions() < sc.defaultParallelism:
-        graph = graph.repartition(nparallel)
+        graph = graph.repartition(npart)
     maxnpart = parallel_factor*npart
 
     # initialize ranks
@@ -132,7 +132,7 @@ if __name__ == "__main__":
     lines = loadFile(reffile, 'ref-', 'value-')
     ranks = lines.map(parseRef)
     if ranks.getNumPartitions() < sc.defaultParallelism:
-        ranks = ranks.repartition(nparallel)
+        ranks = ranks.repartition(npart)
     progress = ranks.map(lambda v: v[1]**2).sum()
     del lines
     
@@ -158,6 +158,7 @@ if __name__ == "__main__":
         time_iter = time.time()-time_iter
         print("finish iteration: %d, progress: %f, improvement: %f, used time: %f" % (iteration, progress, diff, time_iter))
         if diff < epsilon:
+            print('no more obvious improvement')
             break
     
     # Collects result
@@ -179,7 +180,7 @@ if __name__ == "__main__":
     time4=time.time()
     
     print('iterations: %d' % min(iteration+1, max_iteration))
-    print('loading time: %f' % (time1-time0))
+    print('loading time: %f' % (time01-time0))
     print('changing time: %f' % (time1-time01))
     print('initialize time: %f' % (time2-time1))
     print('computing time: %f' % (time3-time2))

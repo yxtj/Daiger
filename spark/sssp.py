@@ -60,13 +60,13 @@ def progress_add(a, b):
 
 if __name__ == "__main__":
     argc=len(sys.argv)
-    if argc < 2 or argc > 6:
-        print("Usage: sssp <file-or-folder> [source=0] [epsilon=1e-6] [parallel-factor=2] [break-lineage=20] [output-file]", file=sys.stderr)
+    if argc < 2 or argc > 7:
+        print("Usage: sssp <file-or-folder> [source=0] [epsilon=1e-9] [parallel-factor=2] [break-lineage=20] [output-file]", file=sys.stderr)
         print("\tIf <file> is given, load a single file. If <folder> is given, load all 'part-*' files of that folder", file=sys.stderr)
         exit(-1)
     infile=sys.argv[1]
     source=int(sys.argv[2]) if argc > 2 else 0
-    epsilon=float(sys.argv[3]) if argc > 3 else 1e-6
+    epsilon=float(sys.argv[3]) if argc > 3 else 1e-9
     parallel_factor=int(sys.argv[4]) if argc > 4 else 2
     break_lineage=int(sys.argv[5]) if argc > 5 else 20
     outfile=sys.argv[6] if argc > 6 else ''
@@ -129,6 +129,7 @@ if __name__ == "__main__":
         print("finish iteration: %d, progress: (%f , %d), improvement: (%f , %d), used time: %f"
             % (iteration, progress[0], progress[1], diff[0], diff[1], time_iter))
         if diff[1] == 0 and abs(diff[0]) < epsilon:
+            print('no more obvious improvement')
             break
     
     # Collects result

@@ -51,7 +51,7 @@ def parseNeighborList(line):
 
 if __name__ == "__main__":
     argc=len(sys.argv)
-    if argc < 3 or argc > 7:
+    if argc < 2 or argc > 8:
         print("Usage: pagerank <file-or-folder> [damp-factor=0.8] [iterations=100] [epsilon=1e-6] [parallel-factor=2] [break-lineage=20] [output-file]", file=sys.stderr)
         print("\tIf <file> is given, load a single file. If <folder> is given, load all 'part-*' files of that folder", file=sys.stderr)
         exit(-1)
@@ -87,7 +87,7 @@ if __name__ == "__main__":
     n = graph.count()
     npart = max(graph.getNumPartitions(), sc.defaultParallelism)
     if graph.getNumPartitions() < sc.defaultParallelism:
-        graph = graph.repartition(nparallel)
+        graph = graph.repartition(npart)
     maxnpart = parallel_factor*npart
 
     # initialize ranks
@@ -118,6 +118,7 @@ if __name__ == "__main__":
         time_iter = time.time()-time_iter
         print("finish iteration: %d, progress: %f, improvement: %f, used time: %f" % (iteration, progress, diff, time_iter))
         if diff < epsilon:
+            print('no more obvious improvement')
             break
     
     # Collects result

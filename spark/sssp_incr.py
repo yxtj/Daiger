@@ -99,15 +99,15 @@ def progress_add(a, b):
 
 if __name__ == "__main__":
     argc=len(sys.argv)
-    if argc < 4 or argc > 8:
-        print("Usage: sssp-incr <graph-file> <delta-file> <ref-file> [source=0] [epsilon=1e-6] [parallel-factor=2] [break-lineage=20] [output-file]", file=sys.stderr)
+    if argc < 4 or argc > 9:
+        print("Usage: sssp-incr <graph-file> <delta-file> <ref-file> [source=0] [epsilon=1e-9] [parallel-factor=2] [break-lineage=20] [output-file]", file=sys.stderr)
         print("\tIf <*-file> is a file, load that file. If it is a directory, load all 'part-*', 'delta-', 'ref-' files of that directory", file=sys.stderr)
         exit(-1)
     infile=sys.argv[1]
     deltafile=sys.argv[2]
     reffile=sys.argv[3]
     source=int(sys.argv[4]) if argc > 4 else 0
-    epsilon=float(sys.argv[5]) if argc > 5 else 1e-6
+    epsilon=float(sys.argv[5]) if argc > 5 else 1e-9
     parallel_factor=int(sys.argv[6]) if argc > 6 else 2
     break_lineage=int(sys.argv[7]) if argc > 7 else 20
     outfile=sys.argv[8] if argc > 8 else ''
@@ -116,7 +116,7 @@ if __name__ == "__main__":
     sc = SparkContext()
     spark = SparkSession\
         .builder\
-        .appName("PythonSSSP")\
+        .appName("PythonSSSPIncr")\
         .getOrCreate()
 
     #nfiles = 1
@@ -153,7 +153,7 @@ if __name__ == "__main__":
     
     npart = max(graph.getNumPartitions(), sc.defaultParallelism)
     if graph.getNumPartitions() < sc.defaultParallelism:
-        graph = graph.repartition(nparallel)
+        graph = graph.repartition(npart)
     maxnpart = parallel_factor*npart
     
     # initialize sssp
@@ -162,7 +162,7 @@ if __name__ == "__main__":
     lines = loadFile(reffile, 'ref-', 'value-')
     sssp = lines.map(parseRef)
     if sssp.getNumPartitions() < sc.defaultParallelism:
-        sssp = sssp.repartition(nparallel)
+        sssp = sssp.repartition(npart)
     progress = sssp.map(lambda v: (0,1) if math.isinf(v[1]) else (v[1],0) ).reduce(progress_add)
     del lines
     
@@ -191,6 +191,7 @@ if __name__ == "__main__":
         print("finish iteration: %d, progress: (%f , %d), improvement: (%f , %d), used time: %f"
             % (iteration, progress[0], progress[1], diff[0], diff[1], time_iter))
         if diff[1] == 0 and abs(diff[0]) < epsilon:
+            print('no more obvious improvement')
             break
     
     time3=time.time()
@@ -214,7 +215,7 @@ if __name__ == "__main__":
     time4=time.time()
     
     print('iterations: %d' % (iteration+1))
-    print('loading time: %f' % (time1-time0))
+    print('loading time: %f' % (time01-time0))
     print('changing time: %f' % (time1-time01))
     print('initialize time: %f' % (time2-time1))
     print('computing time: %f' % (time3-time2))
