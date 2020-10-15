@@ -9,6 +9,7 @@ set(HEADERS
 	Progressor.h
 	ProgressReport.h
 	Terminator.h
+	Prioritizer.h
 )
 set(SOURCES
 	AppBase.cpp

@@ -42,7 +42,8 @@ int main(int argc, char* argv[]){
 	AppBase app;
 	try{
 		app = makeApplication(opt.app_name, opt.app_args,
-			opt.partitioner_args, opt.scheduler_args, opt.terminator_args, net->size());
+			opt.partitioner_args, opt.scheduler_args,
+			opt.terminator_args, opt.prioritizer_args, net->size());
 	}catch(exception& e){
 		LOG(ERROR)<<"Error in generating App via parameter: "<<e.what();
 		return 2;

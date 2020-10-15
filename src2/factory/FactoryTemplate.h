@@ -26,6 +26,7 @@ public:
 	static void registerClass(const std::string& name);
 	template <class T>
 	static void registerClass(const std::string& name, const std::string& usage);
+	static void registerDummy(const std::string& name, const std::string& usage);
 
 	static std::string getUsage();
 
@@ -50,6 +51,12 @@ template <class PRDCT>
 template <class T>
 inline void FactoryTemplate<PRDCT>::registerClass(const std::string & name, const std::string & usage) {
 	registerClass<T>(name);
+	contUsage[name] = usage;
+}
+
+template <class PRDCT>
+inline void FactoryTemplate<PRDCT>::registerDummy(const std::string& name, const std::string& usage) {
+	contGen[name] = [](){ return nullptr; };
 	contUsage[name] = usage;
 }
 

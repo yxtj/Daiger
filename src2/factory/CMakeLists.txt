@@ -7,6 +7,7 @@ set(HEADERS
 	PartitionerFactory.h
 	ProgressorFactory.h
 	TerminatorFactory.h
+	PrioritizerFactory.h
 	factory_reg.h
 )
 set(SOURCES
@@ -17,6 +18,7 @@ set(SOURCES
 	PartitionerFactory.cpp
 	ProgressorFactory.cpp
 	TerminatorFactory.cpp
+	PrioritizerFactory.cpp
 	factory_reg.cpp
 )
 add_library(factory

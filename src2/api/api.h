@@ -3,11 +3,13 @@
 #include "application/Operation.h"
 #include "application/IOHandler.h"
 #include "application/Progressor.h"
+#include "application/Prioritizer.h"
 
 #include "factory/ArgumentSeparatorFactory.h"
 #include "factory/OperationFactory.h"
 #include "factory/IOHandlerFactory.h"
 #include "factory/TerminatorFactory.h"
+#include "factory/PrioritizerFactory.h"
 
 #include "application/AppKernel.h"
 #include "factory/AppKernelFactory.h"

@@ -17,6 +17,7 @@ public:
 	std::vector<std::string> partitioner_args;
 	std::vector<std::string> scheduler_args;
 	std::vector<std::string> terminator_args;
+	std::vector<std::string> prioritizer_args;
 
 	//float schedule_portion;
 	//bool priority_degree; // use degree of out-neighbors

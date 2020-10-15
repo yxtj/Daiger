@@ -49,6 +49,8 @@ Option::Option()
 			"Scheduler name and parameters. Supports: rr, priority, fifo.")
 		("terminator", value<vector<string>>(&terminator_args)->multitoken()->default_value({ "diff", "1e-5" }, "diff"),
 			"Terminator name and parameters. Supports: stop, diff, diffr, var.")
+		("prioritizer", value<vector<string>>(&prioritizer_args)->multitoken()->default_value({"value"}, "value"),
+			"Prioritizer name and parameters. Supports: none, value, value-deg, diff, diff-deg.")
 		("sort_result", bool_switch(&conf.sort_result)->default_value(false), "Whether to sort the result by node id before dumping.")
 		("cache_free", bool_switch(&conf.cache_free)->default_value(false), "Whether to perform cache-free computation.")
 		// running parameter
