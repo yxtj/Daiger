@@ -34,6 +34,9 @@ ProgressorBase* MarkovChain::generateProgressor(){
 GlobalHolderBase* MarkovChain::generateGraph(){
 	return new graph_t();
 }
+PrioritizerBase* MarkovChain::generatePrioritizer(const std::string& name){
+	return PrioritizerFactory::generate<value_t, neighbor_t>(name);
+}
 
 // -------- Components --------
 

@@ -76,7 +76,8 @@ int main(int argc, char* argv[]){
 			<< "\targs: " << opt.app_args << "\n"
 			<< "\tPartitioner: " << opt.partitioner_args << "\n"
 			<< "\tScheduler: " << opt.scheduler_args << "\n"
-			<< "\tTerminator: " << opt.terminator_args;
+			<< "\tTerminator: " << opt.terminator_args << "\n"
+			<< "\tPrioritizer: " << opt.prioritizer_args;
 		LOG(INFO)<<"Behavior parameters: \n"
 			<<"\tBalanced loading: "<<opt.conf.balance_load<<"\n"
 			<<"\tDo incremental: "<<opt.do_incremental<<"\n"

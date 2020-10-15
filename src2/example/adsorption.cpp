@@ -16,6 +16,9 @@ OperationBase* Adsorption::generateOperation() { return new operation_t(); }
 IOHandlerBase* Adsorption::generateIOHandler() { return new iohandler_t(); }
 ProgressorBase* Adsorption::generateProgressor() { return new progressor_t(); }
 GlobalHolderBase* Adsorption::generateGraph() { return new graph_t(); }
+PrioritizerBase* Adsorption::generatePrioritizer(const std::string& name){
+    return PrioritizerFactory::generate<value_t, neighbor_t>(name);
+}
 
 // -------- Components --------
 

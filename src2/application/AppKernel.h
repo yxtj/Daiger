@@ -7,6 +7,7 @@ class OperationBase;
 class IOHandlerBase;
 class ProgressorBase;
 class GlobalHolderBase;
+class PrioritizerBase;
 
 struct AppKernel {
 	virtual ~AppKernel() = default;
@@ -21,4 +22,5 @@ struct AppKernel {
 	virtual IOHandlerBase* generateIOHandler() = 0;
 	virtual ProgressorBase* generateProgressor() = 0;
 	virtual GlobalHolderBase* generateGraph() = 0;
+	virtual PrioritizerBase* generatePrioritizer(const std::string& name) = 0;
 };

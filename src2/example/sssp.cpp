@@ -32,6 +32,9 @@ ProgressorBase* ShortestPath::generateProgressor(){
 GlobalHolderBase* ShortestPath::generateGraph(){
 	return new graph_t();
 }
+PrioritizerBase* ShortestPath::generatePrioritizer(const std::string& name){
+	return PrioritizerFactory::generate<value_t, neighbor_t>(name);
+}
 
 // -------- Components --------
 

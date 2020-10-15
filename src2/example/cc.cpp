@@ -35,7 +35,9 @@ ProgressorBase* ConnectedComponent::generateProgressor(){
 GlobalHolderBase* ConnectedComponent::generateGraph(){
 	return new graph_t();
 }
-
+PrioritizerBase* ConnectedComponent::generatePrioritizer(const std::string& name){
+	return PrioritizerFactory::generate<value_t, neighbor_t>(name);
+}
 // -------- Components --------
 
 void ConnectedComponent::MyOperation::init(const std::vector<std::string>& arg_line){

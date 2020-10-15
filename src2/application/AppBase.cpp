@@ -12,13 +12,13 @@ using namespace std;
 
 AppBase::AppBase()
 	: opt(nullptr), prg(nullptr), ioh(nullptr),
-	ptn(nullptr), scd(nullptr), gh(nullptr)
+	ptn(nullptr), scd(nullptr), ptz(nullptr), gh(nullptr)
 {}
 
 bool AppBase::check() const {
 	return opt!=nullptr && prg!=nullptr && ioh!=nullptr
 		&& ptn!=nullptr && scd!=nullptr && tmt != nullptr
-		&& gh!=nullptr;
+		&& ptz!=nullptr && gh!=nullptr;
 }
 
 void AppBase::clear() {
@@ -32,13 +32,16 @@ void AppBase::clear() {
 	ptn = nullptr;
 	delete scd;
 	scd = nullptr;
+	delete ptz;
+	ptz = nullptr;
 	delete gh;
 	gh = nullptr;
 }
 
 AppBase makeApplication(const std::string& app_name, const std::vector<std::string>& arg_app, 
 	const std::vector<std::string>& arg_partitioner, const std::vector<std::string>& arg_scheduler,
-	const std::vector<std::string>& arg_terminator, const size_t nInstance)
+	const std::vector<std::string>& arg_terminator, const std::vector<std::string>& arg_prioritizer, 
+	const size_t nInstance)
 {
 	AppBase app;
 	AppKernel* apk = AppKernelFactory::generate(app_name);
@@ -51,6 +54,10 @@ AppBase makeApplication(const std::string& app_name, const std::vector<std::stri
 	app.ioh->init(aa.iohandler_arg);
 	app.prg = apk->generateProgressor();
 	app.prg->init(aa.progressor_arg);
+
+	app.ptz = apk->generatePrioritizer(arg_prioritizer[0]);
+	app.ptz->init(arg_prioritizer);
+
 	app.gh = apk->generateGraph();
 	// gh should be initialized later in Worker::registerWorkers()
 	app.needInNeighbor = apk->needInNeighbor();

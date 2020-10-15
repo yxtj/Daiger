@@ -31,6 +31,9 @@ ProgressorBase* PageRank::generateProgressor(){
 GlobalHolderBase* PageRank::generateGraph(){
 	return new graph_t();
 }
+PrioritizerBase* PageRank::generatePrioritizer(const std::string& name){
+	return PrioritizerFactory::generate<value_t, neighbor_t>(name);
+}
 
 // -------- Components --------
 
@@ -72,7 +75,7 @@ priority_t PageRank::MyOperation::priority(const node_t& n){
 // <damp-factor> <use-degree-priority>
 AppArguments PageRank::MySeparator::separate(const std::vector<std::string>& args){
 	if(args.size() < 1 || args.size() > 2 ){
-		throw invalid_argument("PageRank Parameter: <damp> [degree-priority]. degree-priority=true");
+		throw invalid_argument("PageRank Parameter: <damp> [degree-priority=true]");
 	}
 	AppArguments res;
 	res.name = PageRank::name;

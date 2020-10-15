@@ -16,7 +16,9 @@ OperationBase* Jacobi::generateOperation() { return new operation_t(); }
 IOHandlerBase* Jacobi::generateIOHandler() { return new iohandler_t(); }
 ProgressorBase* Jacobi::generateProgressor() { return new progressor_t(); }
 GlobalHolderBase* Jacobi::generateGraph() { return new graph_t(); }
-
+PrioritizerBase* Jacobi::generatePrioritizer(const std::string& name){
+    return PrioritizerFactory::generate<value_t, neighbor_t>(name);
+}
 // -------- Components --------
 
 void Jacobi::MyOperation::init(const std::vector<std::string>& arg_line) {

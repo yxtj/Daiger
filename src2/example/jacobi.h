@@ -51,4 +51,5 @@ struct Jacobi : public AppKernel {
     virtual IOHandlerBase* generateIOHandler();
     virtual ProgressorBase* generateProgressor();
     virtual GlobalHolderBase* generateGraph();
+    virtual PrioritizerBase* generatePrioritizer(const std::string& name);
 };

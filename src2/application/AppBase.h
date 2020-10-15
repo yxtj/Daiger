@@ -6,6 +6,7 @@
 #include "Partitioner.h"
 #include "Scheduler.h"
 #include "Terminator.h"
+#include "Prioritizer.h"
 #include "holder/GlobalHolderBase.h"
 #include <string>
 #include <vector>
@@ -23,6 +24,8 @@ struct AppBase {
 	SchedulerBase* scd;
 	TerminatorBase* tmt;
 
+	PrioritizerBase* ptz;
+
 	GlobalHolderBase* gh; // graph holder
 
 	bool needOutNeighbor;
@@ -34,4 +37,5 @@ struct AppBase {
 
 AppBase makeApplication(const std::string& app_name, const std::vector<std::string>& arg_app, 
 	const std::vector<std::string>& arg_partitioner, const std::vector<std::string>& arg_scheduler,
-	const std::vector<std::string>& arg_terminator, const size_t nInstance);
+	const std::vector<std::string>& arg_terminator, const std::vector<std::string>& arg_prioritizer,
+	const size_t nInstance);
