@@ -22,6 +22,7 @@ public:
 	using operation_t = Operation<V, N>;
 	using iohandler_t= IOHandler<V, N>;
 	using progressor_t = Progressor<V, N>;
+	using prioritizer_t = Prioritizer<V, N>;
 	using node_t = Node<V, N>;
 	using value_t = typename node_t::value_t;
 	using neighbor_t = typename node_t::neighbor_t;
@@ -30,7 +31,7 @@ public:
 	using msg_t = MessageDef<V, N>;
 
 	virtual void init(OperationBase* opt, IOHandlerBase* ioh,
-		SchedulerBase* scd, PartitionerBase* ptn, ProgressorBase* prg,
+		SchedulerBase* scd, PartitionerBase* ptn, ProgressorBase* prg, PrioritizerBase* ptz,
 		const size_t nPart, const int localId, const bool aggregate_message,
 		const bool incremental, const bool async, const bool cache_free, const bool sort_result);
 
@@ -103,6 +104,7 @@ private:
 	SchedulerBase* scd;
 	PartitionerBase* ptn;
 	progressor_t* prg;
+	prioritizer_t* ptz;
 	size_t nPart;
 
 	bool aggregate_message;
@@ -129,7 +131,7 @@ private:
 
 template <class V, class N>
 void GlobalHolder<V, N>::init(OperationBase* opt, IOHandlerBase* ioh,
-		SchedulerBase* scd, PartitionerBase* ptn, ProgressorBase* prg,
+		SchedulerBase* scd, PartitionerBase* ptn, ProgressorBase* prg, PrioritizerBase* ptz,
 		const size_t nPart, const int localId, const bool aggregate_message,
 		const bool incremental, const bool async, const bool cache_free, const bool sort_result)
 {
@@ -138,6 +140,7 @@ void GlobalHolder<V, N>::init(OperationBase* opt, IOHandlerBase* ioh,
 	this->scd = scd;
 	this->ptn = ptn;
 	this->prg = dynamic_cast<progressor_t*>(prg);
+	this->ptz = dynamic_cast<prioritizer_t*>(ptz);
 	this->nPart = nPart;
 	this->local_id = localId;
 	this->aggregate_message = aggregate_message;
@@ -148,7 +151,7 @@ void GlobalHolder<V, N>::init(OperationBase* opt, IOHandlerBase* ioh,
 
 	this->ptn->setParts(nPart);
 
-	local_part.init(this->opt, this->scd, this->prg, nPart, incremental, async, cache_free);
+	local_part.init(this->opt, this->scd, this->prg, this->ptz, nPart, incremental, async, cache_free);
 	remote_parts.resize(nPart);
 	for(size_t i = 0; i<nPart; ++i){
 		if(i == local_id)

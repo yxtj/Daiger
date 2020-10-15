@@ -14,7 +14,7 @@ GraphContainer::GraphContainer(AppBase& app, const ConfData& conf)
 void GraphContainer::init(int wid, GlobalHolderBase* holder, bool incremental){
 	this->wid = wid;
 	this->holder = holder;
-	holder->init(app.opt, app.ioh, app.scd, app.ptn, app.prg,
+	holder->init(app.opt, app.ioh, app.scd, app.ptn, app.prg, app.ptz,
 		conf.nPart, wid, conf.aggregate_message,
 		incremental, conf.async, conf.cache_free, conf.sort_result);
 }

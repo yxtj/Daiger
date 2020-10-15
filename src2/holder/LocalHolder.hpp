@@ -19,6 +19,7 @@ public:
 	using operation_t = Operation<V, N>;
 	using scheduler_t = SchedulerBase;
 	using progressor_t = Progressor<V, N>;
+	using prioritizer_t = Prioritizer<V, N>;
 	using node_t = Node<V, N>;
 	using value_t = V; //typename node_t::value_t;
 	using neighbor_t = typename node_t::neighbor_t;
@@ -26,8 +27,8 @@ public:
 	using sender_req_t = std::function<void(const id_t&, const id_t&)>;
 
 	LocalHolder() = default;
-	void init(operation_t* opt, scheduler_t* scd, progressor_t* prg, size_t n,
-		bool incremental, bool async, bool cache_free);
+	void init(operation_t* opt, scheduler_t* scd, progressor_t* prg, prioritizer_t* ptz,
+		size_t n, bool incremental, bool async, bool cache_free);
 	void setUpdateFunction(bool incremental, bool async, bool cache_free);
 
 	// -------- basic functions --------
@@ -105,6 +106,7 @@ private:
 	operation_t* opt;
 	scheduler_t* scd;
 	progressor_t* prg;
+	prioritizer_t* ptz;
 	bool cache_free;
 	std::unordered_map<id_t, node_t> cont;
 	//f_update_general_t f_update_general;
@@ -128,12 +130,13 @@ private:
 };
 
 template <class V, class N>
-void LocalHolder<V, N>::init(operation_t* opt, scheduler_t* scd, progressor_t* prg, size_t n,
-	bool incremental, bool async, bool cache_free)
+void LocalHolder<V, N>::init(operation_t* opt, scheduler_t* scd, progressor_t* prg, prioritizer_t* ptz,
+	size_t n, bool incremental, bool async, bool cache_free)
 {
 	this->opt = opt;
 	this->scd = scd;
 	this->prg = prg;
+	this->ptz = ptz;
 	this->cache_free = cache_free;
 	progress_value = 0.0;
 	progress_inf = 0;
@@ -162,22 +165,25 @@ void LocalHolder<V, N>::setUpdateFunction(bool incremental, bool async, bool cac
 		f_spread = [&](const id_t& k){
 			return this->spread_acf(k);
 		};
-		f_priority = [&](const node_t& n){
-			value_t t = n.v;
-			node_t& nn = const_cast<node_t&>(n);
-			nn.v = opt->identity_element();
-			priority_t p = opt->priority(n);
-			nn.v = t;
-			return p;
-		};
+		//f_priority = [&](const node_t& n){
+		//	value_t t = n.v;
+		//	node_t& nn = const_cast<node_t&>(n);
+		//	nn.v = opt->identity_element();
+		//	priority_t p = opt->priority(n);
+		//	nn.v = t;
+		//	return p;
+		//};
 	}else{
 		f_spread = [&](const id_t& k){
 			return this->spread_general(k);
 		};
-		f_priority = [&](const node_t& n){
-			return opt->priority(n);
-		};
+		//f_priority = [&](const node_t& n){
+		//	return opt->priority(n);
+		//};
 	}
+	f_priority = [&](const node_t& n){
+		return ptz->priority(n);
+	};
 }
 
 // -------- basic functions --------
