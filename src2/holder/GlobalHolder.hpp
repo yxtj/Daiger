@@ -495,7 +495,7 @@ void GlobalHolder<V, N>::msgUpdate(const std::string& line){
 template <class V, class N>
 std::string GlobalHolder<V, N>::msgRequest(const std::string& line){
 	auto m = deserialize<typename msg_t::VRequest_t>(line);
-	DVLOG(3)<<"receive request: "<<m;
+	//DVLOG(3)<<"receive request: "<<m;
 	value_t v = local_part.get(m.second).v;
 	return serialize(typename msg_t::VReply_t{m.first, m.second, v});
 }
@@ -530,9 +530,9 @@ void GlobalHolder<V, N>::processNodeForced(const id_t id){
 	#if !defined(NDEBUG) || defined(_DEBUG)
 	if(VLOG_IS_ON(3)){
 		const node_t& n = local_part.get(id);
-		DVLOG(3) << "k=" << n.id << " v=" << n.v << " u=" << n.u << " cache=" << n.cs;
+		//DVLOG(3) << "k=" << n.id << " v=" << n.v << " u=" << n.u << " cache=" << n.cs;
 		auto pgs = local_part.get_progress();
-		DVLOG(3) << "progress=(" << pgs.sum << "," << pgs.n_inf << "," << pgs.n_change << ") update=" << local_part.get_n_update();
+		//DVLOG(3) << "progress=(" << pgs.sum << "," << pgs.n_inf << "," << pgs.n_change << ") update=" << local_part.get_n_update();
 	}
 	#endif
 
@@ -543,9 +543,9 @@ void GlobalHolder<V, N>::processNode(const id_t id){
 	#if !defined(NDEBUG) || defined(_DEBUG)
 	if(VLOG_IS_ON(3)){
 		const node_t& n = local_part.get(id);
-		DVLOG(3) << "k=" << n.id << " v=" << n.v << " u=" << n.u << " cache=" << n.cs;
+		//DVLOG(3) << "k=" << n.id << " v=" << n.v << " u=" << n.u << " cache=" << n.cs;
 		auto pgs = local_part.get_progress();
-		DVLOG(3) << "progress=(" << pgs.sum << "," << pgs.n_inf << "," << pgs.n_change << ") update=" << local_part.get_n_update();
+		//DVLOG(3) << "progress=(" << pgs.sum << "," << pgs.n_inf << "," << pgs.n_change << ") update=" << local_part.get_n_update();
 	}
 	#endif
 
@@ -559,7 +559,7 @@ void GlobalHolder<V, N>::processNode_general(const id_t id){
 	// (commit -> spread)
 	local_part.commit(id);
 	std::vector<std::pair<id_t, value_t>> data = local_part.spread(id);
-	DVLOG(3)<<data;
+	//DVLOG(3)<<data;
 	for(auto& p : data){
 		update_cal(id, p.first, p.second);
 	}
@@ -569,7 +569,7 @@ void GlobalHolder<V, N>::processNode_acf(const id_t id){
 	// (spread -> commit)
 	// prevent to merge self-loop
 	std::vector<std::pair<id_t, value_t>> data = local_part.spread(id);
-	DVLOG(3)<<data;
+	//DVLOG(3)<<data;
 	V left = opt->identity_element();
 	for(auto& p : data){
 		if(p.first == id){
@@ -597,7 +597,7 @@ void GlobalHolder<V, N>::doApply(){
 	if(VLOG_IS_ON(3)){
 		for(const id_t id : nodes){
 			const node_t& n = local_part.get(id);
-			DVLOG(3) << "k=" << n.id << " v=" << n.v << " u=" << n.u;
+			VLOG(3) << "k=" << n.id << " v=" << n.v << " u=" << n.u;
 		}
 	}
 	#endif
