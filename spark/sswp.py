@@ -99,7 +99,7 @@ def modify_source(source_node, source_id):
 if __name__ == "__main__":
     argc=len(sys.argv)
     if argc < 2 or argc > 9:
-        print("Usage: sswp-incr <graph-file> [source=0] [delta-file=-] [ref-file=-] [epsilon=1e-9] [parallel-factor=2] [break-lineage=20] [output-file]", file=sys.stderr)
+        print("Usage: sswp <graph-file> [source=0] [delta-file=-] [ref-file=-] [epsilon=1e-9] [parallel-factor=2] [break-lineage=20] [output-file]", file=sys.stderr)
         print("\tIf <*-file> is a file, load that file. If it is a directory, load all 'part-*', 'delta-', 'ref-' files of that directory", file=sys.stderr)
         print("\tIf <delta> and <ref> are given, run the incremental version.")
         exit(-1)
@@ -187,9 +187,9 @@ if __name__ == "__main__":
             lambda k_list_wp: computeContribs(k_list_wp[1][0], k_list_wp[1][1]))
         # Re-calculates sswp based on neighbor contributions.
         sswp = contribs.reduceByKey(max)
-        # truncate the long lineage which greately slown down the process
         if sswp.getNumPartitions() >= maxnpart:
             sswp = sswp.coalesce(npart)
+        # truncate the long lineage which greately slown down the process
         if break_lineage != 0 and iteration != 0 and iteration % break_lineage == 0:
             #sswp = sc.parallelize(sswp.collect())
             sswp = sswp.cache()
@@ -209,7 +209,7 @@ if __name__ == "__main__":
         print("Skip outputting")
     else:
         if sswp.count() != n:
-            sswp = graph.leftOuterJoin(sswp).mapValues(lambda v:v[1] if not math.isinf(v[1]) else math.inf)
+            sssp = graph.leftOuterJoin(sssp).mapValues(lambda lv:lv[1] if lv[1] is not None else 0)
         if outfile == '#console':
             for (link, rank) in sswp.collect():
                 print("%d\t%f" % (link, rank))

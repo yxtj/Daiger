@@ -139,7 +139,7 @@ if __name__ == "__main__":
         print("Skip outputting")
     else:
         if sssp.count() != n:
-            sssp = graph.leftOuterJoin(sssp).mapValues(lambda v:v[1] if not math.isinf(v[1]) else math.inf
+            sssp = graph.leftOuterJoin(sssp).mapValues(lambda lv:lv[1] if lv[1] is not None else math.inf)
         if outfile == '#console':
             for (link, rank) in sssp.collect():
                 print("%d\t%f" % (link, rank))
