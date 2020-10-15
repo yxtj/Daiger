@@ -190,7 +190,7 @@ if __name__ == "__main__":
         time_iter = time.time()-time_iter
         print("finish iteration: %d, progress: (%f , %d), improvement: (%f , %d), used time: %f"
             % (iteration, progress[0], progress[1], diff[0], diff[1], time_iter))
-        if diff[1] == 0 and abs(diff[0]) < epsilon:
+        if diff[1] == 0 and abs(diff[0]) <= epsilon:
             print('no more obvious improvement')
             break
     
