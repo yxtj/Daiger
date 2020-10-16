@@ -59,18 +59,17 @@ def mergeDelta(record):
 
 if __name__ == "__main__":
     argc=len(sys.argv)
-    if argc < 2 or argc > 4:
-        print("Usage: cc <graph-file> [source=0] [delta-file=-] [ref-file=-] [parallel-factor=2] [break-lineage=20] [output-file]", file=sys.stderr)
+    if argc < 2 or argc > 7:
+        print("Usage: cc <graph-file> [delta-file=-] [ref-file=-] [parallel-factor=2] [break-lineage=20] [output-file]", file=sys.stderr)
         print("\tIf <*-file> is a file, load that file. If it is a directory, load all 'part-*', 'delta-', 'ref-' files of that directory", file=sys.stderr)
         print("\tIf <delta> and <ref> are given, run the incremental version.")
         exit(-1)
     infile=sys.argv[1]
-    source=int(sys.argv[2]) if argc > 2 else 0
-    deltafile=sys.argv[3] if argc > 3 else ''
-    reffile=sys.argv[4] if argc > 4 else ''
-    parallel_factor=int(sys.argv[5]) if argc > 5 else 2
-    break_lineage=int(sys.argv[6]) if argc > 6 else 20
-    outfile=sys.argv[7] if argc > 7 else ''
+    deltafile=sys.argv[2] if argc > 2 else ''
+    reffile=sys.argv[3] if argc > 3 else ''
+    parallel_factor=int(sys.argv[4]) if argc > 4 else 2
+    break_lineage=int(sys.argv[5]) if argc > 5 else 20
+    outfile=sys.argv[6] if argc > 6 else ''
 
     if len(deltafile) > 0 and deltafile != '-' and len(reffile) > 0 and reffile != '-':
         do_incremental = True
@@ -94,7 +93,6 @@ if __name__ == "__main__":
     # ...
     lines = loadFile(infile, 'part-')
     graph = lines.map(lambda l: parseNeighborList(l)) #.cache()
-    graph = graph.map(lambda v: v if v[0] != source else modify_source(v, source))
     
     if do_incremental:
         # delta file
@@ -135,14 +133,6 @@ if __name__ == "__main__":
         cc = graph.map(lambda neighbors: (neighbors[0], neighbors[0]))
     progress = cc.aggregate(0, (lambda lr,v:lr+v[1]), add)
     del lines
-
-    # Loads all nodes from input file and initialize their neighbors
-    nodes = lines.map(lambda l: parseNeighborList(l)).cache()
-    n = nodes.count()
-
-    # initialize cc to be their indices
-    cc = nodes.map(lambda neighbors: (neighbors[0], neighbors[0]))
-    progress = int((n-1)*n/2)
     
     # Calculates and updates cc continuously
     print(time.strftime('%H:%M:%S'), 'Calculating')

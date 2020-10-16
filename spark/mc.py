@@ -84,26 +84,24 @@ def progress_fun(v):
     return v[1]**2
 
 def normalize(values):
-    s=values.map(lambda r: r[1]).reduce(add)
+    s=values.map(lambda r: r[1]).sum()
     if s != 1.0:
         values=values.map(lambda r: (r[0], r[1]/s))
     return values
 
 if __name__ == "__main__":
     argc=len(sys.argv)
-    if argc < 2 or argc > 6:
-        print("Usage: mc <graph-file> [source=0] [delta-file=-] [ref-file=-] [epsilon=1e-9] [parallel-factor=2] [break-lineage=20] [output-file]", file=sys.stderr)
+    if argc < 2 or argc > 7:
+        print("Usage: mc <graph-file> [delta-file=-] [ref-file=-] [epsilon=1e-9] [parallel-factor=2] [break-lineage=20] [output-file]", file=sys.stderr)
         print("\tIf <*-file> is a file, load that file. If it is a directory, load all 'part-*', 'delta-', 'ref-' files of that directory", file=sys.stderr)
         print("\tIf <delta> and <ref> are given, run the incremental version.")
         exit(-1)
     infile=sys.argv[1]
-    source=int(sys.argv[2]) if argc > 2 else 0
-    deltafile=sys.argv[3] if argc > 3 else ''
-    reffile=sys.argv[4] if argc > 4 else ''
-    epsilon=float(sys.argv[5]) if argc > 5 else 1e-9
-    parallel_factor=int(sys.argv[6]) if argc > 6 else 2
-    break_lineage=int(sys.argv[7]) if argc > 7 else 20
-    outfile=sys.argv[8] if argc > 8 else ''
+    deltafile=sys.argv[2] if argc > 2 else ''
+    reffile=sys.argv[3] if argc > 3 else ''
+    parallel_factor=int(sys.argv[4]) if argc > 4 else 2
+    break_lineage=int(sys.argv[5]) if argc > 5 else 20
+    outfile=sys.argv[6] if argc > 6 else ''
 
     if len(deltafile) > 0 and deltafile != '-' and len(reffile) > 0 and reffile != '-':
         do_incremental = True
@@ -127,7 +125,6 @@ if __name__ == "__main__":
     # ...
     lines = loadFile(infile, 'part-')
     graph = lines.map(lambda l: parseNeighborList(l)) #.cache()
-    graph = graph.map(lambda v: v if v[0] != source else modify_source(v, source))
     
     if do_incremental:
         # delta file
