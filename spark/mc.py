@@ -92,16 +92,17 @@ def normalize(values):
 if __name__ == "__main__":
     argc=len(sys.argv)
     if argc < 2 or argc > 7:
-        print("Usage: mc <graph-file> [delta-file=-] [ref-file=-] [epsilon=1e-9] [parallel-factor=2] [break-lineage=20] [output-file]", file=sys.stderr)
+        print("Usage: mc <graph-file> [delta-file=-] [ref-file=-] [epsilon=1e-6] [parallel-factor=2] [break-lineage=20] [output-file]", file=sys.stderr)
         print("\tIf <*-file> is a file, load that file. If it is a directory, load all 'part-*', 'delta-', 'ref-' files of that directory", file=sys.stderr)
         print("\tIf <delta> and <ref> are given, run the incremental version.")
         exit(-1)
     infile=sys.argv[1]
     deltafile=sys.argv[2] if argc > 2 else ''
     reffile=sys.argv[3] if argc > 3 else ''
-    parallel_factor=int(sys.argv[4]) if argc > 4 else 2
-    break_lineage=int(sys.argv[5]) if argc > 5 else 20
-    outfile=sys.argv[6] if argc > 6 else ''
+    epsilon=float(sys.argv[4]) if argc > 4 else 1e-6
+    parallel_factor=int(sys.argv[5]) if argc > 5 else 2
+    break_lineage=int(sys.argv[6]) if argc > 6 else 20
+    outfile=sys.argv[7] if argc > 7 else ''
 
     if len(deltafile) > 0 and deltafile != '-' and len(reffile) > 0 and reffile != '-':
         do_incremental = True
@@ -142,7 +143,7 @@ if __name__ == "__main__":
         graph = graph.cogroup(delta).map(mergeDelta)
         graph.cache()
         graph.localCheckpoint()
-        
+    graph.cache()
     n = graph.count()
     
     if do_incremental:
@@ -162,7 +163,7 @@ if __name__ == "__main__":
         if mc.getNumPartitions() < sc.defaultParallelism:
             mc = mc.repartition(npart)
     else:
-        mc = nodes.map(lambda neighbors: (neighbors[0], random.random())).cache()
+        mc = graph.map(lambda neighbors: (neighbors[0], random.random())).cache()
         # this cache is VERY IMPORTANT, otherwise mc will be a new random number each time it is referred
         mc = normalize(mc)
     progress = mc.aggregate(0.0, (lambda lr,v:lr+v[1]**2), add)
@@ -173,7 +174,7 @@ if __name__ == "__main__":
     time2=time.time()   
     for iteration in range(n):
         time_iter=time.time()
-        contribs = nodes.join(mc).flatMap(
+        contribs = graph.join(mc).flatMap(
             lambda k_list_sp: computeContribs(k_list_sp[1][0], k_list_sp[1][1]))
         # Re-calculates mc based on neighbor contributions.
         mc = contribs.reduceByKey(max)

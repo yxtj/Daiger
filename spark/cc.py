@@ -110,7 +110,7 @@ if __name__ == "__main__":
         graph = graph.cogroup(delta).map(mergeDelta)
         graph.cache()
         graph.localCheckpoint()
-        
+    graph.cache()
     n = graph.count()
     
     if do_incremental:
