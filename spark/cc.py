@@ -17,6 +17,27 @@ import math
 from pyspark.sql import SparkSession
 from pyspark import SparkContext
 
+def listFiles(fld, prefix):
+    l = os.listdir(fld)
+    l = [f for f in l if os.path.isfile(fld+'/'+f) and f.startswith(prefix)]
+    ptn = prefix+'\\d+'
+    l = [f for f in l if re.match(ptn, f)]
+    return l
+
+def loadFile(infile, prefix, opt_prefix=None):
+    if os.path.isfile(infile):
+        lines = spark.read.text(infile).rdd.map(lambda r: r[0])
+        #n = 1
+    else:
+        fl = listFiles(infile, prefix)
+        if len(fl) == 0 and opt_prefix is not None:
+            fl = listFiles(infile, opt_prefix)
+        tmp = [spark.read.text(infile+'/'+f).rdd.map(lambda r: r[0]) for f in fl]
+        lines = sc.union(tmp)
+        #n = len(fl)
+    return lines
+    #return lines, n
+
 def computeContribs(neighbors, rank):
     for dst in neighbors:
         yield (dst, rank)
