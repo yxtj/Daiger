@@ -15,7 +15,7 @@ def set_large_figure(fontsize=16):
     plt.rcParams["figure.figsize"] = [6,4.5]
     plt.rcParams["font.size"] = fontsize
 
-# %% data 
+# %% basic compare
 
 class Record():
     def __init__(self, name):
@@ -64,19 +64,16 @@ def load_cmp(fn):
             data.append(d)
     return (name, np.array(data))
 
-
-# %% draw
-
 def draw_cmp(name, data, width=0.8, ncol=1, rotation=0, loc=None):
     ng = data.shape[0]
     nb = 2
     barWidth = width/nb
     off = -width/2 + barWidth/2
     x = np.arange(ng)
-    y1 = data[:,2]
-    y2 = data[:,3]
-    e1 = data[:,4]
-    e2 = data[:,5]
+    y1 = data[:,0]
+    y2 = data[:,1]
+    e1 = data[:,2]
+    e2 = data[:,3]
     plt.figure()
     plt.bar(x + off + barWidth*0, y1, barWidth, yerr=e1)
     plt.bar(x + off + barWidth*1, y2, barWidth, yerr=e2)
@@ -84,6 +81,105 @@ def draw_cmp(name, data, width=0.8, ncol=1, rotation=0, loc=None):
     plt.xlabel('algorithm')
     plt.ylabel('running time (s)')
     plt.legend(['Spark', 'Daiger'], loc=loc)
+    plt.tight_layout()
+
+# %% delta ratio
+
+def load_deltaratio(fn):
+    return np.loadtxt(fn, delimiter='\t', skiprows=1)
+
+def draw_deltaratio_line(data, loc=None):
+    assert data.ndim == 2 and data.shape[1] == 3
+    plt.figure()
+    x=data[:,0]
+    plt.plot(x, data[:,1:])
+    plt.xlabel('ratio or changed edges')
+    plt.ylabel('running time (s)')
+    plt.legend(['Spark', 'Daiger'], loc=loc)
+    plt.grid(True, linestyle='--')
+    plt.tight_layout()
+
+def draw_deltaratio_bar(data, width=0.8, ncol=1, rotation=0, loc=None):
+    assert data.ndim == 2 and data.shape[1] == 3
+    ng = data.shape[0]
+    nb = 2
+    barWidth = width/nb
+    off = -width/2 + barWidth/2
+    x = np.arange(ng)
+    y1 = data[:,1]
+    y2 = data[:,2]
+    plt.figure()
+    plt.bar(x + off + barWidth*0, y1, barWidth)
+    plt.bar(x + off + barWidth*1, y2, barWidth)
+    plt.xticks(x, data[:,0], rotation=rotation)
+    plt.xlabel('ratio of changed edges')
+    plt.ylabel('running time (s)')
+    plt.legend(['Spark', 'Daiger'], loc=loc)
+    plt.tight_layout()
+
+# %% priority
+
+def load_priority(fn):
+    return np.loadtxt(fn, delimiter='\t', skiprows=1)
+
+def get_log_ticks(low, high, base=1, exp=10):
+    v = base
+    c = 0
+    while v > low:
+        v /= exp
+        c -= 1
+    v*=exp
+    c+=1
+    if base == 1:
+        ptn = '$\mathdefault{'+str(exp)+'^{%d}}$'
+    else:
+        ptn = '$\mathdefault{'+str(base)+'x'+str(exp)+'^{%d}}$'
+    values = []
+    ticks = []
+    i=c
+    while base*exp**i <= high:
+        values.append(base*exp**i)
+        ticks.append(ptn % (i))
+        i+=1
+    return values, ticks
+    
+
+def draw_priority(data, rotation=0, ylow=None, yhigh=None):
+    assert data.ndim == 2 and data.shape[1] == 2
+    plt.figure()
+    x=data[:,0]
+    y=data[:,1]
+    plt.plot(x,y)
+    plt.xscale('log')
+    xticks, xtickslabel = get_log_ticks(min(x), max(x))
+    if 1 in xticks:
+        idx = xticks.index(1)
+        xtickslabel[idx] = '1 (RR)'
+    plt.xticks(xticks, xtickslabel, rotation=rotation)
+    plt.xlabel('queue size (portion of nodes)')
+    plt.ylabel('running time (s)')
+    plt.grid(True, linestyle='--')
+    plt.tight_layout()
+    
+
+# %% scale
+
+def load_scale(fn):
+    return np.loadtxt(fn, delimiter='\t', skiprows=1)
+
+def draw_scale_worker(data, loc=None):
+    plt.figure()
+    x=data[:,0]
+    y=data[:,1]
+    ref=y[0]*x[0]/x
+    plt.plot(x, y, linestyle='-')
+    plt.plot(x, ref, linestyle='--')
+    plt.xlabel('# of workers')
+    plt.ylabel('running time (s)')
+    plt.legend(['Daiger', 'Optimal'], loc=loc)
+    ylim=plt.ylim()
+    plt.ylim((0, ylim[1]))
+    plt.grid(True, linestyle='--')
     plt.tight_layout()
 
 
