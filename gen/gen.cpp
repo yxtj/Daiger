@@ -107,18 +107,31 @@ bool dump_one_w(const vector<vector<pair<int,double>> >& g, const int nPart, con
 // ------ offline unweighted ------
 
 vector<vector<int> > gen_uw(const int nPart, const int nNode, const unsigned long seed,
-	function<unsigned(mt19937&)> rngDeg, bool noSelfLoop)
+	function<unsigned(mt19937&)> rngDeg, bool directed, bool noSelfLoop)
 {
 	vector<vector<int> > g(nNode);
 	mt19937 gen(seed);
 	auto deg_gen=bind(rngDeg,gen);
 	uniform_int_distribution<unsigned> n_dis(0,nNode-1);
 	auto dst_gen=[&](){ return n_dis(gen); };
-	for(int i=0;i<nNode;++i){
-		int m=deg_gen();
-		for(int j=0;j<m;++j){
-			g[i].push_back(dst_gen());
+	if(directed){
+		for(int i=0;i<nNode;++i){
+			int m=deg_gen();
+			for(int j=0;j<m;++j){
+				g[i].push_back(dst_gen());
+			}
 		}
+	}else{
+		for(int i=0;i<nNode;++i){
+			int m=deg_gen();
+			for(int j=0;j<m;++j){
+				int d = dst_gen();
+				g[i].push_back(d);
+				g[d].push_back(i);
+			}
+		}
+	}
+	for(int i=0;i<nNode;++i){
 		sort(g[i].begin(),g[i].end());
 		g[i].erase(unique(g[i].begin(),g[i].end()),g[i].end());
 		if(noSelfLoop){
@@ -156,7 +169,7 @@ int dump_uw(const vector<vector<int> >& g, const int nPart, const string& outDir
 // ------ offline weighted ------
 
 vector<vector<pair<int,double>> > gen_w(const int nPart, const int nNode, const unsigned long seed,
-	function<unsigned(mt19937&)> rngDeg, function<double(mt19937&)> rngWgt, bool noSelfLoop)
+	function<unsigned(mt19937&)> rngDeg, function<double(mt19937&)> rngWgt, bool directed, bool noSelfLoop)
 {
 	vector<vector<pair<int,double>> > g(nNode);
 	mt19937 gen(seed);
@@ -164,11 +177,26 @@ vector<vector<pair<int,double>> > gen_w(const int nPart, const int nNode, const 
 	uniform_int_distribution<unsigned> n_dis(0,nNode-1);
 	auto dst_gen=[&](){ return n_dis(gen); };
 	auto wgt_gen=bind(rngWgt,gen);
-	for(int i=0;i<nNode;++i){
-		int m=deg_gen();
-		for(int j=0;j<m;++j){
-			g[i].emplace_back(dst_gen(),wgt_gen());
+	if(directed){
+		for(int i=0;i<nNode;++i){
+			int m=deg_gen();
+			for(int j=0;j<m;++j){
+				g[i].emplace_back(dst_gen(),wgt_gen());
+			}
 		}
+	}else{
+		for(int i=0;i<nNode;++i){
+			int m=deg_gen();
+			for(int j=0;j<m;++j){
+				int d=dst_gen();
+				double w=wgt_gen();
+				g[i].emplace_back(d,w);
+				g[d].emplace_back(i,w);
+			}
+		}
+		
+	}
+	for(int i=0;i<nNode;++i){
 		sort(g[i].begin(),g[i].end(),[](const pair<int,double>& lth, const pair<int,double>& rth){
 			return lth.first<rth.first;
 		});
@@ -218,6 +246,7 @@ struct Option{
 	double alpha;// for power-law distribution
 	string weight;
 	double wmin,wmax;
+	bool directed;
 	string outDir;
 	bool noSelfLoop;
 	bool online;
@@ -231,25 +260,29 @@ private:
 void Option::parse(int argc, char* argv[]){
 	nPart=stoi(string(argv[1]));
 	nNode=stoi(string(argv[2]));
-	outDir="./";
-	if(argc>3)
-		outDir=argv[3];
+	outDir=argv[3];
+	directed=true;
+	if(argc>4)
+		directed=beTrueOption(string(argv[4]));
 	noSelfLoop=false;
-	if(argc>4){
-		noSelfLoop=beTrueOption(string(argv[4]));
+	if(argc>5){
+		noSelfLoop=beTrueOption(string(argv[5]));
 	}
 	string weightMethod="no";
-	if(argc>5)
-		weightMethod=argv[5];
-	string distMethod="pl:2.3";
 	if(argc>6)
-		distMethod=argv[6];
+		weightMethod=argv[6];
+	string distMethod="pl:2.3";
+	if(argc>7)
+		distMethod=argv[7];
 	online = false;
-	if(argc > 7)
-		online = beTrueOption(string(argv[7]));
+	if(argc > 8)
+		online = beTrueOption(string(argv[8]));
 	seed=1535345;
-	if(argc>8)
-		seed=stoul(string(argv[8]));
+	if(argc>9)
+		seed=stoul(string(argv[9]));
+	// check
+	if(online && !directed)
+		throw invalid_argument("do not support undirected graph in online mode");
 	// check distribution
 	if(!setDist(distMethod))
 		throw invalid_argument("unsupported degree distribution: "+distMethod);
@@ -285,9 +318,9 @@ bool Option::setWeight(string& method){
 int main(int argc, char* argv[]){
 	if(argc<3 || argc>9){
 		cerr<<"Generate graph.\n"
-			"Usage: <#parts> <#nodes> [out-dir] [no-self-loop] [weight:<min>,<max>] [deg-dist:<param>] [online] [random-seed]"<<endl;
-		cerr<<"  [self-loop]: (=true) whether to allow self-loop edge.\n"
-			"  [out-dir]: (=./) the folder to store the output fieles\n"
+			"Usage: <#parts> <#nodes> <out-fld> [directed] [no-self-loop] [weight:<min>,<max>] [deg-dist:<param>] [online] [random-seed]"<<endl;
+		cerr<<"  <out-fld>: the folder to store the output fieles\n"
+			"  [directed]: (=1) whether to generate directed graph\n"
 			"  [no-self-loop]: (=0) whether to remove self loop edges\n"
 			"  [weight]: (=no) the weight distribution. If unweighted graph is needed, use \"no\" here.\n"
 			"  [deg-dist]: (=pl:2.3) the degree distribution. Support: uni (uniform), pl:<alpha> (power-law with alpha)\n"
@@ -295,8 +328,8 @@ int main(int argc, char* argv[]){
 			"Offline version guarantees equivalent output for same graph and seed. "
 			"Online version guarantees that ONLY when <#part> is also identical (optimized for huge graph).\n"
 			"  [random-seed]: (=1535345) seed for random numbers.\n"
-			"i.e.: ./gen.exe 2 100 out 0 no pl:2.6 0 123456 \n"
-			"i.e.: ./gen.exe 2 100 out 0 weight:0,1 uni \n"<<endl;
+			"i.e.: ./gen.exe 2 100 out 1 0 no pl:2.6 0 123456 \n"
+			"i.e.: ./gen.exe 2 100 out 1 0 weight:0,1 uni \n"<<endl;
 		return 1;
 	}
 	Option opt;
@@ -308,6 +341,7 @@ int main(int argc, char* argv[]){
 	}
 	ios_base::sync_with_stdio(false);
 	cout<<"generating with "<<opt.nNode<<" nodes, "<<opt.nPart<<" parts, in folder: "<<opt.outDir<<endl;
+	cout<<"directed: "<<opt.directed<<", remove self-loop: "<<opt.noSelfLoop<<endl;
 	cout<<"degree distribution: "<<opt.dist<<", random seed: "<<opt.seed<<endl;
 
 	function<unsigned(mt19937&)> rngDeg;
@@ -345,13 +379,13 @@ int main(int argc, char* argv[]){
 		}
 	}else{ // offline
 		if(opt.weight=="no"){
-			vector<vector<int> > g=gen_uw(opt.nPart,opt.nNode,opt.seed,rngDeg,opt.noSelfLoop);
+			vector<vector<int> > g=gen_uw(opt.nPart,opt.nNode,opt.seed,rngDeg,opt.directed,opt.noSelfLoop);
 			cout<<"dumping"<<endl;
 			n=dump_uw(g,opt.nPart,opt.outDir);
 		}else{
 			uniform_real_distribution<double> uni_dis(opt.wmin, opt.wmax);
 			function<double(mt19937&)> rngWgt=bind(uni_dis,placeholders::_1);
-			vector<vector<pair<int,double>> > g=gen_w(opt.nPart,opt.nNode,opt.seed,rngDeg,rngWgt,opt.noSelfLoop);
+			vector<vector<pair<int,double>> > g=gen_w(opt.nPart,opt.nNode,opt.seed,rngDeg,rngWgt,opt.directed,opt.noSelfLoop);
 			cout<<"dumping"<<endl;
 			n=dump_w(g,opt.nPart,opt.outDir);
 		}
