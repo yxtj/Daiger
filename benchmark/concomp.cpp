@@ -7,16 +7,11 @@
 
 using namespace std;
 
-// return maximum label in its brunch
-void dfs_set(const int p, vector<int>& gid, const vector<vector<int> >& g){
-	int& lbl=gid[p]; // reference to gid[p]
-	auto itend=g[p].rend();
-	for(auto it=g[p].rbegin(); it!=itend; ++it){ // get the larger label first
-		int dst=*it;
-		if(lbl != gid[dst]){
-			lbl=max(lbl, gid[dst]);
-			gid[dst]=lbl;
-			dfs_set(dst, gid, g);
+void dfs(const int p, const int lbl, vector<int>& gid, const vector<vector<int> >& g){
+	gid[p]=lbl;
+	for(int dst: g[p]){
+		if(gid[dst] < lbl){
+			dfs(dst, lbl, gid, g);
 		}
 	}
 }
@@ -30,19 +25,14 @@ vector<int> cal_cc(const vector<vector<int> >& g) {
 		gid.push_back(i);
 	}
 	
-	int iter=0;
-	bool changed=true;
-	while(changed){
-		++iter;
-		changed=false;
-		for(int i=n-1;i>=0;--i){ // get the larger label first
-			int old = gid[i];
-			dfs_set(i, gid, g);
-			//cout<<i<<"\t"<<old<<" - "<<gid[i]<<endl;
-			changed |= old != gid[i];
+	int ncc=0;
+	for(int i=n-1;i>=0;--i){ // start from the largest one
+		if(i==gid[i]){
+			dfs(i,i,gid,g);
+			++ncc;
 		}
 	}
-	cout<<"  iterations: "<<iter<<endl;
+	cout<<"  # of connected components: "<<ncc<<endl;
 	return gid;
 }
 
