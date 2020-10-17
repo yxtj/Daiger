@@ -37,10 +37,6 @@ def loadFile(infile, prefix, opt_prefix=None):
     return lines
     #return lines, n
 
-def computeContribs(neighbors, sp):
-    for (dst, weight) in neighbors:
-        yield (dst, weight + sp)
-
 def parseItem(item):
     item=item.split(',')
     return int(item[0]), float(item[1])
@@ -86,6 +82,10 @@ def mergeDelta(record):
                         l[i] = (m[2], m[3])
                         break
     return (s,l)
+
+def computeContribs(neighbors, sp):
+    for (dst, weight) in neighbors:
+        yield (dst, weight + sp)
 
 def modify_source(source_node, source_id):
     id = source_node[0]

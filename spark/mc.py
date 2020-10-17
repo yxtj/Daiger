@@ -9,6 +9,7 @@ bin/spark-submit mc.py data/xxx.txt
 from __future__ import print_function
 
 import re
+import os
 import sys
 from operator import add
 import time
@@ -100,8 +101,9 @@ def mergeDelta(record):
                         break
     return (s,l)
 
-def progress_fun(v):
-    return v[1]**2
+def normalizeEdge(links):
+    s = sum(w for d,w in links)
+    return [(d,w/s) for d,w in links]
 
 def normalize(values):
     s=values.map(lambda r: r[1]).sum()
@@ -163,6 +165,8 @@ if __name__ == "__main__":
         graph = graph.cogroup(delta).map(mergeDelta)
         graph.cache()
         graph.localCheckpoint()
+    
+    graph = graph.mapValues(normalizeEdge)
     graph.cache()
     n = graph.count()
     
@@ -170,6 +174,8 @@ if __name__ == "__main__":
         del delta
     
     npart = max(graph.getNumPartitions(), sc.defaultParallelism)
+    if npart % sc.defaultParallelism != 0:
+        npart += sc.defaultParallelism - (npart % sc.defaultParallelism)
     if graph.getNumPartitions() < sc.defaultParallelism:
         graph = graph.repartition(npart)
     maxnpart = parallel_factor*npart
@@ -183,9 +189,7 @@ if __name__ == "__main__":
         if mc.getNumPartitions() < sc.defaultParallelism:
             mc = mc.repartition(npart)
     else:
-        mc = graph.map(lambda neighbors: (neighbors[0], random.random())).cache()
-        # this cache is VERY IMPORTANT, otherwise mc will be a new random number each time it is referred
-        mc = normalize(mc)
+        mc = graph.map(lambda node: (node[0], 1.0/n))
     progress = mc.aggregate(0.0, (lambda lr,v:lr+v[1]**2), add)
     del lines
 
@@ -197,7 +201,7 @@ if __name__ == "__main__":
         contribs = graph.join(mc).flatMap(
             lambda k_list_sp: computeContribs(k_list_sp[1][0], k_list_sp[1][1]))
         # Re-calculates mc based on neighbor contributions.
-        mc = contribs.reduceByKey(max)
+        mc = contribs.reduceByKey(add)
         if mc.getNumPartitions() >= maxnpart:
             mc = mc.coalesce(npart)
         # truncate the long lineage which greately slown down the process

@@ -33,12 +33,6 @@ def loadFile(infile, prefix, opt_prefix=None):
         lines = sc.union(tmp)
     return lines
 
-def computeContribs(urls, rank):
-    """Calculates URL contributions to the rank of other URLs."""
-    num_urls = len(urls)
-    for url in urls:
-        yield (url, rank / num_urls)
-
 def parseNeighborList(line):
     t=line.split('\t')
     key=int(t[0])
@@ -70,7 +64,13 @@ def mergeDelta(record):
             else: # m[1] == 'R':
                 l.remove(m[2])
     return (s,l)
-    
+
+def computeContribs(urls, rank):
+    """Calculates URL contributions to the rank of other URLs."""
+    num_urls = len(urls)
+    for url in urls:
+        yield (url, rank / num_urls)
+
 if __name__ == "__main__":
     argc=len(sys.argv)
     if argc < 4 or argc > 10:

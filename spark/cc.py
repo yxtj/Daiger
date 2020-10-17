@@ -9,6 +9,7 @@ bin/spark-submit cc.py data/graph.txt 0 data/delta.txt data/ref.txt
 from __future__ import print_function
 
 import re
+import os
 import sys
 from operator import add
 import time
@@ -37,11 +38,7 @@ def loadFile(infile, prefix, opt_prefix=None):
         #n = len(fl)
     return lines
     #return lines, n
-
-def computeContribs(neighbors, rank):
-    for dst in neighbors:
-        yield (dst, rank)
-
+    
 def parseNeighbors(urls):
     parts = re.split(r'\s+', urls)
     return parts[0], parts[1]
@@ -77,6 +74,10 @@ def mergeDelta(record):
             else: # m[1] == 'R':
                 l.remove(m[2])
     return (s,l)
+
+def computeContribs(neighbors, rank):
+    for dst in neighbors:
+        yield (dst, rank)
 
 if __name__ == "__main__":
     argc=len(sys.argv)
@@ -151,7 +152,7 @@ if __name__ == "__main__":
         if cc.getNumPartitions() < sc.defaultParallelism:
             cc = cc.repartition(npart)
     else:
-        cc = graph.map(lambda neighbors: (neighbors[0], neighbors[0]))
+        cc = graph.map(lambda kl: (kl[0], kl[0]))
     progress = cc.aggregate(0, (lambda lr,v:lr+v[1]), add)
     del lines
     
@@ -162,7 +163,7 @@ if __name__ == "__main__":
         time_iter=time.time()
         contribs = graph.join(cc).flatMap(
             lambda k_list_sp: computeContribs(k_list_sp[1][0], k_list_sp[1][1]))
-        cc = contribs.reduceByKey(min).cache()
+        cc = contribs.reduceByKey(max)
         # Re-calculates cc based on neighbor contributions.
         if cc.getNumPartitions() >= maxnpart:
             cc = cc.coalesce(npart)

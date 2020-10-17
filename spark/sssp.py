@@ -34,10 +34,6 @@ def loadFile(infile, prefix, opt_prefix=None):
         lines = sc.union(tmp)
     return lines
 
-def computeContribs(neighbors, sp):
-    for (dst, weight) in neighbors:
-        yield (dst, weight + sp)
-
 def parseItem(item):
     item=item.split(',')
     return int(item[0]), float(item[1])
@@ -47,6 +43,10 @@ def parseNeighborList(line):
     key=int(t[0])
     value=[parseItem(v) for v in t[1].split(' ') if len(v)>0]
     return (key, value)
+
+def computeContribs(neighbors, sp):
+    for (dst, weight) in neighbors:
+        yield (dst, weight + sp)
 
 def modify_source(source_node, source_id):
     id = source_node[0]

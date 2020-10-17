@@ -33,21 +33,17 @@ def loadFile(infile, prefix, opt_prefix=None):
         lines = sc.union(tmp)
     return lines
 
-
-def computeContribs(urls, rank):
-    """Calculates URL contributions to the rank of other URLs."""
-    num_urls = len(urls)
-    for url in urls:
-        yield (url, rank / num_urls)
-
 def parseNeighborList(line):
     t=line.split('\t')
     key=int(t[0])
     value=[int(v) for v in t[1].split(' ') if len(v)>0]
     return (key, value)
 
-#def difference(x, y):
-#   return x.join(y).mapValues(lambda p:abs(p[0]-p[1])).map(lambda pv: pv[1]).reduce(add)
+def computeContribs(urls, rank):
+    """Calculates URL contributions to the rank of other URLs."""
+    num_urls = len(urls)
+    for url in urls:
+        yield (url, rank / num_urls)
 
 if __name__ == "__main__":
     argc=len(sys.argv)
