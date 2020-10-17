@@ -316,7 +316,7 @@ bool Option::setWeight(string& method){
 }
 
 int main(int argc, char* argv[]){
-	if(argc<3 || argc>9){
+	if(argc<3 || argc>10){
 		cerr<<"Generate graph.\n"
 			"Usage: <#parts> <#nodes> <out-fld> [directed] [no-self-loop] [weight:<min>,<max>] [deg-dist:<param>] [online] [random-seed]"<<endl;
 		cerr<<"  <out-fld>: the folder to store the output fieles\n"
