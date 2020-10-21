@@ -110,21 +110,21 @@ void Master::startProcedure(const int pid){
 	// su_procedure.wait();
 
 	tmr_procedure.restart();
-	DLOG(DEBUG)<<"starting new procedure: "<<pid;
+	DLOG(INFO)<<"starting new procedure: "<<pid;
 	rph.resetTypeCondition(MType::CProcedure);
 	su_procedure.reset();
 	net->broadcast(MType::CProcedure, pid);
 	su_procedure.wait();
-	DLOG(DEBUG)<<"started new procedure: "<<pid;
+	DLOG(INFO)<<"started new procedure: "<<pid;
 }
 
 void Master::finishProcedure(const int pid){
-	DLOG(DEBUG)<<"waiting for finishing procedure: "<<pid;
+	DLOG(INFO)<<"waiting for finishing procedure: "<<pid;
 	rph.resetTypeCondition(MType::CFinish);
 	su_procedure.reset();
 	net->broadcast(MType::CFinish, my_net_id);
 	su_procedure.wait();
-	DLOG(DEBUG)<<"finished procedure: "<<pid;
+	DLOG(INFO)<<"finished procedure: "<<pid;
 	LOG(INFO)<<"Time used: "<<tmr_procedure.elapseSd();
 }
 

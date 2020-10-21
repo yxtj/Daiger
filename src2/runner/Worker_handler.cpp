@@ -68,14 +68,14 @@ void Worker::handleOnline(std::string& d, const RPCInfo& info){
 	int nid = deserialize<int>(d);
 	master_net_id = nid;
 	// sendReply(info);
-	DLOG(DEBUG)<<"got master id";
+	DLOG(INFO)<<"got master id";
 	su_master.notify(); // notify registerWorker()
 }
 
 void Worker::handleRegister(std::string& d, const RPCInfo& info){
 	int nid = deserialize<int>(d);
 	master_net_id = nid;
-	LOG(DEBUG)<<"got master id";
+	DLOG(INFO)<<"got master id";
 	su_master.notify(); // notify registerWorker()
 }
 

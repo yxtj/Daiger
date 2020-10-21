@@ -79,7 +79,7 @@ void Runner::clearMessages(){
 		sleep();
 	}
 	net->flush();
-	DLOG(DEBUG)<<"messages get cleared";
+	DLOG(INFO)<<"messages get cleared";
 }
 
 // register helpers
