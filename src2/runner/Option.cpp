@@ -55,12 +55,12 @@ Option::Option()
 		("cache_free", bool_switch(&conf.cache_free)->default_value(false), "Whether to perform cache-free computation.")
 		// running parameter
 		("timeout", value<float>(&timeout)->default_value(1.0f), "[float] time threshold (second) for determining error.")
-		("update_interval", value<double>(&conf.apply_interval)->default_value(0.5f), "[double] the interval (second) of performing updates.")
-		("update_min_ratio", value<double>(&conf.apply_min_portion)->default_value(0.01),
+		("update_interval", value<double>(&conf.apply_interval)->default_value(0.2, "0.2"), "[double] the interval (second) of performing updates.")
+		("update_min_ratio", value<double>(&conf.apply_min_portion)->default_value(0.01, "0.01"),
 			"[double] the minimum ratio of nodes to be processed before performing updates.")
-		("update_max_ratio", value<double>(&conf.apply_max_portion)->default_value(0.2),
+		("update_max_ratio", value<double>(&conf.apply_max_portion)->default_value(0.2, "0.2"),
 			"[double] the maximum ratio of nodes to be processed before performing updates.")
-		("send_interval", value<double>(&conf.send_interval)->default_value(0.5f), "[double] the interval (second) of send buffered update.")
+		("send_interval", value<double>(&conf.send_interval)->default_value(0.5, "0.5"), "[double] the interval (second) of send buffered update.")
 		("send_min_size", value<int>(&conf.send_min_size)->default_value(1),
 			"[integer] the minimum size (# of nodes) of each sending message, before reaching <send_interval>.")
 		("send_max_size", value<int>(&conf.send_max_size)->default_value(4096),
@@ -124,7 +124,7 @@ bool Option::parseInput(int argc, char* argv[]) {
 
 		sortUpInterval(conf.apply_interval, 0.0001, 10.0);
 		sortUpInterval(conf.send_interval, 0.0001, 10.0);
-		sortUpInterval(conf.progress_interval, conf.apply_interval, 600.0);
+		sortUpInterval(conf.progress_interval, conf.apply_interval*2, 600.0);
 
 		break;
 	}; // technique for condition checking
