@@ -9,6 +9,7 @@ struct FileEnumerator {
 		const std::string& folder, const std::string& prefix = "");
 	static std::vector<std::string> listDirectory(
 		const std::string& folder, const std::string& prefix = "");
-	
+
+	static bool checkDirectory(const std::string& folder);
 	static bool ensureDirectory(const std::string& folder);
 };
