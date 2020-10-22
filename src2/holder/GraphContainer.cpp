@@ -276,11 +276,13 @@ void GraphContainer::update()
 	const double itv = min<double>(conf.apply_interval, conf.send_interval);
 	int c = 0;
 	while(allow_update){
-		if(messages.empty() || c >= 64 || tmr.elapseSd() >= itv){
+		double t2 = tmr.elapseSd();
+		if(messages.empty() || c >= 64 || t2-t >= itv){
 			tryApply();
 			trySend();
 			tryReport();
 			c = 0;
+			t = t2;
 		}
 		if(!messages.empty()){
 			++c;
