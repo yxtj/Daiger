@@ -21,8 +21,11 @@ void GraphContainer::init(int wid, GlobalHolderBase* holder, bool incremental){
 
 void GraphContainer::loadGraph(sender_t sender){
 	vector<string> files = FileEnumerator::listFile(conf.path_graph, conf.prefix_graph);
+	if(files.empty()){
+		throw invalid_argument("No files to load. Check the path argument.");
+	}
 	if(!conf.balance_load && files.size() != conf.nPart){
-		throw invalid_argument("Graph files do not match workers. Consider turning on <balance_load>.");
+		throw invalid_argument("Files do not match workers. Consider turning on <balance_load>.");
 	}
 	regex reg(conf.prefix_graph+"(\\d+)");
 	for(auto& fn : files){
@@ -38,8 +41,11 @@ void GraphContainer::loadGraph(sender_t sender){
 
 void GraphContainer::loadValue(sender_t sender){
 	vector<string> files = FileEnumerator::listFile(conf.path_value, conf.prefix_value);
+	if(files.empty()){
+		throw invalid_argument("No files to load. Check the path argument.");
+	}
 	if(!conf.balance_load && files.size() != conf.nPart){
-		throw invalid_argument("Graph files do not match workers. Consider turning on <balance_load>.");
+		throw invalid_argument("Files do not match workers. Consider turning on <balance_load>.");
 	}
 	regex reg(conf.prefix_value+"(\\d+)");
 	for(auto& fn : files){
@@ -54,8 +60,11 @@ void GraphContainer::loadValue(sender_t sender){
 
 void GraphContainer::loadDelta(sender_t sender){
 	vector<string> files = FileEnumerator::listFile(conf.path_delta, conf.prefix_delta);
+	if(files.empty()){
+		throw invalid_argument("No files to load. Check the path argument.");
+	}
 	if(!conf.balance_load && files.size() != conf.nPart){
-		throw invalid_argument("Graph files do not match workers. Consider turning on <balance_load>.");
+		throw invalid_argument("Files do not match workers. Consider turning on <balance_load>.");
 	}
 	regex reg(conf.prefix_delta+"(\\d+)");
 	for(auto& fn : files){
@@ -261,12 +270,15 @@ void GraphContainer::update()
 	t_last_apply = t;
 	t_last_send = t;
 	t_last_report = t;
+	int c = 0;
 	while(allow_update){
-		if(messages.empty()){
+		if(messages.empty() || c >= 64){
 			tryApply();
 			trySend();
 			tryReport();
+			c = 0;
 		} else{
+			++c;
 			MsgType type;
 			string msg;
 			tie(type, msg) = popMsg();
