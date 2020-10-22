@@ -3,6 +3,7 @@
 #include <vector>
 #include <regex>
 #include <fstream>
+#include <algorithm>
 
 using namespace std;
 
@@ -270,14 +271,16 @@ void GraphContainer::update()
 	t_last_apply = t;
 	t_last_send = t;
 	t_last_report = t;
+	const double itv = min<double>(conf.apply_interval, conf.send_interval);
 	int c = 0;
 	while(allow_update){
-		if(messages.empty() || c >= 64){
+		if(messages.empty() || c >= 64 || tmr.elapseSd() >= itv){
 			tryApply();
 			trySend();
 			tryReport();
 			c = 0;
-		} else{
+		}
+		if(!messages.empty()){
 			++c;
 			MsgType type;
 			string msg;
