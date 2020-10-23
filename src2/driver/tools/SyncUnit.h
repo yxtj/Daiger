@@ -33,6 +33,9 @@ struct SyncUnit{
 	//   false -> waken up by timeout
 	bool wait_for(const double& dur);
 
+	void wait_reset();
+	bool wait_reset_for(const double dur);
+
 	template<class rep, class period>
 	bool wait_for(const std::chrono::duration<rep,period>& dur) {
 		if(ready)	return true;

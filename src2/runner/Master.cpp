@@ -59,8 +59,7 @@ int Master::assignWid(const int nid){
 void Master::terminationCheck(){
 	Timer tmr;
 	while(!app.tmt->check_term()){
-		su_term.wait();
-		su_term.reset();
+		su_term.wait_reset();
 		if(VLOG_IS_ON(1)){
 			auto s = app.tmt->state();
 			auto d = app.tmt->difference();
