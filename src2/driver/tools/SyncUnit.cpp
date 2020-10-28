@@ -1,9 +1,3 @@
-/*
-* SyncUnit.cpp
-*
-*  Created on: Jan 19, 2017
-*      Author: tzhou
-*/
 #include "SyncUnit.h"
 
 void SyncUnit::wait() {

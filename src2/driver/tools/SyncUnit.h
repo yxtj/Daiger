@@ -1,23 +1,16 @@
 #pragma once
-/*
- * SyncUnit.h
- *
- *  Created on: Dec 22, 2015
- *  Modified on Jan 18, 2017
- *      Author: tzhou
- */
 #ifndef DRIVER_TOOLS_SYNCUNIT_H_
 #define DRIVER_TOOLS_SYNCUNIT_H_
 
 #include <condition_variable>
 
-
 /*
  * An wrapped unit used to synchronize across multiple threads.
  * It checks & manipulates the state of a shared variable.
  * API:
- *   wait() -> wait until the state is ready
- *   wait_for() -> wait for the state to be ready for at most a given time.
+ *   wait() -> wait until the state is ready, remain the state to be true
+ *   wait_reset() -> wait until the state is ready, and then reset the state
+ *   wait_for() -> wait for the state to be ready for at most a given time
  *   notify() -> set the state to be ready, at the same time wake up all waiters
  *   reset() -> reset the state to be not ready
  * NOTE:
