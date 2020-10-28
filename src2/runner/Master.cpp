@@ -84,10 +84,12 @@ void Master::terminationCheckSync(){
 	int iter = 0;
 	while(!app.tmt->check_term()){
 		su_term.wait_reset();
+		++iter;
 		if(VLOG_IS_ON(1)){
 			auto s = app.tmt->state();
 			auto d = app.tmt->difference();
-			VLOG(1) << "Time: " << tmr.elapseSd() << " current progress: (" << s.first << "," << s.second
+			VLOG(1) << "Time: " << tmr.elapseSd() << " iteration: " << iter
+				<< " current progress: (" << s.first << "," << s.second
 				<< ") improvement: (" << d.first << "," << d.second << ")";
 		}
 		if(tmr.elapseSd() > opt.conf.termination_max_time){
