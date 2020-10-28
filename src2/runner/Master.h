@@ -33,7 +33,8 @@ protected:
 // local logic functions
 private:
 	int assignWid(const int nid); // bind to specific implementation
-	void terminationCheck();
+	void terminationCheckAsync();
+	void terminationCheckSync();
 	void updateProgress(const int wid, const ProgressReport& report);
 
 	void startProcedure(const int pid);

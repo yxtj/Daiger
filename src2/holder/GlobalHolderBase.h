@@ -16,7 +16,7 @@ public:
 
 	virtual void init(OperationBase* opt, IOHandlerBase* ioh,
 		SchedulerBase* scd, PartitionerBase* ptn, ProgressorBase* prg, PrioritizerBase* ptz,
-		const size_t nPart, const int localId, const bool aggregate_message,
+		const size_t nPart, const int localId, const size_t nNode, const bool aggregate_message,
 		const bool incremental, const bool async, const bool cache_free, const bool sort_result) = 0;
 
 	virtual size_t numLocalNode() = 0;

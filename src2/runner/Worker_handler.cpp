@@ -44,6 +44,7 @@ void Worker::registerHandlers() {
 	regDSPProcess(MType::VUpdate, localCBBinder(&Worker::handleVUpdate));
 	regDSPProcess(MType::VRequest, localCBBinder(&Worker::handleVRequest));
 	regDSPProcess(MType::VReply, localCBBinder(&Worker::handleVReply));
+	regDSPProcess(MType::VSync, localCBBinder(&Worker::handleVSync));
 
 	//regDSPProcess(MType::PApply, localCBBinder(&Worker::handlePApply));
 	//regDSPProcess(MType::PSend, localCBBinder(&Worker::handlePSend));
@@ -175,6 +176,10 @@ void Worker::handleVReply(std::string& d, const RPCInfo& info){
 	//graph.msgReply(d);
 	graph.pushMsg(GraphContainer::MsgType::Reply, d);
 }
+void Worker::handleVSync(std::string& d, const RPCInfo& info){
+	VLOG(2) << "receive sync";
+	graph.sync_notify();
+}
 
 /*
 void Worker::handlePApply(std::string& d, const RPCInfo& info){
@@ -189,6 +194,7 @@ void Worker::handlePReport(std::string& d, const RPCInfo& info){
 */
 
 void Worker::handlePFinish(std::string& d, const RPCInfo& info){
+	VLOG(2) << "receive finish";
 	//update_finish = true;
 	//su_update.notify();
 	graph.stop_update();

@@ -3,7 +3,9 @@
 #include "application/AppBase.h"
 #include "GlobalHolderBase.h"
 #include "util/Timer.h"
+#include "driver/tools/SyncUnit.h"
 #include <functional>
+#include <atomic>
 #include <mutex>
 #include <deque>
 #include <string>
@@ -41,7 +43,8 @@ public:
 	void msgReply(const std::string& line);
 
 	// do the update loop, including: process message, apply, send, report progress.
-	void update();
+	void updateAsync();
+	void updateSync();
 	enum class MsgType {
 		Update,
 		Request,
@@ -49,6 +52,8 @@ public:
 	};
 	void pushMsg(MsgType type, std::string & msg);
 	void stop_update();
+	void sync_wait();
+	void sync_notify();
 
 	void apply(); // apply local u to local v
 	void tryApply();
@@ -74,7 +79,9 @@ private:
 	sender_t sender_req;
 	sender0_t sender_pro;
 	
-	bool allow_update;
+	std::atomic_bool allow_update;
+	SyncUnit su_sync;
+
 	std::mutex mtx;
 	std::deque<std::pair<MsgType, std::string>> messages; // buffered messages to be processed in update()
 

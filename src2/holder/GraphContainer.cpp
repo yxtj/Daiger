@@ -16,7 +16,7 @@ void GraphContainer::init(int wid, GlobalHolderBase* holder, bool incremental){
 	this->wid = wid;
 	this->holder = holder;
 	holder->init(app.opt, app.ioh, app.scd, app.ptn, app.prg, app.ptz,
-		conf.nPart, wid, conf.aggregate_message,
+		conf.nPart, wid, conf.nNode, conf.aggregate_message,
 		incremental, conf.async, conf.cache_free, conf.sort_result);
 }
 
@@ -161,6 +161,8 @@ std::pair<GraphContainer::MsgType, std::string> GraphContainer::popMsg()
 void GraphContainer::stop_update()
 {
 	allow_update = false;
+	if(!conf.async)
+		su_sync.notify();
 }
 
 void GraphContainer::apply(){
@@ -266,7 +268,7 @@ void GraphContainer::msgReply(const std::string& line){
 	holder->msgReply(line);
 }
 
-void GraphContainer::update()
+void GraphContainer::updateAsync()
 {
 	tmr.restart();
 	double t = tmr.elapseSd();
@@ -305,4 +307,22 @@ void GraphContainer::update()
 			}
 		}
 	}
+}
+
+void GraphContainer::updateSync(){
+	tmr.restart();
+	while(allow_update){
+		apply();
+		send();
+		report();
+		sync_wait();
+	}
+}
+
+void GraphContainer::sync_wait(){
+	su_sync.wait_reset();
+}
+
+void GraphContainer::sync_notify(){
+	su_sync.notify();
 }

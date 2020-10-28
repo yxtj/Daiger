@@ -65,4 +65,3 @@ void Master::handleProgressReport(std::string& d, const RPCInfo& info){
 	wm.update_report_time(info.source, Timer::Now());
 	updateProgress(wid, report);
 }
-

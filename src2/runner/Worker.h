@@ -67,6 +67,7 @@ public:
 	void handleVUpdate(std::string& d, const RPCInfo& info);
 	void handleVRequest(std::string& d, const RPCInfo& info);
 	void handleVReply(std::string& d, const RPCInfo& info);
+	void handleVSync(std::string& d, const RPCInfo& info);
 
 	//void handlePApply(std::string& d, const RPCInfo& info);
 	//void handlePSend(std::string& d, const RPCInfo& info);

@@ -28,6 +28,7 @@ struct MType {
 	static constexpr int VUpdate = 30;
 	static constexpr int VRequest = 31;
 	static constexpr int VReply = 32;
+	static constexpr int VSync = 33;
 
 	// Process and Progress (Termination)
 	static constexpr int PApply = 40;

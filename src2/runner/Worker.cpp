@@ -151,7 +151,12 @@ void Worker::procedureUpdate(){
 	VLOG(1)<<"Worker start updating";
 	graph.prepareUpdate(sender_val, sender_req, sender_pro);
 
-	graph.update();
+	if(opt.conf.async){
+		graph.updateAsync();
+	} else{
+		graph.updateSync();
+	}
+
 	/*
 	// start periodic apply-and-send and periodic progress-report
 	update_finish=false;

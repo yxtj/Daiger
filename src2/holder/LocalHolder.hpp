@@ -435,7 +435,8 @@ bool LocalHolder<V, N>::commit(const id_t& k){
 		return false;
 	double oldp = prg->progress(n);
 	plu->commit(n);
-	update_progress(oldp, prg->progress(n));
+	double newp = prg->progress(n);
+	update_progress(oldp, newp);
 	return true;
 }
 // generate outgoing messages
@@ -465,7 +466,9 @@ std::vector<std::pair<id_t, V>> LocalHolder<V, N>::spread_acf(const id_t& k){
 template <class V, class N>
 void LocalHolder<V, N>::update_priority(const node_t& n){
 	if(plu->need_commit(n)){
-		scd->update(n.id, f_priority(n));
+		priority_t p = ptz->priority(n);
+		//priority_t p = f_priority(n);
+		scd->update(n.id, p);
 		++n_update;
 	}
 }

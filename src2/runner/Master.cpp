@@ -56,7 +56,7 @@ int Master::assignWid(const int nid){
 	return nid - 1;
 }
 
-void Master::terminationCheck(){
+void Master::terminationCheckAsync(){
 	Timer tmr;
 	while(!app.tmt->check_term()){
 		su_term.wait_reset();
@@ -77,6 +77,27 @@ void Master::terminationCheck(){
 void Master::updateProgress(const int wid, const ProgressReport& report){
 	app.tmt->update_report(wid, report);
 	rph.input(MType::PReport, wid);
+}
+
+void Master::terminationCheckSync(){
+	Timer tmr;
+	int iter = 0;
+	while(!app.tmt->check_term()){
+		su_term.wait_reset();
+		if(VLOG_IS_ON(1)){
+			auto s = app.tmt->state();
+			auto d = app.tmt->difference();
+			VLOG(1) << "Time: " << tmr.elapseSd() << " current progress: (" << s.first << "," << s.second
+				<< ") improvement: (" << d.first << "," << d.second << ")";
+		}
+		if(tmr.elapseSd() > opt.conf.termination_max_time){
+			VLOG(1) << "update timeout";
+			break;
+		}
+		net->broadcast(MType::VSync, iter);
+	}
+	VLOG(1) << "update terminates";
+	net->broadcast(MType::PFinish, my_net_id);
 }
 
 void Master::registerWorker(){
@@ -204,7 +225,11 @@ void Master::procedureUpdate(){
 	cpid = ProcedureType::Update;
 	LOG(INFO)<<"Starting updating.";
 	startProcedure(cpid);
-	terminationCheck();
+	if(opt.conf.async){
+		terminationCheckAsync();
+	} else{
+		terminationCheckSync();
+	}
 	finishProcedure(cpid);
 	LOG(INFO)<<"Finish updating.";
 }

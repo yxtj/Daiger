@@ -32,7 +32,7 @@ public:
 
 	virtual void init(OperationBase* opt, IOHandlerBase* ioh,
 		SchedulerBase* scd, PartitionerBase* ptn, ProgressorBase* prg, PrioritizerBase* ptz,
-		const size_t nPart, const int localId, const bool aggregate_message,
+		const size_t nPart, const int localId, const size_t nNode, const bool aggregate_message,
 		const bool incremental, const bool async, const bool cache_free, const bool sort_result);
 
 	virtual size_t numLocalNode();
@@ -106,6 +106,7 @@ private:
 	progressor_t* prg;
 	prioritizer_t* ptz;
 	size_t nPart;
+	size_t nNode;
 
 	bool aggregate_message;
 	bool incremental;
@@ -132,7 +133,7 @@ private:
 template <class V, class N>
 void GlobalHolder<V, N>::init(OperationBase* opt, IOHandlerBase* ioh,
 		SchedulerBase* scd, PartitionerBase* ptn, ProgressorBase* prg, PrioritizerBase* ptz,
-		const size_t nPart, const int localId, const bool aggregate_message,
+		const size_t nPart, const int localId, const size_t nNode, const bool aggregate_message,
 		const bool incremental, const bool async, const bool cache_free, const bool sort_result)
 {
 	this->opt = dynamic_cast<operation_t*>(opt);
@@ -143,6 +144,7 @@ void GlobalHolder<V, N>::init(OperationBase* opt, IOHandlerBase* ioh,
 	this->ptz = dynamic_cast<prioritizer_t*>(ptz);
 	this->nPart = nPart;
 	this->local_id = localId;
+	this->nNode = nNode;
 	this->aggregate_message = aggregate_message;
 	this->incremental = incremental;
 	this->async = async;
@@ -151,7 +153,7 @@ void GlobalHolder<V, N>::init(OperationBase* opt, IOHandlerBase* ioh,
 
 	this->ptn->setParts(nPart);
 
-	local_part.init(this->opt, this->scd, this->prg, this->ptz, nPart, incremental, async, cache_free);
+	local_part.init(this->opt, this->scd, this->prg, this->ptz, nNode/nPart+1, incremental, async, cache_free);
 	remote_parts.resize(nPart);
 	for(size_t i = 0; i<nPart; ++i){
 		if(i == local_id)
