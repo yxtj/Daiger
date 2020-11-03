@@ -44,7 +44,7 @@ public:
 	virtual void prepareCollectINList();
 	virtual void prepareCollectINCache();
 	virtual void rebuildSource(); // for selective operators
-	virtual void intializedProcess(); // update <u> and put nodes into the scheduler
+	virtual void initializedProcess(); // update <u> and put nodes into the scheduler
 	virtual void prepareDump();
 	virtual std::pair<bool, std::string> dumpResult();
 
@@ -73,9 +73,10 @@ public:
 	virtual std::string collectLocalProgress();
 
 private:
-	void intializedProcessCB(); // cache-based
-	void intializedProcessACF(); // cache-free accumulative
-	void intializedProcessSCF(); // cache-free selective
+	void initializedProcessNoneIncr();
+	void initializedProcessCB(); // cache-based
+	void initializedProcessACF(); // cache-free accumulative
+	void initializedProcessSCF(); // cache-free selective
 
 	void processNode(const id_t id); // need_commit() check before spread
 	void processNodeForced(const id_t id); // no need_commit() check, directly spread
@@ -123,7 +124,7 @@ private:
 	pf_pn_t pf_processNode; // do not need to make related functions public
 
  	// used for incremental case of accumulative operators, store the source delta nodes
-	// write at loadDelta(), clear at intializedProcess()
+	// write at loadDelta(), clear at initializedProcess()
 	std::unordered_map<id_t, node_t> touched_node;
 
 	// buffer for in-neighbor of nodes on other workers
@@ -153,7 +154,7 @@ void GlobalHolder<V, N>::init(OperationBase* opt, IOHandlerBase* ioh,
 
 	this->ptn->setParts(nPart);
 
-	local_part.init(this->opt, this->scd, this->prg, this->ptz, nNode/nPart+1, incremental, async, cache_free);
+	local_part.init(this->opt, this->scd, this->prg, this->ptz, (nNode+nPart-1)/nPart, incremental, async, cache_free);
 	remote_parts.resize(nPart);
 	for(size_t i = 0; i<nPart; ++i){
 		if(i == local_id)
@@ -252,21 +253,40 @@ int GlobalHolder<V, N>::loadDelta(const std::string& line){
 }
 
 template <class V, class N>
-void GlobalHolder<V, N>::intializedProcess(){
-	if(!cache_free){
-		intializedProcessCB();
-	}else{
-		if(opt->is_accumulative()){
-			intializedProcessACF();
-		}else if(opt->is_selective()){
-			intializedProcessSCF();
+void GlobalHolder<V, N>::initializedProcess(){
+	if(!incremental){
+		initializedProcessNoneIncr();
+	} else{
+		if(cache_free){
+			initializedProcessCB();
+		} else if(opt->is_accumulative()){
+			initializedProcessACF();
+		} else if(opt->is_selective()){
+			initializedProcessSCF();
 		}
 	}
 	touched_node.clear();
 }
 
 template <class V, class N>
-void GlobalHolder<V, N>::intializedProcessCB(){
+void GlobalHolder<V, N>::initializedProcessNoneIncr()
+{
+	local_part.enum_rewind();
+	for(const node_t* p = local_part.enum_next(true);
+		p != nullptr; p = local_part.enum_next(true))
+	{
+		//processNode(p->id);
+		if(local_part.commit(p->id)){
+			std::vector<std::pair<id_t, value_t>> data = local_part.spread(p->id);
+			for(auto& d : data){
+				update_cal(p->id, d.first, d.second);
+			}
+		}
+	}
+}
+
+template <class V, class N>
+void GlobalHolder<V, N>::initializedProcessCB(){
 	if(incremental){
 		for(const std::pair<id_t, node_t>& n : touched_node){
 			processNodeForced(n.first);
@@ -282,7 +302,7 @@ void GlobalHolder<V, N>::intializedProcessCB(){
 	}
 }
 template <class V, class N>
-void GlobalHolder<V, N>::intializedProcessACF(){
+void GlobalHolder<V, N>::initializedProcessACF(){
 	// step 1: if loaded from existed result, move the value of dummy nodes from <u> to <v>
 	if(incremental){
 		std::vector<typename operation_t::DummyNode> dummies = opt->dummy_nodes();
@@ -316,7 +336,7 @@ void GlobalHolder<V, N>::intializedProcessACF(){
 	}
 }
 template <class V, class N>
-void GlobalHolder<V, N>::intializedProcessSCF(){
+void GlobalHolder<V, N>::initializedProcessSCF(){
 	for(const std::pair<id_t, node_t>& n : touched_node){
 		std::vector<std::pair<id_t, value_t>> old_d = opt->func(n.second);
 		std::map<id_t, value_t> old_dm(old_d.begin(), old_d.end());

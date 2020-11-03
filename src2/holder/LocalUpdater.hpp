@@ -54,8 +54,8 @@ struct LuCbGen : public LuCacheBased<V, N>{
 template <class V, class N>
 struct LuCbAcc : public LuCbGen<V, N>{
 	virtual void s_incremental_update(const id_t& from, Node<V, N>& n, const V& m){
-		V dlt = this->opt->ominus(n.cs[from], m);
-		n.u = this->opt->oplus(n.u, dlt);
+		V t = this->opt->ominus(n.u, n.cs[from]);
+		n.u = this->opt->oplus(t, m);
 		n.cs[from] = m;
 	}
 };

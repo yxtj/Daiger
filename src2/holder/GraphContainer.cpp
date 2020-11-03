@@ -125,7 +125,7 @@ void GraphContainer::clearINCache(){
 }
 
 void GraphContainer::genInitMsg(){
-	holder->intializedProcess();
+	holder->initializedProcess();
 }
 
 void GraphContainer::prepareUpdate(sender_t sender_val, sender_t sender_req, sender0_t sender_pro){

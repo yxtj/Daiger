@@ -113,9 +113,12 @@ private:
 	//std::function<void(const id_t&, const id_t&, const value_t&)> f_update_incremental;
 	std::function<void(const id_t&, node_t&, const value_t&)> f_update_incremental;
 	//f_update_incremental_t f_update_incremental;
-	//sender_req_t f_send_req;
-	std::function<std::vector<std::pair<id_t, value_t>>(const id_t&)> f_spread;
-	std::function<priority_t(const node_t&)> f_priority;
+
+	//std::function<std::vector<std::pair<id_t, value_t>>(const id_t&)> f_spread;
+	using pf_spread_t = std::vector<std::pair<id_t, value_t>>(LocalHolder<V, N>::*)(const id_t&);
+	pf_spread_t f_spread;
+
+	//std::function<priority_t(const node_t&)> f_priority;
 
 	double progress_value; // summation of the non-infinity value
 	size_t progress_inf; // # of the infinity
@@ -162,9 +165,10 @@ void LocalHolder<V, N>::setUpdateFunction(bool incremental, bool async, bool cac
 		};
 	}
 	if(cache_free && opt->is_accumulative()){
-		f_spread = [&](const id_t& k){
-			return this->spread_acf(k);
-		};
+		//f_spread = [&](const id_t& k){
+		//	return this->spread_acf(k);
+		//};
+		f_spread = &LocalHolder<V, N>::spread_acf;
 		//f_priority = [&](const node_t& n){
 		//	value_t t = n.v;
 		//	node_t& nn = const_cast<node_t&>(n);
@@ -174,16 +178,17 @@ void LocalHolder<V, N>::setUpdateFunction(bool incremental, bool async, bool cac
 		//	return p;
 		//};
 	}else{
-		f_spread = [&](const id_t& k){
-			return this->spread_general(k);
-		};
+		//f_spread = [&](const id_t& k){
+		//	return this->spread_general(k);
+		//};
+		f_spread = &LocalHolder<V, N>::spread_general;
 		//f_priority = [&](const node_t& n){
 		//	return opt->priority(n);
 		//};
 	}
-	f_priority = [&](const node_t& n){
-		return ptz->priority(n);
-	};
+	//f_priority = [&](const node_t& n){
+	//	return ptz->priority(n);
+	//};
 }
 
 // -------- basic functions --------
@@ -244,7 +249,8 @@ void LocalHolder<V, N>::init_value(const id_t& k, const value_t& v){
 	node_t& n = get(k);
 	double oldp = prg->progress(n);
 	n.v = v;
-	update_progress(oldp, prg->progress(n));
+	double newp = prg->progress(n);
+	update_progress(oldp, newp);
 	if(cache_free && opt->is_accumulative()){
 		// if(n.u != opt->identity_element()){
 		// 	n.u = opt->identity_element();
@@ -442,7 +448,7 @@ bool LocalHolder<V, N>::commit(const id_t& k){
 // generate outgoing messages
 template <class V, class N>
 std::vector<std::pair<id_t, V>> LocalHolder<V, N>::spread(const id_t& k){
-	return f_spread(k);
+	return (this->*f_spread)(k);
 }
 // general version
 template <class V, class N>

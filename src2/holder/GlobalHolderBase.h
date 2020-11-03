@@ -29,7 +29,7 @@ public:
 	virtual void prepareCollectINList() = 0;
 	virtual void prepareCollectINCache() = 0;
 	virtual void rebuildSource() = 0; // for selective operators
-	virtual void intializedProcess() = 0;
+	virtual void initializedProcess() = 0;
 	virtual void prepareDump() = 0;
 	// return whether this call is success and the line to write
 	virtual std::pair<bool, std::string> dumpResult() = 0;
