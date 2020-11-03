@@ -42,8 +42,7 @@ void PageRank::MyOperation::init(const std::vector<std::string>& arg_line, const
 	if(damp < 0.0 || damp > 1.0){
 		throw invalid_argument("Invalid damping factor: "+arg_line[0]);
 	}
-	use_degree = beTrueOption(arg_line[1]);
-	dummy_id = gen_dummy_id(10 + nInstance);
+	dummy_id = gen_dummy_id(0);
 }
 PageRank::MyOperation::node_t PageRank::MyOperation::preprocess_node(
 	const id_t& k, neighbor_list_t& neighbors)
@@ -66,23 +65,15 @@ bool PageRank::MyOperation::is_dummy_node(const id_t& id){
 PageRank::value_t PageRank::MyOperation::func(const node_t& n, const neighbor_t& neighbor){
 	return n.id != dummy_id ? damp*n.v/n.onb.size() : 1-damp;
 }
-// scheduling - priority
-priority_t PageRank::MyOperation::priority(const node_t& n){
-	double p = abs(n.u - n.v);
-	return static_cast<priority_t>(p * (use_degree ? n.onb.size() : 1));
-}
 
-// <damp-factor> <use-degree-priority>
+// <damp-factor>
 AppArguments PageRank::MySeparator::separate(const std::vector<std::string>& args){
-	if(args.size() < 1 || args.size() > 2 ){
-		throw invalid_argument("PageRank Parameter: <damp> [degree-priority=true]");
+	if(args.size() != 1){
+		throw invalid_argument("PageRank Parameter: <damp>");
 	}
 	AppArguments res;
 	res.name = PageRank::name;
-	if(args.size() == 1)
-		res.operation_arg = { args[0], "true" };
-	else
-		res.operation_arg = { args[0], args[1] };
+	res.operation_arg = args;
 	res.iohandler_arg = {};
 	res.progressor_arg = {};
 	return res;

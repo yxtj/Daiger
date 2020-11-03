@@ -50,10 +50,6 @@ ConnectedComponent::MyOperation::node_t ConnectedComponent::MyOperation::preproc
 ConnectedComponent::value_t ConnectedComponent::MyOperation::func(const node_t& n, const neighbor_t& neighbor){
 	return n.v;
 }
-// scheduling - priority
-priority_t ConnectedComponent::MyOperation::priority(const node_t& n){
-	return static_cast<priority_t>(n.v);
-}
 
 AppArguments ConnectedComponent::MySeparator::separate(const std::vector<std::string>& args){
 	AppArguments res;

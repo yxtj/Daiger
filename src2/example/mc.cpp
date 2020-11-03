@@ -85,7 +85,6 @@ void MarkovChain::MyOperation::init(const std::vector<std::string>& arg_line, co
 		throw invalid_argument("cannot parse the value initialization method. Support: fix:<v> and rand:<s>");
 	// TODO: add resource cleaning interface to Operation
 
-	use_degree = beTrueOption(arg_line[1]);
 }
 MarkovChain::MyOperation::node_t MarkovChain::MyOperation::preprocess_node(
 	const id_t& k, neighbor_list_t& neighbors)
@@ -100,17 +99,19 @@ MarkovChain::MyOperation::node_t MarkovChain::MyOperation::preprocess_node(
 MarkovChain::value_t MarkovChain::MyOperation::func(const node_t& n, const neighbor_t& neighbor){
 	return n.v * neighbor.second;
 }
-// scheduling - priority
-priority_t MarkovChain::MyOperation::priority(const node_t& n){
-	double p = abs<double>(n.v - n.u);
-	return static_cast<priority_t>(p * (use_degree ? n.onb.size() : 1));
-}
 
-// <source> <use-degree-priority>
+// <init-method>
 AppArguments MarkovChain::MySeparator::separate(const std::vector<std::string>& args){
+	if(args.size() > 1){
+		throw invalid_argument("MarkovChain Parameter: <init-method>. <init-method> can be fix:<v> or rand. default: fix:1");
+	}
 	AppArguments res;
 	res.name = MarkovChain::name;
-	res.operation_arg = {args[0], args[1]};
+	if(args.size() == 0){
+		res.operation_arg = { "fix:1" };
+	} else{
+		res.operation_arg = args;
+	}
 	res.iohandler_arg = {};
 	res.progressor_arg = {};
 	return res;

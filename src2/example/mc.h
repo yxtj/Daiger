@@ -22,9 +22,7 @@ struct MarkovChain
 
 		virtual node_t preprocess_node(const id_t& k, neighbor_list_t& neighbors);
 		virtual value_t func(const node_t& n, const neighbor_t& neighbor);
-		virtual priority_t priority(const node_t& n);
 	private:
-		bool use_degree;
 
 		struct InnerHelper;
 		InnerHelper* impl;

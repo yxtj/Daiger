@@ -24,16 +24,10 @@ struct Katz
 		virtual std::vector<DummyNode> dummy_nodes();
 		virtual bool is_dummy_node(const id_t& id);
 		virtual value_t func(const node_t& n, const neighbor_t& neighbor);
-		virtual priority_t priority(const node_t& n);
-	private:
-		static priority_t priority_v(const node_t& n);
-		static priority_t priority_vn(const node_t& n);
-		using pf_t = priority_t(*)(const node_t&);
-		pf_t pfun;
+
 	private:
 		id_t source;
 		double beta;
-		bool use_degree;
 		id_t dummy_id;
 	};
 

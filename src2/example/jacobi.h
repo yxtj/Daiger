@@ -24,11 +24,9 @@ struct Jacobi : public AppKernel {
         virtual std::vector<DummyNode> dummy_nodes();
         virtual bool is_dummy_node(const id_t& id);
         virtual value_t func(const node_t& n, const neighbor_t& neighbor);
-        virtual priority_t priority(const node_t& n);
 
     private:
 		id_t constant_id;
-        bool use_degree;
     };
 
     class MySeparator : public ArgumentSeparator {

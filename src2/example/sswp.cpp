@@ -40,7 +40,6 @@ PrioritizerBase* WidestPath::generatePrioritizer(const std::string& name){
 
 void WidestPath::MyOperation::init(const std::vector<std::string>& arg_line, const size_t nInstance){
 	source = stoid(arg_line[0]);
-	use_degree = beTrueOption(arg_line[1]);
 }
 WidestPath::MyOperation::node_t WidestPath::MyOperation::preprocess_node(
 	const id_t& k, neighbor_list_t& neighbors)
@@ -52,23 +51,19 @@ WidestPath::MyOperation::node_t WidestPath::MyOperation::preprocess_node(
 WidestPath::value_t WidestPath::MyOperation::func(const node_t& n, const neighbor_t& neighbor){
 	return min(n.v, neighbor.second);
 }
-// scheduling - priority
-priority_t WidestPath::MyOperation::priority(const node_t& n){
-	double p = n.u;
-	return static_cast<priority_t>(p * (use_degree ? n.onb.size() : 1));
-}
 
-// <source> <use-degree-priority>
+// <source>
 AppArguments WidestPath::MySeparator::separate(const std::vector<std::string>& args){
-	if(args.size() < 1 || args.size() > 2){
-		throw invalid_argument("SSWP Parameter: <source> [degree-priority]. degree-priority=false");
+	if(args.size() > 1){
+		throw invalid_argument("SSWP Parameter: <source>. default: 0");
 	}
 	AppArguments res;
 	res.name = WidestPath::name;
-	if(args.size() == 1)
-		res.operation_arg = { args[0], "false" };
-	else
-		res.operation_arg = { args[0], args[1] };
+	if(args.size() == 0){
+		res.operation_arg = { "0" };
+	} else{
+		res.operation_arg = args;
+	}
 	res.iohandler_arg = {};
 	res.progressor_arg = {};
 	return res;

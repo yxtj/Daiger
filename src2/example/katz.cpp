@@ -40,12 +40,7 @@ PrioritizerBase* Katz::generatePrioritizer(const std::string& name){
 void Katz::MyOperation::init(const std::vector<std::string>& arg_line, const size_t nInstance){
 	source = stoid(arg_line[0]); 
 	beta = stod(arg_line[1]);
-	use_degree = beTrueOption(arg_line[2]);
 	dummy_id = gen_dummy_id(1);
-	if(!use_degree)
-		pfun = &Katz::MyOperation::priority_v;
-	else
-		pfun = &Katz::MyOperation::priority_vn;
 }
 Katz::MyOperation::node_t Katz::MyOperation::preprocess_node(
 	const id_t& k, neighbor_list_t& neighbors)
@@ -75,30 +70,15 @@ bool Katz::MyOperation::is_dummy_node(const id_t& id){
 Katz::value_t Katz::MyOperation::func(const node_t& n, const neighbor_t& neighbor){
     return beta * n.v;
 }
-// scheduling - priority
-priority_t Katz::MyOperation::priority(const node_t& n){
-	return (*pfun)(n);
-}
-priority_t Katz::MyOperation::priority_v(const node_t& n){
-	value_t p = abs(n.u - n.v);
-	return static_cast<priority_t>(p);
-}
-priority_t Katz::MyOperation::priority_vn(const node_t& n){
-	value_t p = abs(n.u - n.v);
-	return static_cast<priority_t>(p*n.onb.size());
-}
 
-// <source> <beta> <use-degree-priority>
+// <source> <beta>
 AppArguments Katz::MySeparator::separate(const std::vector<std::string>& args){
 	if(args.size() < 1 || args.size() > 2){
-		throw invalid_argument("Katz Parameter: <source> <beta> [degree-priority]. degree-priority=true");
+		throw invalid_argument("Katz Parameter: <source> <beta>");
 	}
 	AppArguments res;
 	res.name = Katz::name;
-	if(args.size() == 1)
-		res.operation_arg = { args[0], args[1], "true" };
-	else
-		res.operation_arg = { args[0], args[1], args[2] };
+	res.operation_arg = args;
 	res.iohandler_arg = {};
 	res.progressor_arg = {};
 	return res;

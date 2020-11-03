@@ -18,17 +18,14 @@ struct Adsorption : public AppKernel {
 
         virtual void init(const std::vector<std::string>& arg_line);
 
-        virtual node_t preprocess_node(
-            const id_t& k, neighbor_list_t& neighbors);
+        virtual node_t preprocess_node(const id_t& k, neighbor_list_t& neighbors);
         virtual std::vector<DummyNode> dummy_nodes();
         virtual bool is_dummy_node(const id_t& id);
         virtual value_t func(const node_t& n, const neighbor_t& neighbor);
-        virtual priority_t priority(const node_t& n);
 
-        private:
+    private:
 		double pc, pi;
-        bool use_degree;
-        id_t dummy_id = -1;
+        id_t dummy_id;
     };
 
     class MySeparator : public ArgumentSeparator {
