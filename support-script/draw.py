@@ -125,7 +125,7 @@ def load_priority(fn):
 def get_log_ticks(low, high, base=1, exp=10):
     v = base
     c = 0
-    while v > low:
+    while v >= low:
         v /= exp
         c -= 1
     v*=exp
@@ -167,15 +167,23 @@ def draw_priority(data, rotation=0, ylow=None, yhigh=None):
 def load_scale(fn):
     return np.loadtxt(fn, delimiter='\t', skiprows=1)
 
-def draw_scale_worker(data, loc=None):
+def draw_scale_worker(data, speedup=False, loc=None):
     plt.figure()
     x=data[:,0]
-    y=data[:,1]
-    ref=y[0]*x[0]/x
-    plt.plot(x, y, linestyle='-')
-    plt.plot(x, ref, linestyle='--')
+    d=data[:,1]
+    if speedup:
+        y=d[0]/d
+        ref=x/x[0]
+        plt.plot(x, y, linestyle='-')
+        plt.plot(x, ref, linestyle='--')
+        plt.ylabel('speed up')
+    else:
+        y=d
+        ref=d[0]*x[0]/x
+        plt.plot(x, y, linestyle='-')
+        plt.plot(x, ref, linestyle='--')
+        plt.ylabel('running time (s)')
     plt.xlabel('# of workers')
-    plt.ylabel('running time (s)')
     plt.legend(['Daiger', 'Optimal'], loc=loc)
     ylim=plt.ylim()
     plt.ylim((0, ylim[1]))
