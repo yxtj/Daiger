@@ -9,6 +9,7 @@
 #include <mutex>
 #include <deque>
 #include <string>
+#include <utility>
 
 class GraphContainer {
 public:
@@ -19,9 +20,10 @@ public:
 	using sender0_t = std::function<void(std::string&)>;
 
 	// the std::function<void(const int, std::string&)> sender is used to send the messages to other WORKERS
-	void loadGraph(sender_t sender = {});
-	void loadValue(sender_t sender = {});
-	void loadDelta(sender_t sender = {});
+	std::pair<int, int> loadGraph(sender_t sender = {});
+	int finishGraph();
+	std::pair<int, int> loadValue(sender_t sender = {});
+	std::pair<int, int> loadDelta(sender_t sender = {});
 	void buildINList(sender_t sender);
 	void buildINCache(sender_t sender);
 	void rebuildSource();
@@ -63,9 +65,9 @@ public:
 	void tryReport();
 
 private:
-	void loadGraphFile(const std::string& fn, sender_t sender);
-	void loadValueFile(const std::string& fn, sender_t sender);
-	void loadDeltaFile(const std::string& fn, sender_t sender);
+	std::pair<int, int> loadGraphFile(const std::string& fn, sender_t sender);
+	std::pair<int, int> loadValueFile(const std::string& fn, sender_t sender);
+	std::pair<int, int> loadDeltaFile(const std::string& fn, sender_t sender);
 
 	std::pair<MsgType, std::string> popMsg(); // only called when message queue is not empty
 

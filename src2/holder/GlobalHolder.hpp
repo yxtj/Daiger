@@ -48,7 +48,7 @@ public:
 	virtual void prepareDump();
 	virtual std::pair<bool, std::string> dumpResult();
 
-	virtual void addDummyNodes();
+	virtual int addDummyNodes();
 
 	// in-neighbor
 	virtual void clearINList();
@@ -193,7 +193,7 @@ int GlobalHolder<V, N>::loadGraph(const std::string& line){
 }
 
 template <class V, class N>
-void GlobalHolder<V, N>::addDummyNodes(){
+int GlobalHolder<V, N>::addDummyNodes(){
 	std::vector<typename operation_t::DummyNode> dummies = opt->dummy_nodes();
 	for(auto& p : dummies){
 		id_t id = p.node.id;
@@ -211,6 +211,7 @@ void GlobalHolder<V, N>::addDummyNodes(){
 			local_part.modify_onb_via_fun_all(id, p.func);
 		}
 	}
+	return static_cast<int>(dummies.size());
 }
 
 template <class V, class N>
@@ -615,14 +616,14 @@ void GlobalHolder<V, N>::doApply(){
 	for(const id_t id : nodes){
 		processNode(id);
 	}
-	#if !defined(NDEBUG) || defined(_DEBUG)
+#if !defined(NDEBUG) || defined(_DEBUG)
 	if(VLOG_IS_ON(3)){
 		for(const id_t id : nodes){
 			const node_t& n = local_part.get(id);
 			VLOG(3) << "k=" << n.id << " v=" << n.v << " u=" << n.u;
 		}
 	}
-	#endif
+#endif
 }
 
 template <class V, class N>
@@ -642,9 +643,15 @@ template <class V, class N>
 std::string GlobalHolder<V, N>::collectMsg(const int pid){
 	// msg_t::MsgVUpdate_t = std::vector<typename msg_t::VUpdate_t>
 	// std::vector<std::pair<id_t, std::pair<id_t, value_t>>> data =
-	typename msg_t::MsgVUpdate_t data =
-		remote_parts[pid].collect();
-//	DVLOG(3)<<"send: "<<data;
+	typename msg_t::MsgVUpdate_t data = remote_parts[pid].collect();
+#if !defined(NDEBUG) || defined(_DEBUG)
+	//VLOG(3)<<"send: "<<data;
+	if(VLOG_IS_ON(3)){
+		for(const auto& d : data){
+			VLOG(3) << "f=" << get<0>(d) << " t=" << get<1>(d) << " v=" << get<2>(d);
+		}
+	}
+#endif
 	std::string res = serialize(data);
 	return res;
 }

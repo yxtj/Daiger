@@ -34,7 +34,7 @@ public:
 	// return whether this call is success and the line to write
 	virtual std::pair<bool, std::string> dumpResult() = 0;
 
-	virtual void addDummyNodes() = 0;
+	virtual int addDummyNodes() = 0;
 
 	// in-neighbor list
 	virtual void clearINList() = 0;

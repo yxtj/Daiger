@@ -36,6 +36,8 @@ void Worker::registerHandlers() {
 	regDSPProcess(MType::CFinish, localCBBinder(&Worker::handleFinish));
 	regDSPProcess(MType::CClear, localCBBinder(&Worker::handleClear));
 
+	regDSPProcess(MType::CLoadBalance, localCBBinder(&Worker::handleLoadBalance));
+
 	regDSPProcess(MType::GNode, localCBBinder(&Worker::handleGNode));
 	regDSPProcess(MType::GValue, localCBBinder(&Worker::handleGValue));
 	regDSPProcess(MType::GDelta, localCBBinder(&Worker::handleGDelta));
@@ -57,6 +59,7 @@ void Worker::registerHandlers() {
 
 	//type 2: called by specific functions (handlers)
 	// by handlerRegisterWorker()
+	addRPHAnySU(MType::CLoadBalance, su_loadbalance);
 }
 
 void Worker::handleReply(std::string& d, const RPCInfo& info) {
@@ -148,6 +151,11 @@ void Worker::handleFinish(std::string& d, const RPCInfo& info){
 	}, info);
 }
 
+void Worker::handleLoadBalance(std::string& d, const RPCInfo& info){
+	VLOG(2) << "load balance for " << d << " from " << info.source << " to " << info.dest;
+	rph.input(MType::CLoadBalance, wm.nid2wid(info.source));
+}
+
 void Worker::handleGNode(std::string& d, const RPCInfo& info){
 	graph.loadGraphPiece(d);
 }
@@ -177,7 +185,7 @@ void Worker::handleVReply(std::string& d, const RPCInfo& info){
 	graph.pushMsg(GraphContainer::MsgType::Reply, d);
 }
 void Worker::handleVSync(std::string& d, const RPCInfo& info){
-	VLOG(2) << "receive sync";
+	VLOG(3) << "receive sync";
 	graph.sync_notify();
 }
 

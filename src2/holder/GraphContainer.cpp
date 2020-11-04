@@ -20,7 +20,7 @@ void GraphContainer::init(int wid, GlobalHolderBase* holder, bool incremental){
 		incremental, conf.async, conf.cache_free, conf.sort_result);
 }
 
-void GraphContainer::loadGraph(sender_t sender){
+std::pair<int, int> GraphContainer::loadGraph(sender_t sender){
 	vector<string> files = FileEnumerator::listFile(conf.path_graph, conf.prefix_graph);
 	if(files.empty()){
 		throw invalid_argument("No files to load. Check the path argument.");
@@ -28,19 +28,28 @@ void GraphContainer::loadGraph(sender_t sender){
 	if(!conf.balance_load && files.size() != conf.nPart){
 		throw invalid_argument("Files do not match workers. Consider turning on <balance_load>.");
 	}
+	int nlocal = 0, nremote = 0;
 	regex reg(conf.prefix_graph+"(\\d+)");
 	for(auto& fn : files){
 		smatch m;
 		if(regex_match(fn, m, reg)){
 			int id = stoi(m[1].str());
-			if(id == wid || (conf.balance_load && id%conf.nPart == wid))
-				loadGraphFile(conf.path_graph + "/" + fn, sender);
+			if(id == wid || (conf.balance_load && id % conf.nPart == wid)){
+				auto t = loadGraphFile(conf.path_graph + "/" + fn, sender);
+				nlocal += t.first;
+				nremote += t.second;
+			}
 		}
 	}
-	holder->addDummyNodes();
+	return make_pair(nlocal, nremote);
 }
 
-void GraphContainer::loadValue(sender_t sender){
+int GraphContainer::finishGraph()
+{
+	return holder->addDummyNodes();
+}
+
+std::pair<int, int> GraphContainer::loadValue(sender_t sender){
 	vector<string> files = FileEnumerator::listFile(conf.path_value, conf.prefix_value);
 	if(files.empty()){
 		throw invalid_argument("No files to load. Check the path argument.");
@@ -48,18 +57,23 @@ void GraphContainer::loadValue(sender_t sender){
 	if(!conf.balance_load && files.size() != conf.nPart){
 		throw invalid_argument("Files do not match workers. Consider turning on <balance_load>.");
 	}
+	int nlocal = 0, nremote = 0;
 	regex reg(conf.prefix_value+"(\\d+)");
 	for(auto& fn : files){
 		smatch m;
 		if(regex_match(fn, m, reg)){
 			int id = stoi(m[1].str());
-			if(id == wid || (conf.balance_load && id%conf.nPart == wid))
-				loadValueFile(conf.path_value + "/" + fn, sender);
+			if(id == wid || (conf.balance_load && id % conf.nPart == wid)){
+				auto t = loadValueFile(conf.path_value + "/" + fn, sender);
+				nlocal += t.first;
+				nremote += t.second;
+			}
 		}
 	}
+	return make_pair(nlocal, nremote);
 }
 
-void GraphContainer::loadDelta(sender_t sender){
+std::pair<int, int> GraphContainer::loadDelta(sender_t sender){
 	vector<string> files = FileEnumerator::listFile(conf.path_delta, conf.prefix_delta);
 	if(files.empty()){
 		throw invalid_argument("No files to load. Check the path argument.");
@@ -67,15 +81,20 @@ void GraphContainer::loadDelta(sender_t sender){
 	if(!conf.balance_load && files.size() != conf.nPart){
 		throw invalid_argument("Files do not match workers. Consider turning on <balance_load>.");
 	}
+	int nlocal = 0, nremote = 0;
 	regex reg(conf.prefix_delta+"(\\d+)");
 	for(auto& fn : files){
 		smatch m;
 		if(regex_match(fn, m, reg)){
 			int id = stoi(m[1].str());
-			if(id == wid || (conf.balance_load && id%conf.nPart == wid))
-				loadDeltaFile(conf.path_delta + "/" + fn, sender);
+			if(id == wid || (conf.balance_load && id%conf.nPart == wid)){
+				auto t = loadDeltaFile(conf.path_delta + "/" + fn, sender);
+				nlocal += t.first;
+				nremote += t.second;
+			}
 		}
 	}
+	return make_pair(nlocal, nremote);
 }
 
 void GraphContainer::dumpResult(){
@@ -215,34 +234,52 @@ void GraphContainer::tryReport()
 }
 // --------
 
-void GraphContainer::loadGraphFile(const std::string& fn, sender_t sender){
+std::pair<int, int> GraphContainer::loadGraphFile(const std::string& fn, sender_t sender){
+	int nlocal = 0, nremote = 0;
 	ifstream fin(fn);
 	string line;
 	while(getline(fin, line)){
 		int pid = holder->loadGraph(line);
-		if(pid != wid)
+		if(pid != wid){
 			sender(pid, line);
+			++nremote;
+		} else{
+			++nlocal;
+		}
 	}
+	return make_pair(nlocal, nremote);
 }
-void GraphContainer::loadValueFile(const std::string& fn, sender_t sender){
+std::pair<int, int> GraphContainer::loadValueFile(const std::string& fn, sender_t sender){
+	int nlocal = 0, nremote = 0;
 	ifstream fin(fn);
 	string line;
 	while(getline(fin, line)){
 		int pid = holder->loadValue(line);
-		if(pid != wid)
+		if(pid != wid){
 			sender(pid, line);
+			++nremote;
+		} else{
+			++nlocal;
+		}
 	}
+	return make_pair(nlocal, nremote);
 }
-void GraphContainer::loadDeltaFile(const std::string& fn, sender_t sender){
+std::pair<int, int> GraphContainer::loadDeltaFile(const std::string& fn, sender_t sender){
+	int nlocal = 0, nremote = 0;
 	ifstream fin(fn);
 	string line;
 	while(getline(fin, line)){
 		if(line.size() < 3)
 			continue;
 		int pid = holder->loadDelta(line);
-		if(pid != wid)
+		if(pid != wid){
 			sender(pid, line);
+			++nremote;
+		} else{
+			++nlocal;
+		}
 	}
+	return make_pair(nlocal, nremote);
 }
 bool GraphContainer::loadGraphPiece(const std::string& line){
 	return holder->loadGraph(line) == wid;

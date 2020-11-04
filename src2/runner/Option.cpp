@@ -50,7 +50,7 @@ Option::Option()
 		("terminator", value<vector<string>>(&terminator_args)->multitoken()->default_value({ "diff", "1e-5" }, "diff"),
 			"Terminator name and parameters. Supports: stop, diff, diffr, var.")
 		("prioritizer", value<vector<string>>(&prioritizer_args)->multitoken()->default_value({"value"}, "value"),
-			"Prioritizer name and parameters. Supports: none, value, value-deg, diff, diff-deg.")
+			"Prioritizer name and parameters. Supports: none, value, value_deg, diff, diff_deg.")
 		("sort_result", bool_switch(&conf.sort_result)->default_value(false), "Whether to sort the result by node id before dumping.")
 		("cache_free", bool_switch(&conf.cache_free)->default_value(false), "Whether to perform cache-free computation.")
 		// running parameter
@@ -102,12 +102,16 @@ bool Option::parseInput(int argc, char* argv[]) {
 
 		sortUpPath(path_root);
 		if(!path_root.empty()){
-			conf.path_graph = setWithRootPath(conf.path_graph, "graph");
+			if(conf.path_graph.empty())
+				conf.path_graph = setWithRootPath(conf.path_graph, "graph");
 			if(do_incremental){
-				conf.path_delta = setWithRootPath(conf.path_delta, "delta");
-				conf.path_value = setWithRootPath(conf.path_value, "value");
+				if(conf.path_delta.empty())
+					conf.path_delta = setWithRootPath(conf.path_delta, "delta");
+				if(conf.path_value.empty())
+					conf.path_value = setWithRootPath(conf.path_value, "value");
 			}
-			conf.path_result = setWithRootPath(conf.path_result, "result");
+			if(conf.path_result.empty())
+				conf.path_result = setWithRootPath(conf.path_result, "result");
 		}
 		if(conf.path_graph.empty()) {
 			cerr << "Graph path is not given" << endl;

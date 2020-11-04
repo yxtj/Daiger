@@ -72,8 +72,20 @@ void Worker::procedureLoadGraph(){
 		};
 	setLogThreadName(log_name+"-PLG");
 	LOG(INFO) << "Worker start loading graph";
-	graph.loadGraph(sender);
+	pair<int, int> nlr = graph.loadGraph(sender);
+	// report
+	net->send(master_net_id, MType::CMsgCount, nlr);
+	// load balance
+	if(opt.conf.balance_load && opt.conf.nPart > 1){
+		for(int i = 0; i < opt.conf.nPart; ++i){
+			net->send(wm.wid2nid(i), MType::CLoadBalance, "graph");
+		}
+		su_loadbalance.wait_reset();
+		VLOG(2) << "load balance for graph on W" << wm.nid2wid(my_net_id) << " finished";
+	}
+	graph.finishGraph();
 }
+
 
 void Worker::procedureLoadValue(){
 	std::function<void(const int, std::string&)> sender = 
@@ -83,6 +95,15 @@ void Worker::procedureLoadValue(){
 	setLogThreadName(log_name+"-PLV");
 	LOG(INFO) << "Worker start loading value";
 	graph.loadValue(sender);
+	// load balance
+	if(opt.conf.balance_load && opt.conf.nPart > 1){
+		for(int i = 0; i < opt.conf.nPart; ++i){
+			if(i == wm.nid2wid(my_net_id))
+				rph.input(MType::CLoadBalance, i);
+			net->send(wm.wid2nid(i), MType::CLoadBalance, "value");
+		}
+		su_loadbalance.wait_reset();
+	}
 }
 
 void Worker::procedureLoadDelta(){
@@ -93,6 +114,15 @@ void Worker::procedureLoadDelta(){
 	setLogThreadName(log_name+"-PLD");
 	LOG(INFO) << "Worker start loading delta";
 	graph.loadDelta(sender);
+	// load balance
+	if(opt.conf.balance_load && opt.conf.nPart > 1){
+		for(int i = 0; i < opt.conf.nPart; ++i){
+			if(i == wm.nid2wid(my_net_id))
+				rph.input(MType::CLoadBalance, i);
+			net->send(wm.wid2nid(i), MType::CLoadBalance, "delta");
+		}
+		su_loadbalance.wait_reset();
+	}
 }
 
 void Worker::procedureBuildINList()

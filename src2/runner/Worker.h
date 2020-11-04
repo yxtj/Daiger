@@ -55,6 +55,7 @@ public:
 	void handleTerminate(std::string& d, const RPCInfo& info); // force exit
 
 	void handleClear(std::string& d, const RPCInfo& info);
+	void handleLoadBalance(std::string& d, const RPCInfo& info);
 	void handleProcedure(std::string& d, const RPCInfo& info);
 	void handleFinish(std::string& d, const RPCInfo& info);
 
@@ -91,4 +92,5 @@ private:
 	SyncUnit su_update;
 
 	SyncUnit su_stop;
+	SyncUnit su_loadbalance;
 };

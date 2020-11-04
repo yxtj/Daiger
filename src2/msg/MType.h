@@ -16,6 +16,8 @@ struct MType {
 	// Procedure Control
 	static constexpr int CProcedure = 10;
 	static constexpr int CFinish = 11;
+	static constexpr int CMsgCount = 12;
+	static constexpr int CLoadBalance = 13;
 
 	// Graph Loading and related
 	static constexpr int GNode = 20;
