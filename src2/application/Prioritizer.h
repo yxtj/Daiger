@@ -37,7 +37,8 @@ class PrioritizerValue
 {
 public:
 	virtual priority_t priority(const Node<V, N>& n){
-		return static_cast<priority_t>(n.u);
+		V p = std::abs<V>(n.u);
+		return static_cast<priority_t>(p);
 	}
 };
 
@@ -47,7 +48,8 @@ class PrioritizerValueODeg
 {
 public:
 	virtual priority_t priority(const Node<V, N>& n){
-		return static_cast<priority_t>(n.u * n.onb.size());
+		V p = std::abs<V>(n.u);
+		return static_cast<priority_t>(p * n.onb.size());
 	}
 };
 
