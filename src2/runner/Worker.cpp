@@ -74,11 +74,11 @@ void Worker::procedureLoadGraph(){
 	LOG(INFO) << "Worker start loading graph";
 	pair<int, int> nlr = graph.loadGraph(sender);
 	// report
-	net->send(master_net_id, MType::CMsgCount, nlr);
+	net->send(master_net_id, MType::HGraphSize, nlr);
 	// load balance
 	if(opt.conf.balance_load && opt.conf.nPart > 1){
 		for(int i = 0; i < opt.conf.nPart; ++i){
-			net->send(wm.wid2nid(i), MType::CLoadBalance, "graph");
+			net->send(wm.wid2nid(i), MType::HLoadBalance, "graph");
 		}
 		su_loadbalance.wait_reset();
 		VLOG(2) << "load balance for graph on W" << wm.nid2wid(my_net_id) << " finished";
@@ -99,8 +99,8 @@ void Worker::procedureLoadValue(){
 	if(opt.conf.balance_load && opt.conf.nPart > 1){
 		for(int i = 0; i < opt.conf.nPart; ++i){
 			if(i == wm.nid2wid(my_net_id))
-				rph.input(MType::CLoadBalance, i);
-			net->send(wm.wid2nid(i), MType::CLoadBalance, "value");
+				rph.input(MType::HLoadBalance, i);
+			net->send(wm.wid2nid(i), MType::HLoadBalance, "value");
 		}
 		su_loadbalance.wait_reset();
 	}
@@ -118,8 +118,8 @@ void Worker::procedureLoadDelta(){
 	if(opt.conf.balance_load && opt.conf.nPart > 1){
 		for(int i = 0; i < opt.conf.nPart; ++i){
 			if(i == wm.nid2wid(my_net_id))
-				rph.input(MType::CLoadBalance, i);
-			net->send(wm.wid2nid(i), MType::CLoadBalance, "delta");
+				rph.input(MType::HLoadBalance, i);
+			net->send(wm.wid2nid(i), MType::HLoadBalance, "delta");
 		}
 		su_loadbalance.wait_reset();
 	}

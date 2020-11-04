@@ -28,6 +28,7 @@ void Master::registerHandlers() {
 	regDSPProcess(MType::CReply, localCBBinder(&Master::handleReply));
 	regDSPProcess(MType::CRegister, localCBBinder(&Master::handleRegister));
 	regDSPProcess(MType::PReport, localCBBinder(&Master::handleProgressReport));
+	regDSPProcess(MType::HGraphSize, localCBBinder(&Master::handleGraphSize));
 
 	// part 2: reply handler:
 	//type 1: called by handleReply() directly
@@ -42,6 +43,7 @@ void Master::registerHandlers() {
 	addRPHEachSU(MType::CRegister, su_regw);
 	// by handleProgressReport()
 	addRPHEachSU(MType::PReport, su_term);
+	addRPHEachSU(MType::HGraphSize, su_graphsize);
 }
 
 void Master::handleReply(std::string& d, const RPCInfo& info) {
@@ -64,4 +66,13 @@ void Master::handleProgressReport(std::string& d, const RPCInfo& info){
 	VLOG(1)<<"receive report from: "<<wid<<" ("<<report.sum<<", "<<report.n_inf<<", "<<report.n_change<<")";
 	wm.update_report_time(info.source, Timer::Now());
 	updateProgress(wid, report);
+}
+
+void Master::handleGraphSize(std::string& d, const RPCInfo& info){
+	pair<int, int> cnt = deserialize<pair<int, int>>(d);
+	int wid = wm.nid2wid(info.source);
+	nNodeSum += cnt.first;
+	nNodeLocal[wid] = cnt.first;
+	nNodeRemote[wid] += cnt.second;
+	rph.input(MType::HGraphSize, wid);
 }

@@ -14,6 +14,9 @@ Master::Master(AppBase& app, Option& opt)
 {
 	my_net_id = net->id();
 	setLogThreadName("M"+to_string(my_net_id));
+	nNodeSum = 0;
+	nNodeLocal.resize(opt.conf.nPart, 0);
+	nNodeRemote.resize(opt.conf.nPart, 0);
 }
 
 void Master::run() {
@@ -171,6 +174,9 @@ void Master::procedureLoadGraph(){
 	cpid = ProcedureType::LoadGraph;
 	LOG(INFO)<<"Starting loading graph.";
 	startProcedure(cpid);
+	su_graphsize.wait_reset();
+	LOG(INFO) << "  Number of nodes: " << nNodeSum;
+	LOG(INFO) << "  Number of nodes on each worker: " << nNodeLocal;
 	finishProcedure(cpid);
 	LOG(INFO)<<"Finish loading graph.";
 }

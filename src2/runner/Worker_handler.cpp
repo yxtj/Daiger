@@ -36,7 +36,7 @@ void Worker::registerHandlers() {
 	regDSPProcess(MType::CFinish, localCBBinder(&Worker::handleFinish));
 	regDSPProcess(MType::CClear, localCBBinder(&Worker::handleClear));
 
-	regDSPProcess(MType::CLoadBalance, localCBBinder(&Worker::handleLoadBalance));
+	regDSPProcess(MType::HLoadBalance, localCBBinder(&Worker::handleLoadBalance));
 
 	regDSPProcess(MType::GNode, localCBBinder(&Worker::handleGNode));
 	regDSPProcess(MType::GValue, localCBBinder(&Worker::handleGValue));
@@ -59,7 +59,7 @@ void Worker::registerHandlers() {
 
 	//type 2: called by specific functions (handlers)
 	// by handlerRegisterWorker()
-	addRPHAnySU(MType::CLoadBalance, su_loadbalance);
+	addRPHAnySU(MType::HLoadBalance, su_loadbalance);
 }
 
 void Worker::handleReply(std::string& d, const RPCInfo& info) {
@@ -153,7 +153,7 @@ void Worker::handleFinish(std::string& d, const RPCInfo& info){
 
 void Worker::handleLoadBalance(std::string& d, const RPCInfo& info){
 	VLOG(2) << "load balance for " << d << " from " << info.source << " to " << info.dest;
-	rph.input(MType::CLoadBalance, wm.nid2wid(info.source));
+	rph.input(MType::HLoadBalance, wm.nid2wid(info.source));
 }
 
 void Worker::handleGNode(std::string& d, const RPCInfo& info){

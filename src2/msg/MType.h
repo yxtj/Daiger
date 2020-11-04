@@ -13,11 +13,11 @@ struct MType {
 	static constexpr int CTerminate = 8;
 	static constexpr int CAlive = 9;
 
-	// Procedure Control
+	// Procedure Control & helper message
 	static constexpr int CProcedure = 10;
 	static constexpr int CFinish = 11;
-	static constexpr int CMsgCount = 12;
-	static constexpr int CLoadBalance = 13;
+	static constexpr int HGraphSize= 12;
+	static constexpr int HLoadBalance = 13;
 
 	// Graph Loading and related
 	static constexpr int GNode = 20;

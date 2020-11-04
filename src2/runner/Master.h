@@ -4,6 +4,7 @@
 #include "runner_helpers.h"
 #include "util/Timer.h"
 #include <string>
+#include <vector>
 
 class NetworkThread;
 
@@ -53,6 +54,7 @@ public:
 
 	void handleRegister(std::string& d, const RPCInfo& info);
 	void handleProgressReport(std::string& d, const RPCInfo& info);
+	void handleGraphSize(std::string& d, const RPCInfo& info);
 
 private:
 	int my_net_id;
@@ -63,6 +65,10 @@ private:
 	SyncUnit su_procedure;
 	SyncUnit su_term;
 	SyncUnit su_clear;
+	SyncUnit su_graphsize;
+	int nNodeSum;
+	std::vector<int> nNodeLocal;
+	std::vector<int> nNodeRemote;
 
 	Timer tmr_procedure;
 };
