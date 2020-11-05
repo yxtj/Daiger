@@ -70,6 +70,7 @@ private:
 	std::pair<int, int> loadDeltaFile(const std::string& fn, sender_t sender);
 
 	std::pair<MsgType, std::string> popMsg(); // only called when message queue is not empty
+	bool processMsg(const std::pair<GraphContainer::MsgType, std::string>& msg);
 
 private:
 	AppBase app;

@@ -176,6 +176,26 @@ std::pair<GraphContainer::MsgType, std::string> GraphContainer::popMsg()
 	messages.pop_front();
 	return res;
 }
+bool GraphContainer::processMsg(const std::pair<GraphContainer::MsgType, std::string>& msg)
+{
+	const MsgType& type = msg.first;
+	const string& data = msg.second;
+	switch(type)
+	{
+	case GraphContainer::MsgType::Update:
+		msgUpdate(data);
+		break;
+	case GraphContainer::MsgType::Request:
+		msgRequest(data);
+		break;
+	case GraphContainer::MsgType::Reply:
+		msgReply(data);
+		break;
+	default:
+		return false;
+	}
+	return true;
+}
 
 void GraphContainer::stop_update()
 {
@@ -325,23 +345,8 @@ void GraphContainer::updateAsync()
 		}
 		if(!messages.empty()){
 			++c;
-			MsgType type;
-			string msg;
-			tie(type, msg) = popMsg();
-			switch(type)
-			{
-			case GraphContainer::MsgType::Update:
-				msgUpdate(msg);
-				break;
-			case GraphContainer::MsgType::Request:
-				msgRequest(msg);
-				break;
-			case GraphContainer::MsgType::Reply:
-				msgReply(msg);
-				break;
-			default:
-				break;
-			}
+			auto msg = popMsg();
+			processMsg(msg);
 		}
 	}
 }
@@ -349,6 +354,10 @@ void GraphContainer::updateAsync()
 void GraphContainer::updateSync(){
 	tmr.restart();
 	while(allow_update){
+		while(!messages.empty()){
+			auto msg = popMsg();
+			processMsg(msg);
+		}
 		apply();
 		send();
 		report();
