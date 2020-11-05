@@ -263,7 +263,7 @@ void GlobalHolder<V, N>::initializedProcess(){
 			initializedProcessNoneIncr();
 		}
 	} else{
-		if(cache_free){
+		if(!cache_free){
 			initializedProcessCB();
 		} else if(opt->is_accumulative()){
 			initializedProcessACF();
