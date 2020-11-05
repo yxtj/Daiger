@@ -232,7 +232,7 @@ void GraphContainer::trySend()
 	double t = tmr.elapseSd();
 	size_t n = holder->toSend();
 	if(n >= conf.send_max_size ||
-		(t - t_last_apply >= conf.send_interval && n >= conf.send_min_size))
+		(t - t_last_send >= conf.send_interval && n >= conf.send_min_size))
 	{
 		t_last_send = t;
 		send();

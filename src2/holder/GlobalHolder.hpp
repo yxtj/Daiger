@@ -550,27 +550,27 @@ void GlobalHolder<V, N>::prepare_cal(const id_t& from, const id_t& to, const val
 
 template <class V, class N>
 void GlobalHolder<V, N>::processNodeForced(const id_t id){
-	#if !defined(NDEBUG) || defined(_DEBUG)
+#if !defined(NDEBUG) || defined(_DEBUG)
 	if(VLOG_IS_ON(3)){
 		const node_t& n = local_part.get(id);
 		//DVLOG(3) << "k=" << n.id << " v=" << n.v << " u=" << n.u << " cache=" << n.cs;
 		auto pgs = local_part.get_progress();
 		//DVLOG(3) << "progress=(" << pgs.sum << "," << pgs.n_inf << "," << pgs.n_change << ") update=" << local_part.get_n_update();
 	}
-	#endif
+#endif
 
 	(this->*pf_processNode)(id);
 }
 template <class V, class N>
 void GlobalHolder<V, N>::processNode(const id_t id){
-	#if !defined(NDEBUG) || defined(_DEBUG)
+#if !defined(NDEBUG) || defined(_DEBUG)
 	if(VLOG_IS_ON(3)){
 		const node_t& n = local_part.get(id);
-		//DVLOG(3) << "k=" << n.id << " v=" << n.v << " u=" << n.u << " cache=" << n.cs;
+		//VLOG(3) << "k=" << n.id << " v=" << n.v << " u=" << n.u << " cache=" << n.cs;
 		auto pgs = local_part.get_progress();
-		//DVLOG(3) << "progress=(" << pgs.sum << "," << pgs.n_inf << "," << pgs.n_change << ") update=" << local_part.get_n_update();
+		//VLOG(3) << "progress=(" << pgs.sum << "," << pgs.n_inf << "," << pgs.n_change << ") update=" << local_part.get_n_update();
 	}
-	#endif
+#endif
 
 	if(!local_part.need_commit(id))
 		return;
@@ -613,6 +613,7 @@ size_t GlobalHolder<V, N>::toApply(){
 template <class V, class N>
 void GlobalHolder<V, N>::doApply(){
 	std::vector<id_t> nodes = scd->pick();
+	//LOG(DEBUG) << "apply " << nodes.size();
 	for(const id_t id : nodes){
 		processNode(id);
 	}
@@ -642,8 +643,9 @@ size_t GlobalHolder<V, N>::toSend(const int pid){
 template <class V, class N>
 std::string GlobalHolder<V, N>::collectMsg(const int pid){
 	// msg_t::MsgVUpdate_t = std::vector<typename msg_t::VUpdate_t>
-	// std::vector<std::pair<id_t, std::pair<id_t, value_t>>> data =
+	// std::vector<std::tuple<id_t, id_t, value_t>> data =
 	typename msg_t::MsgVUpdate_t data = remote_parts[pid].collect();
+	//LOG(DEBUG) << "send " << data.size();
 #if !defined(NDEBUG) || defined(_DEBUG)
 	//VLOG(3)<<"send: "<<data;
 	if(VLOG_IS_ON(3)){

@@ -167,6 +167,7 @@ void Worker::procedureUpdate(){
 	// register useful callbacks for sending messages
 	std::function<void(const int, std::string&)> sender_val = 
 		[&](const int wid, std::string& msg){
+			//VLOG(2) << "send to " << wid;
 			net->send(wm.wid2nid(wid), MType::VUpdate, move(msg));
 		};
 	std::function<void(const int, std::string&)> sender_req = 
