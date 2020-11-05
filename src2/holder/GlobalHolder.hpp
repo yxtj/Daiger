@@ -74,6 +74,7 @@ public:
 
 private:
 	void initializedProcessNoneIncr();
+	void initializedProcessNoneIncrACF();
 	void initializedProcessCB(); // cache-based
 	void initializedProcessACF(); // cache-free accumulative
 	void initializedProcessSCF(); // cache-free selective
@@ -256,7 +257,11 @@ int GlobalHolder<V, N>::loadDelta(const std::string& line){
 template <class V, class N>
 void GlobalHolder<V, N>::initializedProcess(){
 	if(!incremental){
-		initializedProcessNoneIncr();
+		if(is_acf()){
+			initializedProcessNoneIncrACF();
+		} else{
+			initializedProcessNoneIncr();
+		}
 	} else{
 		if(cache_free){
 			initializedProcessCB();
@@ -282,6 +287,23 @@ void GlobalHolder<V, N>::initializedProcessNoneIncr()
 			for(auto& d : data){
 				update_cal(p->id, d.first, d.second);
 			}
+		}
+	}
+}
+
+template <class V, class N>
+void GlobalHolder<V, N>::initializedProcessNoneIncrACF()
+{
+	local_part.enum_rewind();
+	for(const node_t* p = local_part.enum_next(true);
+		p != nullptr; p = local_part.enum_next(true))
+	{
+		if(local_part.need_commit(p->id)){
+			std::vector<std::pair<id_t, value_t>> data = local_part.spread(p->id);
+			for(auto& d : data){
+				update_cal(p->id, d.first, d.second);
+			}
+			local_part.commit(p->id);
 		}
 	}
 }
