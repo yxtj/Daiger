@@ -150,6 +150,7 @@ tuple<int, int, int> changeOne(ifstream& fin, int maxV, const ModifyThreshold& t
 				newV = rnd_node(gen) % maxV;
 			}while(dests.find(newV) != dests.end() && rpt++ < 10);
 			if(rpt < 10){
+				dests.insert(newV);
 				addSet.push_back(Edge{ u, newV });
 			}else{
 				// ++failAdd;
@@ -257,7 +258,9 @@ int changeAll(const vector<vector<int>>& g, const ModifyThreshold& threshold,
 	for(size_t i = 0; i < g.size(); ++i){
 		int addCnt = 0;
 		const auto& vec = g[i];
+		unordered_set<int> dests;
 		for(const int& j : vec){
+			dests.insert(e.node);
 			double r = rnd_prob(gen);
 			if(r < threshold.trivial){
 				continue;
@@ -269,13 +272,15 @@ int changeAll(const vector<vector<int>>& g, const ModifyThreshold& threshold,
 		}
 		totalE += vec.size();
 		// add
+		unordered_set<int> added;
 		while(addCnt--){
 			int rpt = 0;
 			int newV;
 			do{
 				newV = rnd_node(gen);
-			}while(binary_search(vec.begin(), vec.end(), newV) && rpt++ < 10);
+			}while(dests.find(newV) != dests.end() && rpt++ < 10);
 			if(rpt < 10){
+				dests.insert(newV);
 				Edge e{ i, newV};
 				addSet.push_back(e);
 			}else{
