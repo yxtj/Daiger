@@ -27,7 +27,6 @@ void Worker::registerHandlers() {
 	// part 1: message handler
 	regDSPProcess(MType::CReply, localCBBinder(&Worker::handleReply));
 	regDSPProcess(MType::COnline, localCBBinder(&Worker::handleOnline));
-	regDSPProcess(MType::CRegister, localCBBinder(&Worker::handleRegister));
 	regDSPProcess(MType::CWorkers, localCBBinder(&Worker::handleWorkers));
 	regDSPProcess(MType::CShutdown, localCBBinder(&Worker::handleShutdown));
 	regDSPImmediate(MType::CTerminate, localCBBinder(&Worker::handleTerminate));
@@ -72,13 +71,6 @@ void Worker::handleOnline(std::string& d, const RPCInfo& info){
 	int nid = deserialize<int>(d);
 	master_net_id = nid;
 	// sendReply(info);
-	DLOG(INFO)<<"got master id";
-	su_master.notify(); // notify registerWorker()
-}
-
-void Worker::handleRegister(std::string& d, const RPCInfo& info){
-	int nid = deserialize<int>(d);
-	master_net_id = nid;
 	DLOG(INFO)<<"got master id";
 	su_master.notify(); // notify registerWorker()
 }
@@ -185,7 +177,7 @@ void Worker::handleVReply(std::string& d, const RPCInfo& info){
 	graph.pushMsg(GraphContainer::MsgType::Reply, d);
 }
 void Worker::handleVSync(std::string& d, const RPCInfo& info){
-	VLOG(3) << "receive sync";
+	VLOG(2) << "receive sync";
 	graph.sync_notify();
 }
 

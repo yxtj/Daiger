@@ -49,7 +49,6 @@ public:
 	void handleReply(std::string& d, const RPCInfo& info);
 
 	void handleOnline(std::string& d, const RPCInfo& info);
-	void handleRegister(std::string& d, const RPCInfo& info);
 	void handleWorkers(std::string& d, const RPCInfo& info);
 	void handleShutdown(std::string& d, const RPCInfo& info); // normal exit
 	void handleTerminate(std::string& d, const RPCInfo& info); // force exit
@@ -88,8 +87,6 @@ private:
 	SyncUnit su_master;
 	SyncUnit su_regw;
 	SyncUnit su_winfo;
-	bool update_finish;
-	SyncUnit su_update;
 
 	SyncUnit su_stop;
 	SyncUnit su_loadbalance;

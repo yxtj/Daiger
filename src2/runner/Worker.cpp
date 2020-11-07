@@ -187,47 +187,6 @@ void Worker::procedureUpdate(){
 	} else{
 		graph.updateSync();
 	}
-
-	/*
-	// start periodic apply-and-send and periodic progress-report
-	update_finish=false;
-	int ams = static_cast<int>(opt.apply_interval*1000); // millisecond
-	int sms = static_cast<int>(opt.send_interval*1000);
-	int tms = static_cast<int>(opt.term_interval*1000);
-	double interval = _helper_gcd(_helper_gcd(ams, sms), tms) / 1000.0;
-	Timer last_apply, last_send, last_term;
-	RPCInfo info;
-	info.source = my_net_id;
-	info.dest = my_net_id;
-	// start with an apply and send
-	info.tag = MType::PApply;
-	driver.pushData("", info);
-	info.tag = MType::PSend;
-	driver.pushData("", info);
-	while(!update_finish){
-		if(!su_update.wait_for(interval)){ // wake up by timeout
-			su_update.reset();
-			if(!update_finish && last_apply.elapseMS() > ams){
-				last_apply.restart();
-				info.tag = MType::PApply;
-				driver.pushData("", info);
-			}
-			if(!update_finish && last_send.elapseMS() > sms){
-				last_send.restart();
-				info.tag = MType::PSend;
-				driver.pushData("", info);
-			}
-			if(!update_finish && last_term.elapseMS() > tms){
-				last_term.restart();
-				info.tag = MType::PReport;
-				driver.pushData("", info);
-			}
-		}else{ // wake up by termination singal
-			LOG(INFO)<<"Force finish updating by master";
-			break;
-		}
-	}
-	*/
 }
 
 void Worker::procedureDumpResult(){
