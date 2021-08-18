@@ -19,6 +19,15 @@
 
 using namespace std;
 
+template <typename T>
+pair<size_t, size_t> getGraphInfo(const vector<vector<T>>& g){
+	size_t nn = g.size();
+	size_t ne = 0;
+	for(const auto& l: g){
+		ne += l.size();
+	}
+	return make_pair(nn, ne);
+}
 
 // ------ online unweighted ------
 
@@ -243,7 +252,7 @@ int dump_w(const vector<vector<pair<int,double>> >& g, const int nPart, const st
 struct Option{
 	int nPart, nNode;
 	string dist;
-	double alpha;// for power-law distribution
+	vector<string> distParam;
 	string weight;
 	double wmin,wmax;
 	bool directed;
@@ -290,16 +299,25 @@ void Option::parse(int argc, char* argv[]){
 		throw invalid_argument("unsupported weight distribution: "+weightMethod);
 }
 bool Option::setDist(string& method){
-	if(method=="uni"){
-		alpha=2.0;
-		dist="uni";
-	}else if(method.substr(0,3)=="pl:"){
-		alpha=stod(method.substr(3));
-		dist="pl";
+	auto p=method.find(":");
+	if(p!=string::npos){
+		dist=method.substr(0,p);
+		distParam.clear();
+		++p;
+		size_t pp;
+		while((pp = method.find(',',p)) != method.npos){
+			string to = method.substr(p, pp-p);
+			distParam.push_back(to);
+			p=pp+1;
+		}
+		if(p<method.size()){
+			distParam.push_back(method.substr(p));
+		}
 	}else{
 		return false;
 	}
-	return true;
+	vector<string> supported = {"uni","pl"};
+	return find(supported.begin(), supported.end(), dist)!=supported.end();
 }
 bool Option::setWeight(string& method){
 	if(method=="no"){
@@ -323,7 +341,7 @@ int main(int argc, char* argv[]){
 			"  [directed]: (=1) whether to generate directed graph\n"
 			"  [no-self-loop]: (=0) whether to remove self loop edges\n"
 			"  [weight]: (=no) the weight distribution. If unweighted graph is needed, use \"no\" here.\n"
-			"  [deg-dist]: (=pl:2.3) the degree distribution. Support: uni (uniform), pl:<alpha> (power-law with alpha)\n"
+			"  [deg-dist]: (=pl:2.3) the degree distribution. Support: uni:<min>,<max> (uniform in range [min,max]), pl:<alpha> (power-law with alpha)\n"
 			"  [online]: (=0) whether to perform online generation. "
 			"Offline version guarantees equivalent output for same graph and seed. "
 			"Online version guarantees that ONLY when <#part> is also identical (optimized for huge graph).\n"
@@ -346,10 +364,12 @@ int main(int argc, char* argv[]){
 
 	function<unsigned(mt19937&)> rngDeg;
 	uniform_int_distribution<int> uni_dis(0,opt.nNode-1);
-	power_law_distribution<unsigned> pl_dis(1, opt.alpha);
+	power_law_distribution<unsigned> pl_dis(1, 2.3);
 	if(opt.dist=="uni"){
+		uni_dis=uniform_int_distribution<int>(stoi(opt.distParam[0]), stoi(opt.distParam[1]));
 		rngDeg=bind(uni_dis,placeholders::_1);
 	}else{
+		pl_dis=power_law_distribution<unsigned>(1, stod(opt.distParam[0]));
 		rngDeg=[&](mt19937& m){ return min<unsigned>(pl_dis(m), opt.nNode); };
 	}
 	
@@ -362,6 +382,8 @@ int main(int argc, char* argv[]){
 			for(int i=0; i<opt.nPart; ++i){
 				cout<<"  "<<i+1<<"/"<<opt.nPart<<endl;
 				vector<vector<int> > g=gen_one_uw(opt.nPart,i,opt.nNode,gen,rngDeg,opt.noSelfLoop);
+				pair<size_t, size_t> cnt=getGraphInfo(g);
+				cout<<"  generate "<<cnt.first<<" nodes and "<<cnt.second<<" edges"<<endl;
 				bool f=dump_one_uw(g,opt.nPart,i,opt.outDir);
 				if(f)
 					++n;
@@ -372,6 +394,8 @@ int main(int argc, char* argv[]){
 			for(int i=0; i<opt.nPart; ++i){
 				cout<<"  "<<i+1<<"/"<<opt.nPart<<endl;
 				vector<vector<pair<int,double>> > g=gen_one_w(opt.nPart,i,opt.nNode,gen,rngDeg,rngWgt,opt.noSelfLoop);
+				pair<size_t, size_t> cnt=getGraphInfo(g);
+				cout<<"  generate "<<cnt.first<<" nodes and "<<cnt.second<<" edges"<<endl;
 				bool f=dump_one_w(g,opt.nPart,i,opt.outDir);
 				if(f)
 					++n;
@@ -380,12 +404,16 @@ int main(int argc, char* argv[]){
 	}else{ // offline
 		if(opt.weight=="no"){
 			vector<vector<int> > g=gen_uw(opt.nPart,opt.nNode,opt.seed,rngDeg,opt.directed,opt.noSelfLoop);
+			pair<size_t, size_t> cnt=getGraphInfo(g);
+			cout<<"generate "<<cnt.first<<" nodes and "<<cnt.second<<" edges"<<endl;
 			cout<<"dumping"<<endl;
 			n=dump_uw(g,opt.nPart,opt.outDir);
 		}else{
 			uniform_real_distribution<double> uni_dis(opt.wmin, opt.wmax);
 			function<double(mt19937&)> rngWgt=bind(uni_dis,placeholders::_1);
 			vector<vector<pair<int,double>> > g=gen_w(opt.nPart,opt.nNode,opt.seed,rngDeg,rngWgt,opt.directed,opt.noSelfLoop);
+			pair<size_t, size_t> cnt=getGraphInfo(g);
+			cout<<"generate "<<cnt.first<<" nodes and "<<cnt.second<<" edges"<<endl;
 			cout<<"dumping"<<endl;
 			n=dump_w(g,opt.nPart,opt.outDir);
 		}
